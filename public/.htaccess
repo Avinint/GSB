@@ -1,0 +1,13 @@
+Options -MultiViews
+
+allow from all
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+	RewriteBase /anime
+    RewriteCond %{REQUEST_FILENAME} !-f
+    
+
+
+    RewriteRule ^index.php [QSA,L]
+</IfModule>

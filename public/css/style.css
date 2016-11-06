@@ -1,0 +1,61 @@
+﻿body{
+	margin-bottom: 60px;
+}
+.content{
+
+}
+
+.navbar-gsb{
+	//background-color: #226B5A;
+	background-color: #009688;
+	background-image: none;
+}
+.navbar-brand{
+	padding: 0 15px;
+}
+
+.navbar-gsb ul.nav li a{
+	color: ghostwhite;
+	
+	//color: dodgerblue;
+}
+.navbar-gsb ul.nav li a:hover{
+	color: black;
+
+}
+.navbar-gsb  ul.dropdown-menu li a{
+	color: black;
+}
+.nav-logo{
+	max-height: 100%;
+}
+.jumbo-no-padding{
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+.carousel
+{
+	width: auto;
+	height: auto;
+	min-height: 100%;
+}
+.carousel-inner h1{
+	text-shadow: 3px 3px 5px #000;
+}
+footer{
+	height:50px;
+	background-color:#2B7A91;
+	color: ghostwhite;
+	position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 60px;
+	padding: 20px;
+	/*margin: 0 auto ;*/
+}
+div.footer-text{
+	position: relative;
+	left: 40%;
+	width: 200px;
+}
