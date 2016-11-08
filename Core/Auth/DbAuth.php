@@ -27,9 +27,9 @@ class DbAuth{
 		 return isset($_SESSION['auth']);
 	}
 	
-	public isGranted($role)
+	public isGranted($role = 1)
 	{
-		return ($this->logged && $_SESSION['role'] === $role);
+		return ($this->logged() && $_SESSION['role'] === $role);
 	}
 	
 	public function getUserId()
