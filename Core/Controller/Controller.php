@@ -10,11 +10,14 @@ class Controller{
 
 	protected $viewpath;
     protected $route;
+	protected $auth;
 	
 	public function __construct()
 	{
+		// TODO Appliquer denied access  en fonction du fichier security.php
 		$this->viewpath = ROOT.'/App/View/';
         $this->route = new Routing();
+		$this->auth =  new DbAuth();
 	}
 
     protected function createForm($form)
@@ -32,6 +35,16 @@ class Controller{
 	protected function loadModel($model)
 	{
 		$this->$model = App::getInstance()->getTable($model);
+	}
+	
+	protected function denyAccessUnlessGranted($role = 1, $msg = 'Impossible d\'accéder à cette page!')
+	{
+		$app = App::getInstance();
+		
+		if(false === $this->auth->isGranted($role)){
+			$this->forbidden();
+			// TODO  créer createAccessDeniedException
+		}
 	}
 	
 	// Adds or changes the date when inserting in database or updating
