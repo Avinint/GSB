@@ -2,13 +2,13 @@
 
 use \Core\Config;
 use \Core\Database\MySQLDatabase;
-use \Core\Routing\Routing;
+use \Core\Service\Routing;
 
 abstract class AbstractApp
 {
 	protected static $_instance;
 	protected $db_instance;
-  protected $routing;
+    protected $routing;
 	protected $ac_instance;
 	
 	public static function getInstance()

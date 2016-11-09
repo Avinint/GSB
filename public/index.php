@@ -9,7 +9,6 @@ define('BR', '<br/>');
 require ROOT.'/App/App.php';
 
 App::load();
- 
 $app = App::getInstance();
 $controller = $app->getRouting()->resolveRoute();
 

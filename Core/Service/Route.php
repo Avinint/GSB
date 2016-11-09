@@ -1,6 +1,6 @@
 <?php
 
-namespace Core\Routing;
+namespace Core\Service;
 
 class Route
 {
@@ -8,13 +8,12 @@ class Route
     private $path;
     private $parameters;
 
-    function __construct($name, $path, $parameters = null)
+    function __construct($name = null, $path = null, $parameters = null)
     {
         $this->name = $name;
         $this->parameters = $parameters;
         $this->path = $path;
     }
-
 
     /**
      * @param mixed $name

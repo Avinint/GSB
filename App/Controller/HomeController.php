@@ -8,4 +8,9 @@ class HomeController extends AppController
     {
         $this->render('Home:index.php');
     }
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
 }

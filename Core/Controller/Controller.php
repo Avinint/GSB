@@ -4,20 +4,22 @@ namespace Core\Controller;
 
 use \App;
 use Core\View\View;
-use Core\Routing\Routing;
+use Core\Service\Routing;
+use Core\Service\DbAuth;
 
-class Controller{
-
-	protected $viewpath;
-  protected $route;
+class Controller
+{
+    protected $viewpath;
+    protected $route;
+    protected $auth;
 	
-	public function __construct()
-	{
-		// TODO Appliquer control access access  en fonction du fichier security.php
-		$this->viewpath = ROOT.'/App/View/';
-    $this->route = new Routing();
-		$this->auth =  new DbAuth();
-	}
+    public function __construct()
+    {
+        // TODO Appliquer control access access  en fonction du fichier security.php
+        $this->viewpath = ROOT.'/App/View/';
+        $this->route = new Routing();
+        $this->auth =  new DbAuth();
+    }
 
     protected function createForm($form)
     {
@@ -25,56 +27,68 @@ class Controller{
         return new $form();
     }
 
-	protected function render($view, $variables = [])
-	{
+    protected function render($view, $variables = [])
+    {
         $view = new View($view);
         $view->render($variables);
-	}
-	
-	protected function loadModel($model)
-	{
-		$this->$model = App::getInstance()->getTable($model);
-	}
-	
-	public function  controlAccess()
-	{
-		$app = App::getInstance();
-		$ac = $app->getAccessControl();
-		// TODO finir donner acces à la current_route
-	}
-	
-	protected function denyAccessUnlessGranted($role = 1, $msg = 'Impossible d\'accéder à cette page!')
-	{
-		$app = App::getInstance();
-		$auth = new DbAuth();
-		if(false === $this->auth->isGranted($role)){
-			$this->forbidden();
-			// TODO  créer createAccessDeniedException
-		}
-	}
-	
-	// Adds or changes the date when inserting in database or updating
-	protected function insertDate($format = 'Y-m-d H:i:s')
-	{
-        return date($format);
-	}
+    }
 
-	protected function getLastInsertId()
-	{
-		return \App::getInstance()->getDb()->lastInsertId();
-	}
-	
-	protected function forbidden()
-	{
-		header('HTTP/1.0 403 Forbidden');
-		die('Acces interdit');
-	}
-	
-	protected function notFound()
-	{
-		header('HTTP/1.0 404 Not Found');
-		die('Page introuvable');
-	}
+    // TODO remove
+    protected function loadModel($model)
+    {
+        $app = App::getInstance();
+        var_dump($app);
+        $this->$model = $app->getTable($model);
+        var_dump($model);
+
+    }
+
+    protected function getTable($model)
+    {
+        $app = App::getInstance();
+
+        return $app->getTable($model);
+    }
+
+    public function controlAccess()
+    {
+        $app = App::getInstance();
+        $ac = $app->getAccessControl();
+        // TODO finir donner acces à la current_route
+    }
+
+    protected function denyAccessUnlessGranted($role = 1, $msg = 'Impossible d\'accéder à cette page!')
+    {
+       /* $app = App::getInstance();
+        $auth = new DbAuth();
+        if(false === $this->auth->isGranted($role)){
+            $this->forbidden();
+            // TODO  créer createAccessDeniedException
+        }*/
+    }
+
+    // Adds or changes the date when inserting in database or updating
+    protected function insertDate($format = 'Y-m-d H:i:s')
+    {
+        return date($format);
+    }
+
+    protected function getLastInsertId()
+    {
+        return \App::getInstance()->getDb()->lastInsertId();
+    }
+
+    protected function forbidden()
+    {
+        header('HTTP/1.0 403 Forbidden');
+        die('Acces interdit');
+    }
+
+    protected function notFound()
+    {
+        header('HTTP/1.0 404 Not Found');
+        die('Page introuvable');
+    }
 
     public function redirect($url, $statusCode = 303)
     {
