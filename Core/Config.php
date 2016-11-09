@@ -45,10 +45,12 @@ class Config
 		return self::$_instance;
 	}
 	
-	public function __construct($parameters, $config)
+	public function __construct($parameters, $config, $security)
 	{
-		var_dump(require($parameters));
-		$this->settings = array_merge(require($parameters), require($config));
+		$this->settings = array_merge(
+			 require($parameters), 
+			 require($config), 
+			 require($security));
 	}
 	
 	public function get($key)

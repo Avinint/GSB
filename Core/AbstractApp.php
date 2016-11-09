@@ -8,7 +8,8 @@ abstract class AbstractApp
 {
 	protected static $_instance;
 	protected $db_instance;
-    protected $routing;
+  protected $routing;
+	protected $ac_instance;
 	
 	public static function getInstance()
 	{
@@ -38,20 +39,34 @@ abstract class AbstractApp
 	public function getTable($name)
 	{
 		$className = '\\App\\Table\\'.ucfirst($name).'Table';
-        if(!class_exists($className)){
-            $className = '\\Core\\Table\\Table';
-        }
+		if(!class_exists($className)){
+				$className = '\\Core\\Table\\Table';
+		}
+		
 		return new $className($this->getDb());
-
+	}
+	
+	public function getConfig()
+	{
+	  return Config::getInstance(ROOT.'/App/Config/DbConfig.php', ROOT.'/App/Config/Config.php', ROOT.'/App/Config/Config.php');
 	}
 	
 	public function getDb()
 	{
-		$config = Config::getInstance(ROOT.'/App/Config/DbConfig.php', ROOT.'/App/Config/Config.php');
 		if(is_null($this->db_instance)){
+			$config = $this->getConfig();
 			$this->db_instance = new MySQLDatabase($config->get('db_name'), $config->get('db_user'), $config->get('db_pass'), $config->get('db_host'));
-			
 		}
+		
 		return $this->db_instance;
-	}
+  }
+
+	public function getAccessControl()
+	{
+		if(is_null($this->ac_instance)){
+			$this->ac_instance = $this->getConfig()->get('access_control');
+		}
+		
+		return $this->ac_instance;
+  }
 }

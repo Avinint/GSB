@@ -9,14 +9,13 @@ use Core\Routing\Routing;
 class Controller{
 
 	protected $viewpath;
-    protected $route;
-	protected $auth;
+  protected $route;
 	
 	public function __construct()
 	{
-		// TODO Appliquer denied access  en fonction du fichier security.php
+		// TODO Appliquer control access access  en fonction du fichier security.php
 		$this->viewpath = ROOT.'/App/View/';
-        $this->route = new Routing();
+    $this->route = new Routing();
 		$this->auth =  new DbAuth();
 	}
 
@@ -37,10 +36,17 @@ class Controller{
 		$this->$model = App::getInstance()->getTable($model);
 	}
 	
+	public function  controlAccess()
+	{
+		$app = App::getInstance();
+		$ac = $app->getAccessControl();
+		// TODO finir donner acces à la current_route
+	}
+	
 	protected function denyAccessUnlessGranted($role = 1, $msg = 'Impossible d\'accéder à cette page!')
 	{
 		$app = App::getInstance();
-		
+		$auth = new DbAuth();
 		if(false === $this->auth->isGranted($role)){
 			$this->forbidden();
 			// TODO  créer createAccessDeniedException
@@ -73,7 +79,7 @@ class Controller{
     public function redirect($url, $statusCode = 303)
     {
         header('Location: ' . $url, true, $statusCode);
-        die();
+        die("redirection"); // TDODO test and remove?
     }
 
 

@@ -13,3 +13,4 @@ App::load();
 $app = App::getInstance();
 $controller = $app->getRouting()->resolveRoute();
 
+// TODO  resolveRoute renvoie la route pour acces dans le controller

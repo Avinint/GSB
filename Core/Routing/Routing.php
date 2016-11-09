@@ -55,9 +55,7 @@ class Routing
             $count = 0;
             $path = $route['path'];
 
-
             while(strpos($path, '{') !== false && strpos($path, '}') !== false){
-
                 $key = $this->getParams($path);
                 $count++;
                 $params[$key] = null;
@@ -85,8 +83,6 @@ class Routing
             }
 
             // stripos: pour differencier les routes avec des parametres de l'equivalent sans
-
-
             if(($path == $routePath)xor(stripos($tempRoutePath, $path) !== false && $count > 0)) {
                 $this->dispatch($route['controller'], $params);
                 return true;
