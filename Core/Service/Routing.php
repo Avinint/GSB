@@ -60,13 +60,13 @@ class Routing
             $count = 0;
             $path = $route['path'];
 
-						// On récupère les caractères entre accolades comme paramètres de la route
+            // On récupère les caractères entre accolades comme paramètres de la route
             while(strpos($path, '{') !== false && strpos($path, '}') !== false){
                 $key = $this->getParams($path);
                 $count++;
                 $params[$key] = null;
-								// le nom est stocké comme clé dans un tableau associatif  vide
-								// On remplira le tableau avec les valeurs récupérés dans l
+                // le nom est stocké comme clé dans un tableau associatif  vide
+                // On remplira le tableau avec les valeurs récupérés dans l
             }
 
             //echo 'route collection path: "'.$path.'"'.BR;
@@ -74,19 +74,19 @@ class Routing
             $tempRoutePath = $routePath;
             $data = '';
             if($tempRoutePath !== $path){
-							$data = str_replace($path.'/', '', $tempRoutePath);
-							$data = ltrim($data, '/');
-							//echo BR.'data: '.$data;
-							//$tempRoutePath = str_replace('/'.$data, '', $tempRoutePath);
-							//echo BR.'route match path: '.$tempRoutePath;
-							$data = explode('/', $data);
-							$paramKeys = array_keys($params);
+                $data = str_replace($path.'/', '', $tempRoutePath);
+                $data = ltrim($data, '/');
+                //echo BR.'data: '.$data;
+                //$tempRoutePath = str_replace('/'.$data, '', $tempRoutePath);
+                //echo BR.'route match path: '.$tempRoutePath;
+                $data = explode('/', $data);
+                $paramKeys = array_keys($params);
 
-							foreach ($paramKeys as $value => $key){
-								if($value <  count($data)){
-										$params[$key] = $data[$value];
-								}
-							}
+                foreach ($paramKeys as $value => $key){
+                    if($value <  count($data)){
+                            $params[$key] = $data[$value];
+                    }
+                }
             }
 
             // stripos: pour differencier les routes avec des parametres de l'equivalent sans
@@ -100,14 +100,14 @@ class Routing
 
         return false;
     }
-		
-		public function controlAccess($route)
-		{
-			$this->auth =  new DbAuth();
-			$app = App::getInstance();
-			$ac = $app->getAccessControl();
-			// TODO finir donner acces à la current_route
-		}
+
+    public function controlAccess($route)
+    {
+        $this->auth =  new DbAuth();
+        $app = App::getInstance();
+        $ac = $app->getAccessControl();
+        // TODO finir donner acces à la current_route
+    }
 
     public function dispatch($controller,  $params = array())
     {
@@ -116,16 +116,14 @@ class Routing
 
         $controller = implode('\\', $controller);
         $controller = 'App\Controller\\'. $controller;
-        var_dump($controller);
         $controller = new $controller();
-        var_dump($controller);
         if(isset($params)){
-                $controller->$action($params);
+            $controller->$action($params);
         }else{
-                $controller->$action();
+            $controller->$action();
         }
     }
-		
+
     public function resolveRoute()
     {
         $basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
@@ -134,25 +132,24 @@ class Routing
         //echo 'uri: '.$uri.BR;
         $uri = str_replace('index.php', '', $uri);
         $uri =  '/'.trim($uri, '/');
-				$this->currentRoute->setPath($uri);
-				
-		var_dump($this->currentRoute);
+        $this->currentRoute->setPath($uri);
+
         return $this->routeMatch($uri);
     }
 
     public function generateRoute($routeName, $parameters = array())
     {
-			foreach($this->routes as $name => $route)
-			{
-				if($name == $routeName) {
-					//$path = $route['path'];
-					if(false === $this->controlAccess){
-						$this->dispatch($route['controller'], $parameters);
-					}
-				}
-			}
-			
-			return null;
+        foreach($this->routes as $name => $route)
+        {
+            if($name == $routeName) {
+                //$path = $route['path'];
+                if(false === $this->controlAccess){
+                    $this->dispatch($route['controller'], $parameters);
+                }
+            }
+        }
+
+        return null;
     }
 
     public function generatePath($path)

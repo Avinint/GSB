@@ -36,11 +36,7 @@ class Controller
     // TODO remove
     protected function loadModel($model)
     {
-        $app = App::getInstance();
-        var_dump($app);
-        $this->$model = $app->getTable($model);
-        var_dump($model);
-
+        $this->$model = $this->getTable($model);
     }
 
     protected function getTable($model)

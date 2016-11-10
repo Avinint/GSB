@@ -13,7 +13,6 @@ abstract class AbstractApp
 	
 	public static function getInstance()
 	{
-
 		if(is_null(self::$_instance))
 		{
 			self::$_instance = new App();
@@ -48,7 +47,7 @@ abstract class AbstractApp
 	
 	public function getConfig()
 	{
-	  return Config::getInstance(ROOT.'/App/Config/DbConfig.php', ROOT.'/App/Config/Config.php', ROOT.'/App/Config/Config.php');
+	  return Config::getInstance(ROOT.'/App/Config/DbConfig.php', ROOT.'/App/Config/Config.php', ROOT.'/App/Config/Security.php');
 	}
 	
 	public function getDb()
@@ -57,7 +56,7 @@ abstract class AbstractApp
 			$config = $this->getConfig();
 			$this->db_instance = new MySQLDatabase($config->get('db_name'), $config->get('db_user'), $config->get('db_pass'), $config->get('db_host'));
 		}
-		
+
 		return $this->db_instance;
   }
 
