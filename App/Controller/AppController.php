@@ -14,7 +14,7 @@ class AppController extends Controller
         parent::__construct();
         $this->loadModel('Utilisateur');
     }
-/*
+
     public function login()
     {
         if(!empty($_POST) && isset($_POST['login_action'])){
@@ -42,5 +42,5 @@ class AppController extends Controller
         }
 
         return new LogoutForm();
-    }*/
+    }
 }
