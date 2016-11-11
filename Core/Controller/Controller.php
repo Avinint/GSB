@@ -52,7 +52,7 @@ class Controller
         $match = false;
         $app = App::getInstance();
         $ac = $app->getAccessControl();
-        var_dump($ac);
+
         foreach ($ac as $rule){
             if($route->getPath() === $ac['path']){
                 var_dump('match');
@@ -63,7 +63,7 @@ class Controller
         if (false === $match) {
 
         }
-        die();
+
         // TODO finir donner acces à la current_route
     }
 

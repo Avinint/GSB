@@ -5,21 +5,28 @@ namespace Core\Service;
 
 class ExceptionHandler
 {
-    public static function register($handler = null)
+    private $environment;
+
+    public static function register($environment, $handler = null)
     {
-        var_dump("ziziziz");
         if(!$handler instanceof self) {
             $handler = new static();
         }
-        var_dump("ziziziz");
+        $handler->environment = $environment;
 
-        //set_error_handler(array($handler, 'handleException'));
+        set_exception_handler(array($handler, 'handleException'));
 
         return $handler;
     }
 
     public function handleException(\Exception $e)
     {
-        sprintf('Uncaught Exception %s: "%s" at %s line %s', get_class($e), $e->getMessage(), $e->getFile(), $e->getLine());
+        if($this->environment === "dev"){
+            echo sprintf('Uncaught %s: "%s" at %s line %s', get_class($e), $e->getMessage(), $e->getFile(), $e->getLine());
+        }
+
+        return false;
     }
+
+
 } 

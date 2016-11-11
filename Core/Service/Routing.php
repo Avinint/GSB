@@ -6,7 +6,6 @@ use Core\Service\DbAuth;
 use Core\Service\Route;
 use Core\Controller\Controller;
 
-// TODO  add var current_route for access from controller
 class Routing
 {
     private $routes = array();
@@ -116,7 +115,7 @@ class Routing
 
             throw new \Exception("Something wrong happened...");
         }
-        $controller->controlAccess($this->currentRoute);
+        //$controller->controlAccess($this->currentRoute);
         if(isset($params)){
             $controller->$action($params);
         }else{

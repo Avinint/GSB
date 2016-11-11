@@ -1,0 +1,20 @@
+Options -MultiViews
+DirectoryIndex DirectoryIndex public/index.php public/index_dev.php
+allow from all
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+	RewriteBase /
+
+
+	Rewritecond %{REQUEST_URI} !^/public
+    Rewriterule ^(.*)$ /public/
+
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^/public/index.php [QSA,L]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteRule ^/public/index_dev.php  /dev  [QSA,L]
+
+</IfModule>

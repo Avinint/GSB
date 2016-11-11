@@ -12,23 +12,33 @@ abstract class BaseApp
     protected $routing;
 	protected $accessControl;
     protected $exceptionHandler;
+    protected $environment;
 	
-	public static function getInstance()
+	public static function getInstance($environment)
 	{
 		if(is_null(self::$instance))
 		{
-			self::$instance = new App();
-
-            self::$instance->exceptionHandler = ExceptionHandler::register();
-            var_dump("lolo");
+			self::$instance = new App($environment);
+            self::$instance->exceptionHandler =  ExceptionHandler::register($environment);
             self::$instance->routing = new Routing();
 		}
+
 		return self::$instance;
 	}
+
+    public function __construct($environment)
+    {
+        $this->environment = $environment;
+    }
 
     public function getRouting()
     {
         return $this->routing;
+    }
+
+    public function getEnvironment()
+    {
+        return $this->environment;
     }
 
 	public static function load()
