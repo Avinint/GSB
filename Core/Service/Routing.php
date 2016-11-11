@@ -4,6 +4,7 @@ namespace Core\Service;
 
 use Core\Service\DbAuth;
 use Core\Service\Route;
+use Core\Controller\Controller;
 
 // TODO  add var current_route for access from controller
 class Routing
@@ -13,7 +14,7 @@ class Routing
 
     public function __construct()
     {
-        $this->initRoutes(require ROOT.D_S.'App'.D_S.'Config'.D_S.'Routes.php');
+        $this->initRoutes(require ROOT.D_S.'App'.D_S.'Config'.D_S.'routes.php');
 				$this->currentRoute = new Route();
     }
 
@@ -101,13 +102,6 @@ class Routing
         return false;
     }
 
-    public function controlAccess($route)
-    {
-        $this->auth =  new DbAuth();
-        $app = App::getInstance();
-        $ac = $app->getAccessControl();
-        // TODO finir donner acces à la current_route
-    }
 
     public function dispatch($controller,  $params = array())
     {
@@ -116,7 +110,13 @@ class Routing
 
         $controller = implode('\\', $controller);
         $controller = 'App\Controller\\'. $controller;
+
         $controller = new $controller();
+        if(!$controller instanceof Controller){
+
+            throw new \Exception("Something wrong happened...");
+        }
+        $controller->controlAccess($this->currentRoute);
         if(isset($params)){
             $controller->$action($params);
         }else{
@@ -143,9 +143,7 @@ class Routing
         {
             if($name == $routeName) {
                 //$path = $route['path'];
-                if(false === $this->controlAccess){
-                    $this->dispatch($route['controller'], $parameters);
-                }
+                $this->dispatch($route['controller'], $parameters);
             }
         }
 
@@ -188,8 +186,6 @@ class Routing
 
                     $path = $path.'/'.$str;
                 }
-
-                return $path;
                 //$this->dispatch($route['controller'], $parameters);
             }
         }

@@ -4,7 +4,7 @@ use \Core\Config;
 use \Core\Database\MySQLDatabase;
 use \Core\Service\Routing;
 
-abstract class AbstractApp
+abstract class BaseApp
 {
 	protected static $_instance;
 	protected $db_instance;
@@ -47,7 +47,7 @@ abstract class AbstractApp
 	
 	public function getConfig()
 	{
-	  return Config::getInstance(ROOT.'/App/Config/DbConfig.php', ROOT.'/App/Config/Config.php', ROOT.'/App/Config/Security.php');
+	  return Config::getInstance(ROOT.'/App/Config/dbConfig.php', ROOT.'/App/Config/config.php', ROOT.'/App/Config/security.php');
 	}
 	
 	public function getDb()

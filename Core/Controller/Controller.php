@@ -5,6 +5,7 @@ namespace Core\Controller;
 use \App;
 use Core\View\View;
 use Core\Service\Routing;
+use Core\Service\Route;
 use Core\Service\DbAuth;
 
 class Controller
@@ -46,21 +47,34 @@ class Controller
         return $app->getTable($model);
     }
 
-    public function controlAccess()
+    public function controlAccess(Route $route)
     {
+        $match = false;
         $app = App::getInstance();
         $ac = $app->getAccessControl();
+        var_dump($ac);
+        foreach ($ac as $rule){
+            if($route->getPath() === $ac['path']){
+                var_dump('match');
+                $this->denyAccessUnlessGranted('ROLE_DEFAULT', $msg = 'Impossible d\'accéder à cette page!');
+            }
+        }
+
+        if (false === $match) {
+
+        }
+        die();
         // TODO finir donner acces à la current_route
     }
 
-    protected function denyAccessUnlessGranted($role = 1, $msg = 'Impossible d\'accéder à cette page!')
+    protected function denyAccessUnlessGranted($role = 'ROLE_DEFAULT', $msg = 'Impossible d\'accéder à cette page!')
     {
-       /* $app = App::getInstance();
+        $app = App::getInstance();
         $auth = new DbAuth();
         if(false === $this->auth->isGranted($role)){
             $this->forbidden();
             // TODO  créer createAccessDeniedException
-        }*/
+        }
     }
 
     // Adds or changes the date when inserting in database or updating
@@ -164,7 +178,6 @@ class Controller
             foreach($children as $class => $child){
                 $object = $child['entity'];
                 // var_dump($object->getVars());
-
                 if($object){
                     foreach ($object->getVars() as $key => $value){
 

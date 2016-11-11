@@ -1,12 +1,17 @@
 ﻿<?php
 
-use Core\Auth\DbAuth;
-
 define('ROOT', dirname(__DIR__));
-define('D_S', DIRECTORY_SEPARATOR);
-define('BR', '<br/>');
-
 require ROOT.'/App/App.php';
+
+try{
+    throw new Exception("bla bla bla");
+    echo "hll;o";
+}catch(Exception $e){
+    echo "hererer;o";
+    var_dump($e);
+
+    echo $e->getMessage();
+}
 
 App::load();
 $app = App::getInstance();
