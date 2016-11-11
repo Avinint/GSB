@@ -18,7 +18,7 @@ abstract class BaseApp
 		if(is_null(self::$instance))
 		{
 			self::$instance = new App();
-            
+
             self::$instance->exceptionHandler = ExceptionHandler::register();
             var_dump("lolo");
             self::$instance->routing = new Routing();
