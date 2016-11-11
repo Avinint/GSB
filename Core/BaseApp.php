@@ -3,22 +3,27 @@
 use \Core\Config;
 use \Core\Database\MySQLDatabase;
 use \Core\Service\Routing;
+use Core\Service\ExceptionHandler;
 
 abstract class BaseApp
 {
-	protected static $_instance;
-	protected $db_instance;
+	protected static $instance;
+	protected $db;
     protected $routing;
-	protected $ac_instance;
+	protected $accessControl;
+    protected $exceptionHandler;
 	
 	public static function getInstance()
 	{
-		if(is_null(self::$_instance))
+		if(is_null(self::$instance))
 		{
-			self::$_instance = new App();
-            self::$_instance->routing = new Routing();
+			self::$instance = new App();
+            
+            self::$instance->exceptionHandler = ExceptionHandler::register();
+            var_dump("lolo");
+            self::$instance->routing = new Routing();
 		}
-		return self::$_instance;
+		return self::$instance;
 	}
 
     public function getRouting()
@@ -52,20 +57,25 @@ abstract class BaseApp
 	
 	public function getDb()
 	{
-		if(is_null($this->db_instance)){
+		if(is_null($this->db)){
 			$config = $this->getConfig();
-			$this->db_instance = new MySQLDatabase($config->get('db_name'), $config->get('db_user'), $config->get('db_pass'), $config->get('db_host'));
+			$this->db = new MySQLDatabase($config->get('db_name'), $config->get('db_user'), $config->get('db_pass'), $config->get('db_host'));
 		}
 
-		return $this->db_instance;
+		return $this->db;
   }
 
 	public function getAccessControl()
 	{
-		if(is_null($this->ac_instance)){
-			$this->ac_instance = $this->getConfig()->get('access_control');
+		if(is_null($this->accessControl)){
+			$this->accessControl = $this->getConfig()->get('access_control');
 		}
 		
-		return $this->ac_instance;
-  }
+		return $this->accessControl;
+    }
+
+    public function getExceptionHandler()
+    {
+        return $this->exceptionHandler;
+    }
 }
