@@ -4,11 +4,6 @@ namespace Core\Entity;
 
 class Entity{
 
-    public function getUploadRefs()
-    {
-        return require ROOT.'\App\Config\UploadRef.php';
-    }
-
 	public function __get($key)
 	{	
 		$method = 'get'.ucfirst($key);

@@ -1,23 +1,23 @@
 <?php
 
-namespace Core\Routing;
+namespace Core\Component;
 
 class Route
 {
     private $name;
     private $path;
+    private $controller;
     private $parameters;
 
-    function __construct($name, $path, $parameters = null)
+    function __construct($name = null, $path = null, $parameters = null)
     {
         $this->name = $name;
         $this->parameters = $parameters;
         $this->path = $path;
     }
 
-
     /**
-     * @param mixed $name
+     * @param String $name
      */
     public function setName($name)
     {
@@ -25,7 +25,7 @@ class Route
     }
 
     /**
-     * @return mixed
+     * @return String
      */
     public function getName()
     {
@@ -33,7 +33,23 @@ class Route
     }
 
     /**
-     * @param mixed $parameters
+     * @param String $controller
+     */
+    public function setController($controller)
+    {
+        $this->controller = $controller;
+    }
+
+    /**
+     * @return String
+     */
+    public function getController()
+    {
+        return $this->controller;
+    }
+
+    /**
+     * @param String $parameters
      */
     public function setParameters($parameters)
     {
@@ -41,7 +57,7 @@ class Route
     }
 
     /**
-     * @return mixed
+     * @return String
      */
     public function getParameters()
     {
@@ -49,7 +65,7 @@ class Route
     }
 
     /**
-     * @param mixed $path
+     * @param String $path
      */
     public function setPath($path)
     {
@@ -57,7 +73,7 @@ class Route
     }
 
     /**
-     * @return mixed
+     * @return String
      */
     public function getPath()
     {

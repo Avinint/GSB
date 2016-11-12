@@ -13,6 +13,14 @@ return array(
         'path' => '/',
         'controller' => 'HomeController:index',
     ),
+    'yoyopage' => array(
+        'path' => '/yoyo',
+        'controller' => 'HomeController:show',
+    ),
+    'yoyolalapage' => array(
+        'path' => '/yoyo/lala',
+        'controller' => 'HomeController:show',
+    ),
     'admin_control_panel' => array(
         'path' => '/control/panel',
         'controller' => 'Admin:AdminController:panel',

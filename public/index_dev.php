@@ -5,5 +5,5 @@ require ROOT.'/App/App.php';
 require ROOT.'/App/Config/globals.php';
 
 App::load();
-$app = App::getInstance('prod');
-$app->getRouting()->getRoute();
+$app = App::getInstance('dev');
+$controller = $app->getRouting()->getRoute();

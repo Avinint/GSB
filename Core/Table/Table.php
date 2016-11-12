@@ -255,7 +255,7 @@ class Table {
 
     public function getPrefix()
     {
-        $config = Config::getInstance(ROOT.'/Config/Config.php');
+        $config = Config::getInstance(ROOT.'/Config/config.php');
         return $config->get('db_prefix');
     }
 }

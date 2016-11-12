@@ -1,12 +1,12 @@
 <?php
 
-namespace Core\Auth;
+namespace Core\Component;
 
 use Core\Database\Database;
 use Core\Entity\UserInterface;
 
-class DbAuth{
-
+class DbAuth
+{
 	/**
 	* @param $username
 	* @param @password
@@ -25,6 +25,11 @@ class DbAuth{
 	public function logged()
 	{
 		 return isset($_SESSION['auth']);
+	}
+	
+	public function isGranted($role = 1)
+	{
+		return ($this->logged() && $_SESSION['role'] === $role);
 	}
 	
 	public function getUserId()
