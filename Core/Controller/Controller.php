@@ -51,21 +51,25 @@ class Controller
     {
         $app = App::getInstance();
         $ac = $app->getAccessControl();
-
         foreach ($ac as $rule) {
-            if ($route->getPath() === $rule['path']) {
-                $this->denyAccessUnlessGranted('ROLE_DEFAULT', $msg = 'Impossible d\'accéder à cette page!');
+            if (preg_match('/'.$rule['path'].'/', $route->getPath())) {
+                foreach ($rule['roles'] as $role) {
+                    if (true === $this->auth->isGranted($role)) {
+                        var_dump('good');
+                        return;
+                    }
+                }
+                $this->forbidden('Impossible d\'accéder à cette page!');
             }
         }
-
         // TODO finir donner acces à la current_route
     }
 
-    protected function denyAccessUnlessGranted($role = 'ROLE_DEFAULT', $msg = 'Impossible d\'accéder à cette page!')
+    protected function filterAccess($role = 'ROLE_DEFAULT', $msg = 'Impossible d\'accéder à cette page!')
     {
         $app = App::getInstance();
         $auth = new DbAuth();
-        if (false === $this->auth->isGranted($role)) {
+        if (false === $this->auth->isGranted($role, $msg)) {
             $this->forbidden();
             // TODO  créer createAccessDeniedException
         }
@@ -82,10 +86,10 @@ class Controller
         return \App::getInstance()->getDb()->lastInsertId();
     }
 
-    protected function forbidden()
+    protected function forbidden($msg = 'Accès interdit')
     {
         header('HTTP/1.0 403 Forbidden');
-        die('Acces interdit');
+        die($msg);
     }
 
     protected function notFound()
@@ -97,7 +101,7 @@ class Controller
     public function redirect($url, $statusCode = 303)
     {
         header('Location: ' . $url, true, $statusCode);
-        die("redirection"); // TDODO test and remove?
+        throw new \Exception("redirection"); // TDODO test and remove?
     }
 
 
