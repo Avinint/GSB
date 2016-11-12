@@ -70,7 +70,7 @@ class Controller
         $app = App::getInstance();
         $auth = new DbAuth();
         if (false === $this->auth->isGranted($role, $msg)) {
-            $this->forbidden();
+            $this->forbidden($msg);
             // TODO  créer createAccessDeniedException
         }
     }
@@ -103,7 +103,6 @@ class Controller
         header('Location: ' . $url, true, $statusCode);
         throw new \Exception("redirection"); // TDODO test and remove?
     }
-
 
     public function handleRequest($form, $object, $route){
 
