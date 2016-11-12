@@ -6,9 +6,14 @@ class HomeController extends AppController
 {
     public function index()
     {
-        throw new \Exception("bla bla bla");echo "holala";
         $this->render('Home:index.php');
     }
+
+    public function show()
+    {
+        $this->render('Home:show.php');
+    }
+
 
     public function __construct()
     {

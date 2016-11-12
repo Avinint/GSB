@@ -9,7 +9,8 @@ use Core\Controller\Controller;
 class Routing
 {
     private $routes = array();
-		private $currentRoute;
+	private $currentRoute;
+
 
     public function __construct()
     {
@@ -49,6 +50,7 @@ class Routing
         return $key;
     }
 
+    // identify the route identity from its path in the route list
     public function routeMatch($routePath)
     {
         $params = array();
@@ -101,7 +103,7 @@ class Routing
         return false;
     }
 
-
+    // launches the controller action that matches the  route
     public function dispatch($controller,  $params = array())
     {
         $controller = explode(':', $controller);
@@ -123,14 +125,23 @@ class Routing
         }
     }
 
+    //  parses the URL for the route path
     public function resolveRoute()
     {
-        $basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
+        //$basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
+
 
         $uri = strtolower(substr($_SERVER['REQUEST_URI'], strlen($basepath)));
+
+        $basepath = array_filter(explode('/', $_SERVER['SCRIPT_NAME']));
+
+        $uri = array_map(function ($a) { return "/".$a ;}, $basepath );
+        $uri = str_replace($uri, '', $_SERVER['REQUEST_URI']);
+
         //echo 'uri: '.$uri.BR;
-        $uri = str_replace('index.php', '', $uri);
-        $uri =  '/'.trim($uri, '/');
+
+        $uri = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $uri);
+        $uri =  '/'.ltrim($uri, '/dev');
         $this->currentRoute->setPath($uri);
 
         return $this->routeMatch($uri);
@@ -152,9 +163,9 @@ class Routing
     public function generatePath($path)
     {
         $uri = '//'.$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'];
+
         //$basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';;
-        $uri = str_replace('/index.php', '', $uri);
-        $basepath = rtrim($uri,'/');
+        $basepath = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $uri);
         $path = $basepath.$path;
 
         return $path;
@@ -162,12 +173,13 @@ class Routing
 
     public function generateURL($routeName, $parameters = array())
     {
-        $basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
+        $basepath = implode('/', array_slice(explode('/', $_SERVER['REQUEST_URI']), 0, -1)) . '/';
         $basepath = rtrim($basepath,'/');
+
         foreach($this->routes as $name => $route)
         {
             if($name == $routeName) {
-                $path = $basepath.$route['path'];
+                $path = rtrim($basepath.$route['path']);
 
                 if($parameters){
                     $params = array();
@@ -185,10 +197,14 @@ class Routing
 
                     $path = $path.'/'.$str;
                 }
+
+                return $path;
                 //$this->dispatch($route['controller'], $parameters);
             }
         }
 
         return null;
     }
+
+
 }

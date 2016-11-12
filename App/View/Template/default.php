@@ -9,9 +9,9 @@
 
 		<!-- Bootstrap -->
 		<!-- Latest compiled and minified CSS -->
-		<link rel="stylesheet" href="<?php echo $this->route->generatePath('/css/bootstrap.min.css');?>">
-		<link rel="stylesheet" href="<?php echo $this->route->generatePath('/css/style.css')?>"/>
-		<link rel="stylesheet" href="public/css/style.css"/>
+		<link rel="stylesheet" href="<?php echo $this->route->generatePath('css/bootstrap.min.css');?>">
+		<link rel="stylesheet" href="<?php echo $this->route->generatePath('css/style.css')?>"/>
+
 		<!-- Optional theme -->
 		<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous"> -->
 
@@ -24,7 +24,7 @@
 	</head>
 	<body>
 	<!-- Fixed navbar -->
-		<nav class="navbar navbar-inverse navbar-gsb navbar-fixed-top">
+		<nav class="navbar navbar-inverse navbar-gsb">
 			<div class="container">
 				<div class="navbar-header">
 				  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -33,7 +33,7 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				  </button>
-				  <a class="navbar-brand" href="#"><img class="nav-logo" src="img/logo-tr-sm.png"/></a>
+				  <a class="navbar-brand" href="#"><img class="nav-logo" src="<?php echo $this->route->generatePath('img/logo-tr-sm.png');?>"/></a>
 				</div>
 				<div id="navbar" class="navbar-collapse collapse">
 				  <ul class="nav navbar-nav">
@@ -65,6 +65,6 @@
 	</footer>
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-	<script src="<?php echo $this->route->generatePath('/js/bootstrap.min.js')?>"></script>
+	<script src="<?php echo $this->route->generatePath('js/bootstrap.min.js')?>"></script>
   </body>
 </html>

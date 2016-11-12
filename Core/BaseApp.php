@@ -14,7 +14,7 @@ abstract class BaseApp
     protected $exceptionHandler;
     protected $environment;
 	
-	public static function getInstance($environment)
+	public static function getInstance($environment = 'prod')
 	{
 		if(is_null(self::$instance))
 		{
