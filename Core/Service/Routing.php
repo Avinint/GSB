@@ -53,12 +53,11 @@ class Routing
         //$uri = strtolower(substr($_SERVER['REQUEST_URI'], strlen($basepath)));
         if (!$this->currentRoute->getPath()) {
             $basepath = array_filter(explode('/', $_SERVER['SCRIPT_NAME']));
-
             $uri = array_map(function ($a) { return "/".$a ;}, $basepath );
             $uri = str_replace($uri, '', $_SERVER['REQUEST_URI']);
             $uri = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $uri);
             $uri =  '/'.ltrim($uri, '/dev');
-
+            $uri =  '/'.ltrim($uri, '/index_dev.php');
             $this->currentRoute->setPath($uri);
         }
 
@@ -69,7 +68,6 @@ class Routing
     public function resolveRoute()
     {
         $params = array();
-        $path = '';
 
         if(!$this->currentRoute->getName()) {
             foreach($this->routes as $name => $route) {
