@@ -49,19 +49,13 @@ class Controller
 
     public function controlAccess(Route $route)
     {
-        $match = false;
         $app = App::getInstance();
         $ac = $app->getAccessControl();
 
-        foreach ($ac as $rule){
-            if($route->getPath() === $ac['path']){
-                var_dump('match');
+        foreach ($ac as $rule) {
+            if ($route->getPath() === $rule['path']) {
                 $this->denyAccessUnlessGranted('ROLE_DEFAULT', $msg = 'Impossible d\'accéder à cette page!');
             }
-        }
-
-        if (false === $match) {
-
         }
 
         // TODO finir donner acces à la current_route
@@ -71,7 +65,7 @@ class Controller
     {
         $app = App::getInstance();
         $auth = new DbAuth();
-        if(false === $this->auth->isGranted($role)){
+        if (false === $this->auth->isGranted($role)) {
             $this->forbidden();
             // TODO  créer createAccessDeniedException
         }

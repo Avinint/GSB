@@ -15,12 +15,7 @@ class Routing
     public function __construct()
     {
         $this->initRoutes(require ROOT.D_S.'App'.D_S.'Config'.D_S.'routes.php');
-				$this->currentRoute = new Route();
-    }
-
-    public function createRoute(array  $route)
-    {
-        //return new Route($route['name'], $route['path']);
+        $this->currentRoute = new Route();
     }
 
     public function addRoute(array $route)
@@ -28,14 +23,15 @@ class Routing
         $this->routes[] = $route;
     }
 
-   public function getRoute($name = '', $path = '')
-   {
-       echo $_SERVER["REQUEST_URI"];
-   }
+    public function getRoute()
+    {
+        $this->routeMatch();
+        $this->dispatch($this->currentRoute->getController(), $this->currentRoute->getParameters());
+    }
 
     public function initRoutes(array $routes = array())
     {
-       $this->routes = $routes;
+        $this->routes = $routes;
     }
 
     public function getParams(&$path)
@@ -50,55 +46,74 @@ class Routing
         return $key;
     }
 
+    //  parses the URL for the route path
+    public function routeMatch()
+    {
+        //$basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
+        //$uri = strtolower(substr($_SERVER['REQUEST_URI'], strlen($basepath)));
+        if (!$this->currentRoute->getPath()) {
+            $basepath = array_filter(explode('/', $_SERVER['SCRIPT_NAME']));
+
+            $uri = array_map(function ($a) { return "/".$a ;}, $basepath );
+            $uri = str_replace($uri, '', $_SERVER['REQUEST_URI']);
+            $uri = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $uri);
+            $uri =  '/'.ltrim($uri, '/dev');
+
+            $this->currentRoute->setPath($uri);
+        }
+
+        return $this->resolveRoute();
+    }
+
     // identify the route identity from its path in the route list
-    public function routeMatch($routePath)
+    public function resolveRoute()
     {
         $params = array();
-        $tempRoutePath = '';
         $path = '';
 
-        foreach($this->routes as $name => $route)
-        {
-            $count = 0;
-            $path = $route['path'];
+        if(!$this->currentRoute->getName()) {
+            foreach($this->routes as $name => $route) {
+                $count = 0;
+                $path = $route['path'];
 
-            // On récupère les caractères entre accolades comme paramètres de la route
-            while(strpos($path, '{') !== false && strpos($path, '}') !== false){
-                $key = $this->getParams($path);
-                $count++;
-                $params[$key] = null;
-                // le nom est stocké comme clé dans un tableau associatif  vide
-                // On remplira le tableau avec les valeurs récupérés dans l
-            }
+                // On récupère les caractères entre accolades comme paramètres de la route
+                while(strpos($path, '{') !== false && strpos($path, '}') !== false){
+                    $key = $this->getParams($path);
+                    $count++;
+                    $params[$key] = null;
+                    // le nom est stocké comme clé dans un tableau associatif  vide
+                    // On remplira le tableau avec les valeurs récupérés dans l
+                }
 
-            //echo 'route collection path: "'.$path.'"'.BR;
-            //echo 'route match path: "'.$routePath.'"'.BR;
-            $tempRoutePath = $routePath;
-            $data = '';
-            if($tempRoutePath !== $path){
-                $data = str_replace($path.'/', '', $tempRoutePath);
-                $data = ltrim($data, '/');
-                //echo BR.'data: '.$data;
-                //$tempRoutePath = str_replace('/'.$data, '', $tempRoutePath);
-                //echo BR.'route match path: '.$tempRoutePath;
-                $data = explode('/', $data);
-                $paramKeys = array_keys($params);
+                $routePath = $this->currentRoute->getPath();
 
-                foreach ($paramKeys as $value => $key){
-                    if($value <  count($data)){
-                            $params[$key] = $data[$value];
+                if(!$this->currentRoute->getParameters()) {
+                    if($routePath !== $path){
+                        $data = str_replace($path.'/', '', $routePath);
+                        $data = ltrim($data, '/');
+                        $data = explode('/', $data);
+                        $paramKeys = array_keys($params);
+
+                        foreach ($paramKeys as $value => $key){
+                            if($value < count($data)){
+                                $params[$key] = $data[$value];
+                            }
+                        }
                     }
+                    $this->currentRoute->setParameters($params);
+                }
+
+                // stripos: pour differencier les routes avec des parametres de l'equivalent sans
+                if(($path === $this->currentRoute->getPath())xor(stripos($routePath, $path) !== false && $count > 0)) {
+                    $this->currentRoute->setName($name);
+                    $this->currentRoute->setController($route['controller']);
+
+                    return true;
                 }
             }
-
-            // stripos: pour differencier les routes avec des parametres de l'equivalent sans
-            if(($path === $routePath)xor(stripos($tempRoutePath, $path) !== false && $count > 0)) {
-                $this->dispatch($route['controller'], $params);
-                return true;
-            }
+            // header('Location:'.ROOT.'/App/View/Messages/404.html', 404);
+            throw new \RuntimeException("HTTP/1.0 404 Not Found", 404);
         }
-       // header('Location:'.ROOT.'/App/View/Messages/404.html', 404);
-        //throw new \RuntimeException("HTTP/1.0 404 Not Found", 404);
 
         return false;
     }
@@ -117,34 +132,56 @@ class Routing
 
             throw new \Exception("Something wrong happened...");
         }
-        //$controller->controlAccess($this->currentRoute);
-        if(isset($params)){
+        $controller->controlAccess($this->currentRoute);
+        if(is_null($params)){
             $controller->$action($params);
         }else{
             $controller->$action();
         }
     }
 
-    //  parses the URL for the route path
-    public function resolveRoute()
+    public function generatePath($path)
     {
-        //$basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';
+        $uri = '//'.$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'];
+        // $basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';;
+        $basepath = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $uri);
+        $path = $basepath.$path;
 
+        return $path;
+    }
 
-        $uri = strtolower(substr($_SERVER['REQUEST_URI'], strlen($basepath)));
+    public function generateURL($routeName, $parameters = array())
+    {
+        $pathsteps = preg_split('/(?=\/)/', $_SERVER['REQUEST_URI'], -1, PREG_SPLIT_NO_EMPTY);
+        $routepath =  preg_split('/(?=\/)/', $this->currentRoute->getPath(), -1, PREG_SPLIT_NO_EMPTY);
+        $basepath = array_diff($pathsteps,$routepath);
 
-        $basepath = array_filter(explode('/', $_SERVER['SCRIPT_NAME']));
+        foreach($this->routes as $name => $route)
+        {
+            if($name == $routeName) {
+                //$routepath =  preg_split('/(?=\/)/', $route['path'], -1, PREG_SPLIT_NO_EMPTY);
+                $path = implode($basepath).$route['path'];
 
-        $uri = array_map(function ($a) { return "/".$a ;}, $basepath );
-        $uri = str_replace($uri, '', $_SERVER['REQUEST_URI']);
+                if($parameters){
+                    $params = array();
+                    while(strpos($path, '{') !== false && strpos($path, '}') !== false){
 
-        //echo 'uri: '.$uri.BR;
+                        $key = $this->getParams($path);
+                        $params[$key] = null;
+                    }
+                    foreach($parameters as $key =>$value)
+                    {
+                        $params[$key] = $value;
+                    }
+                    $str = implode('/', $params);
+                    $path = $path.'/'.$str;
+                }
 
-        $uri = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $uri);
-        $uri =  '/'.ltrim($uri, '/dev');
-        $this->currentRoute->setPath($uri);
+                return $path;
+            }
+        }
 
-        return $this->routeMatch($uri);
+        return null;
     }
 
     public function generateRoute($routeName, $parameters = array())
@@ -159,52 +196,4 @@ class Routing
 
         return null;
     }
-
-    public function generatePath($path)
-    {
-        $uri = '//'.$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'];
-
-        //$basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';;
-        $basepath = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $uri);
-        $path = $basepath.$path;
-
-        return $path;
-    }
-
-    public function generateURL($routeName, $parameters = array())
-    {
-        $basepath = implode('/', array_slice(explode('/', $_SERVER['REQUEST_URI']), 0, -1)) . '/';
-        $basepath = rtrim($basepath,'/');
-
-        foreach($this->routes as $name => $route)
-        {
-            if($name == $routeName) {
-                $path = rtrim($basepath.$route['path']);
-
-                if($parameters){
-                    $params = array();
-                    while(strpos($path, '{') !== false && strpos($path, '}') !== false){
-
-                        $key = $this->getParams($path);
-                        $params[$key] = null;
-                    }
-                    foreach($parameters as $key =>$value)
-                    {
-                        $params[$key] = $value;
-                    }
-
-                    $str = implode('/', $params);
-
-                    $path = $path.'/'.$str;
-                }
-
-                return $path;
-                //$this->dispatch($route['controller'], $parameters);
-            }
-        }
-
-        return null;
-    }
-
-
 }

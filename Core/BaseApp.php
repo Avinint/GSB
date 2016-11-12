@@ -3,7 +3,7 @@
 use \Core\Config;
 use \Core\Database\MySQLDatabase;
 use \Core\Service\Routing;
-use Core\Service\ExceptionHandler;
+use Core\Service\Exception\ExceptionHandler;
 
 abstract class BaseApp
 {

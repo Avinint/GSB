@@ -6,7 +6,4 @@ require ROOT.'/App/Config/globals.php';
 
 App::load();
 $app = App::getInstance('prod');
-
-$controller = $app->getRouting()->resolveRoute();
-
-// TODO  resolveRoute renvoie la route pour acces dans le controller
+$app->getRouting()->getRoute();
