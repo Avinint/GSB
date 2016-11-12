@@ -1,16 +1,13 @@
 <?php
 
-namespace Core\Service;
+namespace Core\Component;
 
-use Core\Service\DbAuth;
-use Core\Service\Route;
 use Core\Controller\Controller;
 
 class Routing
 {
     private $routes = array();
 	private $currentRoute;
-
 
     public function __construct()
     {

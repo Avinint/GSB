@@ -5,7 +5,7 @@ namespace App\Controller;
 use App\Form\LogoutForm;
 use Core\Controller\Controller;
 use App\Form\LoginForm;
-use Core\Service\DbAuth;
+use Core\Component\DbAuth;
 
 class AppController extends Controller
 {

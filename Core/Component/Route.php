@@ -1,6 +1,6 @@
 <?php
 
-namespace Core\Service;
+namespace Core\Component;
 
 class Route
 {

@@ -4,9 +4,9 @@ namespace Core\Controller;
 
 use \App;
 use Core\View\View;
-use Core\Service\Routing;
-use Core\Service\Route;
-use Core\Service\DbAuth;
+use Core\Component\Routing;
+use Core\Component\Route;
+use Core\Component\DbAuth;
 
 class Controller
 {

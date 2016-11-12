@@ -1,6 +1,6 @@
 <?php
 
-namespace Core\Service\Exception;
+namespace Core\Component\Exception;
 
 
 class ExceptionHandler
@@ -13,7 +13,6 @@ class ExceptionHandler
             $handler = new static();
         }
         $handler->environment = $environment;
-
         set_exception_handler(array($handler, 'handleException'));
 
         return $handler;

@@ -3,7 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Controller\AppController;
-use Core\Service\DbAuth;
+use Core\Component\DbAuth;
 use\App;
 
 

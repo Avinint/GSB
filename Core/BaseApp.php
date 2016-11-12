@@ -1,9 +1,9 @@
 <?php 
 
-use \Core\Config;
-use \Core\Database\MySQLDatabase;
-use \Core\Service\Routing;
-use Core\Service\Exception\ExceptionHandler;
+use Core\Config;
+use Core\Database\MySQLDatabase;
+use Core\Component\Routing;
+use Core\Component\Exception\ExceptionHandler;
 
 abstract class BaseApp
 {
