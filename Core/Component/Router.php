@@ -4,7 +4,7 @@ namespace Core\Component;
 
 use Core\Controller\Controller;
 
-class Routing
+class Router
 {
     private $routes = array();
 	private $currentRoute;
