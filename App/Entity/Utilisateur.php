@@ -7,24 +7,22 @@ use Core\Entity\Entity;
 use Core\Entity\UserInterface;
 
 class Utilisateur extends Entity implements UserInterface{
-	
-	protected $id;
+
+    protected $id;
     protected $pseudo;
-	protected $nom;
-	protected $prenom;
-	protected $email;
-	protected $mdp;
-    protected $image;
-	protected $role_id;
-    protected $newsletter;
+    protected $nom;
+    protected $prenom;
+    protected $email;
+    protected $mdp;
+    protected $role_id;
 
     /**
      * @return string
      */
-	public function getId()
-	{
-		return $this->id;
-	}
+    public function getId()
+    {
+        return $this->id;
+    }
 
     /**
      * @param mixed $pseudo
@@ -121,22 +119,6 @@ class Utilisateur extends Entity implements UserInterface{
     public function getRole_id()
     {
         return $this->role_id;
-    }
-
-    /**
-     * @param mixed $newsletter
-     */
-    public function setNewsletter($newsletter)
-    {
-        $this->newsletter = $newsletter;
-    }
-
-    /**
-     * @return boolean
-     */
-    public function getNewsletter()
-    {
-        return $this->newsletter;
     }
 
     /**

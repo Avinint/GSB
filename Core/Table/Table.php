@@ -12,46 +12,69 @@ class Table {
 	
 	protected $table;
 	protected $db;
-    protected $entityPath = 'App\Entity\Class';
+    protected $entity;
     protected $count = 1;
-	
-	public function getClass()
-	{
-		if($this->table === null){
-			$class = explode("\\", get_called_class());
-			$class = str_replace('Table', '', $class);
-			$this->table = strtolower(end($class));
-		}
 
-		return $this->table;
-	}
+    public function getTable()
+    {
+        $this->getDbTableName();
 
-	public function __construct(Database $db)
-	{	
-		if(is_null($this->table)){
-			$this->db = $db;
-			$parts = explode('\\', get_called_class());
-			$class = end($parts);
-			$this->table = strtolower(str_replace('Table', '', $class));
-		}
-	}
+        return $this->table;
+    }
+
+    public function getDbTableName()
+    {
+        if(is_null($this->table)){
+            $app = App::getInstance();
+            $class = explode("\\", get_called_class());
+            $class = end($class);
+            $this->table = $app->decamelize(str_replace('Table', '', $class));
+        }
+    }
+
+    public function getEntityClass()
+    {
+        return $this->entity;
+    }
+
+    private function getEntity()
+    {
+        $entity = $this->entity?
+        'App\\Entity\\'.$this->entity :
+        preg_replace('/Table$/i', '', preg_replace('/Table/i', 'Entity', get_called_class(), 1), 1);
+
+        return $entity;
+    }
+
+    public function __construct($entity = null)
+    {
+        $app = App::getInstance();
+        $this->db = $app->getDb();
+        if($entity){
+            $this->entity = $entity;
+            $this->table = $app->decamelize($entity);
+        }else{
+            $this->getDbTableName();
+        }
+    }
 
     public function createQueryBuilder($alias = '', $table='')
     {
         $query = new QueryBuilder($this);
         if($alias === null){
-            $alias = $this->getClass()[0]; // Si alias vide on utilise la premiere lettre de la classe
+            $alias = $this->getTable()[0]; // Si alias vide on utilise la premiere lettre de la classe
         }
-       //$query->addAlias($alias, $this->getClass());
+        //$query->addAlias($alias, $this->getTable());
         if($table === ''){
-            $table = $this->getClass();
+            $table = $this->getTable();
         }
         $query->select($alias.'.*')->from($table, $alias);
 
         return $query;
     }
 
-    public function getEntity($id, $table)
+    /* TODO remove used for debug */
+    public function findEntity($id, $table)
     {
         $query = $this->createQueryBuilder($table[0], $table)
             ->where('id = :id')
@@ -110,7 +133,7 @@ class Table {
 	public function update($entity, $fields, $image = null, $table = '')
 	{
         if($table === ''){
-            $table = $this->getPrefix().$this->getClass();
+            $table = $this->getPrefix().$this->getTable();
         }else{
             $table = $this->getPrefix().$table;
         }
@@ -136,7 +159,7 @@ class Table {
 
 		$sql_parts = [];
 		$attributes = [];
-       // var_dump($entity->getVars());
+
 		foreach($fields as $k => $v){
 			$sql_parts[] = "$k = ?";
 			$attributes[] = "$v";
@@ -168,7 +191,7 @@ class Table {
 	public function create($entity, $fields, $image = null, $table = '')
 	{
         if($table === ''){
-            $table = $this->getPrefix().$this->getClass();
+            $table = $this->getPrefix().$this->getTable();
         }else{
             $table = $this->getPrefix().$table;
         }
@@ -229,8 +252,8 @@ class Table {
 
 	public function query($statement, $attributes = null, $one = false, $class = null)
 	{
-        // change le chemin de table en chemin d'entité
-        $entity = $class?  $class: preg_replace('/Table$/i', '', preg_replace('/Table/i', 'Entity', get_called_class(), 1), 1);
+
+        $entity = $this->getEntity();
 		$app = App::getInstance();
 		if($attributes){
 			return 	$app->getDb()->prepare(
@@ -255,7 +278,7 @@ class Table {
 
     public function getPrefix()
     {
-        $config = Config::getInstance(ROOT.'/Config/config.php');
+        $config = Config::getInstance(ROOT.'/Config/dbConfig.php', ROOT.'/Config/config.php', ROOT.'/Config/security.php');
         return $config->get('db_prefix');
     }
 }

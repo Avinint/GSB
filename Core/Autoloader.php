@@ -11,10 +11,24 @@ class Autoloader{
 	
 	static function autoload($class)
 	{
-		if(strpos($class, __NAMESPACE__.'\\') === 0){
-			$class = str_replace(__NAMESPACE__.'\\', '', $class);
-           $class = str_replace( '\\', D_S, $class);
-			require __DIR__.D_S.$class.'.php';
-		}	
-	}
+        $namespaces = array('App', 'Core');
+        foreach($namespaces as $namespace){
+            if(strpos($class, $namespace.'\\') === 0){
+                $file = self::resolve($namespace, $class);
+
+                if(file_exists($file)){
+                    require $file;
+                    break;
+                }
+            }
+        }
+    }
+
+    static function resolve($namespace, $class)
+    {
+        $class = str_replace( '\\', D_S, $class);
+        $file = dirname(__DIR__).D_S.$class.'.php';
+
+        return $file;
+    }
 }

@@ -164,9 +164,11 @@ class QueryBuilder{
 
     public function getSingleResult()
     {
+        // TODO WTF remove that
         $table = $this->tables[0];
         $table = explode(' ', $table);
         $table = ucfirst(array_shift($table));
+
         return $this->repository->query($this->query, $this->parameters, true);
     }
 

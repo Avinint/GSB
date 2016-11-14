@@ -12,7 +12,7 @@ class AppController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->loadModel('Utilisateur');
+      // $this->loadModel('Utilisateur');
     }
 
     public function login()
@@ -20,7 +20,7 @@ class AppController extends Controller
         if(!empty($_POST) && isset($_POST['login_action'])){
             $auth = new DbAuth();
 
-            if($user = $this->Utilisateur->findByUsername($_POST['login_pseudo'])){
+            if($user = $this->getTable('Utilisateur')->findByUsername($_POST['login_pseudo'])){
                 if($auth->login($user, $_POST['login_mdp'])){
 
                         $this->redirect($this->route->generateURL('admin_control_panel' ));

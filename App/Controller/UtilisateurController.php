@@ -7,7 +7,7 @@ use App\Form\ProfilForm;
 use App\Entity\Utilisateur;
 use App\Form\ContactForm;
 use App\Form\InscriptionForm;
-use Core\Auth\DbAuth;
+use Core\Component\DbAuth;
 
 class UtilisateurController extends AppController
 {
@@ -18,24 +18,24 @@ class UtilisateurController extends AppController
         $this->loadModel('Utilisateur');
     }
 
-	/*public function login()
-	{
-		$error = false;
-		if(!empty($_POST)){
-			$auth = new DBAuth(\App::getInstance()->getDb());
+    /*public function login()
+    {
+        $error = false;
+        if(!empty($_POST)){
+            $auth = new DBAuth(\App::getInstance()->getDb());
             var_dump($this->Utilisateur->findByUsername($_POST['pseudo']));
             if($auth->login($this->Utilisateur->findByUsername($_POST['pseudo']), $_POST['mdp'])){
 
-                $this->redirect($this->route->generateURL('admin_article_index' ));
+            $this->redirect($this->route->generateURL('admin_article_index' ));
 
-			}else{
-				$error = true;
-			}
-		}
-		$form = new LoginForm();
+            }else{
+                $error = true;
+            }
+        }
+        $form = new LoginForm();
 
-		$this->render('User:login.php', compact('form', 'error'));
-	}*/
+        $this->render('User:login.php', compact('form', 'error'));
+    }*/
 
     public function contact()
     {

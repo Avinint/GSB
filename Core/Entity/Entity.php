@@ -2,8 +2,8 @@
 
 namespace Core\Entity;
 
-class Entity{
-
+class Entity
+{
 	public function __get($key)
 	{	
 		$method = 'get'.ucfirst($key);
@@ -24,6 +24,7 @@ class Entity{
         return $this->$key;
 	}
 
+
     public function getClassName()
     {
         $class = explode("\\", get_called_class());
@@ -37,7 +38,16 @@ class Entity{
         return get_called_class();
     }
 
-    public function getFilePath()
+    // retourne le chemin jusqu'au répertoire img ou un
+    public function getFilePath($folder = '')
+    {
+        if (!is_null($folder)) {
+            $folder = D_S.$folder;
+        }
+        return  ROOT.D_S.'public'.D_S.'img'.$folder;
+    }
+
+    public function getFilePathFromClass()
     {
         return  ROOT.D_S.'public'.D_S.'img'.D_S.$this->getClassName().'s';
     }
@@ -90,7 +100,24 @@ class Entity{
 
     public static function getMetadata()
     {
-        return self::$metadata;
+        //return self::$metadata;
     }
 
+    public static function getTable()
+    {
+        $class = new \ReflectionClass(get_called_class());
+        $repo = 'App'.D_S.'Table'.D_S.$class->getShortName().'Table';
+
+        return new $repo() ;
+    }
+
+    public static function all()
+    {
+        return static::getTable()->findAll();
+    }
+
+    public static function find($id)
+    {
+        return static::getTable()->find($id);
+    }
 }
