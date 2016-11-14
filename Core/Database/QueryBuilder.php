@@ -16,6 +16,7 @@ class QueryBuilder{
     private $sortBy;
     private $joins = array();
     private $parameters = array();
+    private $criterias = array();
 	
 
     public function __construct(Table $repository)
@@ -95,11 +96,14 @@ class QueryBuilder{
 
 	public function from($table, $alias = null)
 	{
-
+        $alias = $alias? : $this->repository->getTable()[0];
+        if (in_array($this->aliases, $alias)) {
+            $this->aliases[$alias] = $table;
+        }
 		if($alias){
 			$this->tables[] = $this->getPrefix().$table.'  AS '.$alias;
 		}else{
-			$this->tables[] = $this->getPrefix().$table;
+			$this->tables[] = $this->getPrefix().$table.'  AS '.$alias;
 		}
 		return $this;
 	}
@@ -107,6 +111,13 @@ class QueryBuilder{
     public function setParameter($identifier, $value)
     {
         $this->parameters[':'.$identifier] = $value;
+
+        return $this;
+    }
+
+    public function setCriteria($identifier, $value)
+    {
+        $this->criterias[':'.$identifier] = $value;
 
         return $this;
     }
@@ -147,7 +158,7 @@ class QueryBuilder{
 	public function getQuery()
 	{
 	    $this->query =  'SELECT '.implode(', ', array_reverse($this->fields)).' FROM '.
-            implode(', ', $this->tables).implode(' ', $this->joins).$this->condition.$this->sortBy;
+            implode(', ', $this->tables).' '.implode(' ', $this->joins).$this->condition.$this->sortBy;
 
         return $this;
 	}
@@ -165,11 +176,11 @@ class QueryBuilder{
     public function getSingleResult()
     {
         // TODO WTF remove that
-        $table = $this->tables[0];
+        /*$table = $this->tables[0];
         $table = explode(' ', $table);
-        $table = ucfirst(array_shift($table));
+        $table = ucfirst(array_shift($table));*/
 
-        return $this->repository->query($this->query, $this->parameters, true);
+        return $this->repository->query($this->query, array_values($this->parameters), true);
     }
 
    private function parse_table($join)

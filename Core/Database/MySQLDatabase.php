@@ -52,6 +52,7 @@ class MySQLDatabase extends Database{
 	{
         $data = null;
 		$req = $this->getPDO()->prepare($statement);
+        var_dump($req);
 		$res = $req->execute($attr);
 		if(
 			strpos($statement, 'UPDATE') === 0 ||

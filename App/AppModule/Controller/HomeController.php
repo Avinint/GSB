@@ -10,10 +10,12 @@ class HomeController extends AppController
     {
         $app = \App::getInstance();
 
-        $uti = $app->getTable('AppModule:Utilisateur')->find(1);
-       
+        //$uti = $app->getTable('AppModule:Utilisateur')->find(1);
+       // var_dump($uti);
 		//$utis = $app->getTable('utilisateur')->all();
-		//$users = Utilisateur::findByVille('Paris');
+		$user = $app->getTable('AppModule:Utilisateur')->findOneBy(array('prenom' => 'Haitem'));
+        var_dump($user);
+        //var_dump($users);
         /* echo $uti->prenom.' '.$uti->nom.BR;
         $user = Utilisateur::find(2);
         echo $user->prenom.' '.$uti->nom;

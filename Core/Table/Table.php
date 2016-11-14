@@ -67,12 +67,13 @@ class Table {
         }
     }
 
-    public function createQueryBuilder($alias = '', $table='')
+    public function createQueryBuilder($alias = '', $table = '')
     {
         $query = new QueryBuilder($this);
         if($alias === null){
-            $alias = $this->getTable()[0]; // Si alias vide on utilise la premiere lettre de la classe
+            $alias = strtolower($this->getTable()[0]); // Si alias vide on utilise la premiere lettre de la classe
         }
+
         //$query->addAlias($alias, $this->getTable());
         if($table === ''){
             $table = $this->getTable();
@@ -105,13 +106,114 @@ class Table {
         return $query->getSingleResult();
     }
 
-    public function findAll()
+    public function findOneBy(array $criteria)
+    {
+        $query = $this
+            ->createQueryBuilder('a')
+            ->where(':criteria = :value')
+            ->setParameter('criteria', key($criteria))
+            ->setParameter('value', $criteria[key($criteria)])
+            ;
+
+        var_dump($query);
+        $query->getQuery();
+        return $query->getSingleResult();
+    }
+
+    public function findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+    {
+        // TODO support for limits
+        $query = $this
+            ->createQueryBuilder('a')
+            ->select('a.'.key($criteria));
+        if ($criteria) {
+            $query->where(':criteria = :value')
+                ->setParameter('criteria', key($criteria))
+                ->setParameter('value', $criteria[key($criteria)]);
+        }
+        if ($orderBy) {
+            $query->orderBy(':sort', ':order')
+            ->setParameter('sort', $orderBy[0])
+            ->setParameter('sort', $orderBy[1])
+            ->getQuery();
+        }
+
+        return $query->getResults();
+    }
+
+    public function findAll(array $orderBy = null)
     {
         $query = $this->createQueryBuilder('a');
+        if ($orderBy) {
+            $query->orderBy(':sort', ':order')
+            ->setParameter('sort', $orderBy[0])
+            ->setParameter('sort', $orderBy[1])
+            ->getQuery();
+        }
+
         return $query
             ->getQuery()
             ->getResults();
     }
+
+    /** Allows magic finders
+     * @param $method
+     * @param $arguments
+     * @return mixed
+     * @throws
+     * @throws \BadMethodCallException
+     * @throws
+     */
+    public function __call($method, $arguments)
+    {
+        switch (true) {
+            case (0 === strpos($method, 'findBy')):
+                $by = substr($method, 6);
+                $method = 'findBy';
+                break;
+
+            case (0 === strpos($method, 'findOneBy')):
+                $by = substr($method, 9);
+                $method = 'findOneBy';
+                break;
+
+            default:
+                throw new \Exception(
+                    "Undefined method '$method'. The method name must start with ".
+                    "either findBy or findOneBy!"
+                );
+        }
+        var_dump($arguments);var_dump($method);
+
+        if (empty($arguments)) {
+            throw new  \Exception($method.' requires parameters: '.$by);
+        }
+
+
+;        $fieldName = lcfirst($by);var_dump($fieldName);var_dump(count($arguments));
+
+        //if ($this->_class->hasField($fieldName) || $this->_class->hasAssociation($fieldName)) {
+        switch (count($arguments)) {
+            case 1:
+                return $this->$method(array($fieldName => $arguments[0]));
+
+            case 2:
+                return $this->$method(array($fieldName => $arguments[0]), $arguments[1]);
+
+            case 3:
+                return $this->$method(array($fieldName => $arguments[0]), $arguments[1], $arguments[2]);
+
+            case 4:
+                return $this->$method(array($fieldName => $arguments[0]), $arguments[1], $arguments[2], $arguments[3]);
+
+            default:
+                // Do nothing
+        }
+        //}
+
+        throw new Exception($this->_entityName, $fieldName, $method.$by);
+    }
+
 
     public function extract($key, $value)
     {
