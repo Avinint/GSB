@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Controller;
+namespace App\AppModule\Controller;
 
-use App\Form\LogoutForm;
+use App\AppModule\Form\LogoutForm;
 use Core\Controller\Controller;
-use App\Form\LoginForm;
+use App\AppModule\Form\LoginForm;
 use Core\Component\DbAuth;
 
 class AppController extends Controller

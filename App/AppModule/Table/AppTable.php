@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Table;
+namespace App\AppModule\Table;
 
 use \Core\Table\Table;
 

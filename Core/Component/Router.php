@@ -116,15 +116,16 @@ class Router
     // launches the controller action that matches the  route
     public function dispatch($controller,  $params = array())
     {
+		
         $controller = explode(':', $controller);
+		$namespace = array_shift($controller);
         $action = array_pop($controller);
 
         $controller = implode('\\', $controller);
-        $controller = 'App\Controller\\'. $controller;
+        $controller = 'App\\'.$namespace.'\\Controller\\'. $controller;
 
         $controller = new $controller();
-        if(!$controller instanceof Controller){
-
+        if (!$controller instanceof Controller) {
             throw new \Exception("Something wrong happened...");
         }
         $controller->controlAccess($this->currentRoute);

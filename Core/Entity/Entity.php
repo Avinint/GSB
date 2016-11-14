@@ -32,6 +32,15 @@ class Entity
 
         return $class;
     }
+	
+	private static function getModule()
+	{
+		$class = explode("\\", get_called_class());
+		array_shift($class);
+		$module = array_shift($class);
+		
+        return $module;
+	}
 
     public function getClass()
     {
@@ -106,7 +115,7 @@ class Entity
     public static function getTable()
     {
         $class = new \ReflectionClass(get_called_class());
-        $repo = 'App'.D_S.'Table'.D_S.$class->getShortName().'Table';
+        $repo = 'App'.D_S.self::getModule().D_S.'Table'.D_S.$class->getShortName().'Table';
 
         return new $repo() ;
     }

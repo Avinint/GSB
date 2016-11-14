@@ -34,13 +34,22 @@ class Table {
 
     public function getEntityClass()
     {
-        return $this->entity;
+        $module = ''; $class = '';
+        if($this->entity){
+            $class = explode(':', $this->entity);
+            $module = array_shift($class);
+            $class = array_shift($class);
+           $class = 'App\\'.$module.'\\Entity\\'.$class;
+        }
+        return $class;
     }
+
 
     private function getEntity()
     {
-        $entity = $this->entity?
-        'App\\Entity\\'.$this->entity :
+
+        $entity = $this->entity ?
+        $this->getEntityClass() :
         preg_replace('/Table$/i', '', preg_replace('/Table/i', 'Entity', get_called_class(), 1), 1);
 
         return $entity;
