@@ -1,13 +1,13 @@
 <?php 
 
-namespace App\Controller;
+namespace App\AppModule\Controller;
 
-use App\Form\LoginForm;
-use App\Form\ProfilForm;
-use App\Entity\Utilisateur;
-use App\Form\ContactForm;
-use App\Form\InscriptionForm;
-use Core\Component\DbAuth;
+use App\AppModule\Form\LoginForm;
+use App\AppModule\Form\ProfilForm;
+use App\AppModule\Entity\Utilisateur;
+use App\AppModule\Form\ContactForm;
+use App\AppModule\Form\InscriptionForm;
+use Core\AppModule\Component\DbAuth;
 
 class UtilisateurController extends AppController
 {
@@ -47,7 +47,7 @@ class UtilisateurController extends AppController
         $headlines = $this->Article->extract('id', 'titre');
         $page = 'Contactez nous:';
         $form = new ContactForm();
-        $this->render('User:contact.php', compact('form','page', 'login', 'logout', 'User', 'headlines'));
+        $this->render('User:contact.php', array('form'=> $form,'page'=> $page, 'login'=> $login, 'logout'=> $logout, 'User'=>$user, 'headlines'=> $headlines));
     }
 
     public function signup()

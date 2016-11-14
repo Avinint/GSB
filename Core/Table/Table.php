@@ -36,6 +36,11 @@ class Table {
     {
         return $this->entity;
     }
+	
+	public function getModule()
+	{
+		$this
+	}
 
     private function getEntity()
     {

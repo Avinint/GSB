@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Form;
+namespace App\AppModule\Form;
 
 use Core\Form\Form;
 use Core\Form\FormBuilder;
 
-class LoginForm extends Form{
+class ContactForm extends Form{
 
      public function getName()
     {
@@ -15,25 +15,31 @@ class LoginForm extends Form{
     public function buildForm(FormBuilder $builder)
     {
         return $builder
-        ->add('pseudo', 'text', array(
-            'label' => 'Pseudo:',
+        ->add('email', 'email', array(
+            'label' => 'Email:',
                 'labelType' => 'block',
                     'required' => true,
                         'parentTag' => array(
                             'div' => 'form-group'
                     )
             ))
-        ->add('mdp', 'password', array(
-            'label' => 'Mot de Passe:',
+            ->add('titre', 'text', array(
+                    'label' => 'Titre:',
+                    'labelType' => 'block',
+                    'required' => true,
+                    'parentTag' => array(
+                        'div' => 'form-group'
+                    )
+                ))
+        ->add('message', 'textarea', array(
+            'label' => 'Message:',
                 'labelType' => 'block',
                     'required' => true,
                         'parentTag' => array(
                             'div' => 'form-group'
                     )
-            ))
-            ->add('action', 'hidden', array(
-                'value' => 'login'
             ))
         ->getForm();
     }
+
 }

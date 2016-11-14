@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Form;
+namespace App\AppModule\Form;
 
 use Core\Form\Form;
 use Core\Form\FormBuilder;

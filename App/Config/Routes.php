@@ -3,55 +3,55 @@
 return array(
     'utilisateur_login' => array(
         'path' => '/login',
-        'controller' => 'AppController:login',
+        'controller' => 'AppModule:AppController:login',
     ),
     'utilisateur_logout' => array(
         'path' => '/logout',
-        'controller' => 'AppController:logout',
+        'controller' => 'AppModule:AppController:logout',
     ),
     'homepage' => array(
         'path' => '/',
-        'controller' => 'HomeController:index',
+        'controller' => 'AppModule:HomeController:index',
     ),
     'yoyopage' => array(
         'path' => '/yoyo',
-        'controller' => 'HomeController:show',
+        'controller' => 'AppModule:HomeController:show',
     ),
     'yoyolalapage' => array(
         'path' => '/yoyo/lala',
-        'controller' => 'HomeController:show',
+        'controller' => 'AppModule:HomeController:show',
     ),
     'admin_control_panel' => array(
         'path' => '/control/panel',
-        'controller' => 'Admin:AdminController:panel',
+        'controller' => 'AppModule:Admin:AdminController:panel',
     ),
     'utilisateur_contact' => array(
         'path' => '/contact',
-        'controller' => 'UtilisateurController:contact',
+        'controller' => 'AppModule:UtilisateurController:contact',
     ),
     'utilisateur_signup' => array(
         'path' => '/inscription',
-        'controller' => 'UtilisateurController:signup',
+        'controller' => 'AppModule:UtilisateurController:signup',
     ),
     'utilisateur_profil_edit' => array(
         'path' => '/profil/edit',
-        'controller' => 'Admin:UtilisateurController:editProfil',
+        'controller' => 'AppModule:Admin:UtilisateurController:editProfil',
     ),
     'admin_utilisateur_index' => array(
         'path' => '/admin/utilisateur/index',
-        'controller' => 'Admin:UtilisateurController:index',
+        'controller' => 'AppModule:Admin:UtilisateurController:index',
     ),
     'admin_utilisateur_edit' => array(
         'path' => '/admin/utilisateur/edit/{id}',
-        'controller' => 'Admin:UtilisateurController:edit',
+        'controller' => 'AppModule:Admin:UtilisateurController:edit',
     ),
     'admin_utilisateur_add' => array(
         'path' => '/admin/utilisateur/add',
-        'controller' => 'Admin:UtilisateurController:add',
+        'controller' => 'AppModule:Admin:UtilisateurController:add',
     ),
     'admin_utilisateur_delete' => array(
         'path' => '/admin/utilisateur/delete',
-        'controller' => 'Admin:UtilisateurController:delete',
+        'controller' => 'AppModule:Admin:UtilisateurController:delete',
     ),
    
 );
