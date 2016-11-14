@@ -51,7 +51,11 @@ abstract class BaseApp
 
     public function getTable($name = '')
     {
-        $className = 'App\\Table\\'.ucfirst($name).'Table';
+        $name = explode(':', $name);
+        $module = array_shift($name);
+        $name = array_pop($name);
+
+        $className = 'App\\'.$module.'\\Table\\'.ucfirst($name).'Table';
         if (!class_exists($className)) {
             $className = 'Core\\Table\\Table';
         }

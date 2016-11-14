@@ -11,12 +11,10 @@ class View implements \ArrayAccess
 
     public function __construct($view, array $helpers = array())
     {
-        $view = explode('D_S', $view);
-		;
-		$module = array_shift($view).'Module';
-		var_dump($module); die();
-        $this->view = str_replace(':', D_S, $view);
-		$this->viewpath = ROOT.'/App/View/';
+        $view = explode(':', $view);
+		$module = array_shift($view);
+        $this->view = implode(D_S, $view);
+		$this->viewpath = ROOT.D_S.'App'.D_S.$module.D_S.'View'.D_S;
         $this->app = \App::getInstance();
         $this->route = $this->app->getRouter();
     }

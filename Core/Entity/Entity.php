@@ -114,9 +114,8 @@ class Entity
 
     public static function getTable()
     {
-		var_dump(self::getModule());
         $class = new \ReflectionClass(get_called_class());
-        $repo = 'App'.D_S.'AppModule'.D_S.'Table'.D_S.$class->getShortName().'Table';
+        $repo = 'App'.D_S.self::getModule().D_S.'Table'.D_S.$class->getShortName().'Table';
 
         return new $repo() ;
     }

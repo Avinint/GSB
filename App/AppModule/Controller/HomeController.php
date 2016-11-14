@@ -10,20 +10,22 @@ class HomeController extends AppController
     {
         $app = \App::getInstance();
 
-        $uti = $app->getTable('utilisateur')->find('a131');
+        $uti = $app->getTable('AppModule:Utilisateur')->find(1);
+       
 		//$utis = $app->getTable('utilisateur')->all();
 		//$users = Utilisateur::findByVille('Paris');
-        echo $uti->prenom.' '.$uti->nom.BR;
-        $user = Utilisateur::find('d13');
+        /* echo $uti->prenom.' '.$uti->nom.BR;
+        $user = Utilisateur::find(2);
         echo $user->prenom.' '.$uti->nom;
+        var_dump('jjje');*/
         //var_dump(Utilisateur::all());
         //$this->filterAccess('ROLE_DEFAULT');
-        $this->render('App:Home:index.php');
+        $this->render('AppModule:Home:index.php');
     }
 
     public function show()
     {
-        $this->render('App:Home:show.php');
+        $this->render('AppModule:Home:show.php');
     }
 
     public function __construct()
