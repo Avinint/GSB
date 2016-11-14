@@ -4,7 +4,7 @@ namespace Core\Controller;
 
 use \App;
 use Core\View\View;
-use Core\Component\Routing;
+use Core\Component\Router;
 use Core\Component\Route;
 use Core\Component\DbAuth;
 
@@ -18,7 +18,7 @@ class Controller
     {
         // TODO Appliquer control access access  en fonction du fichier security.php
         $this->viewpath = ROOT.'/App/View/';
-        $this->route = new Routing();
+        $this->route = new Router();
         $this->auth =  new DbAuth();
     }
 

@@ -2,7 +2,7 @@
 
 use Core\Config;
 use Core\Database\MySQLDatabase;
-use Core\Component\Routing;
+use Core\Component\Router;
 use Core\Component\Exception\ExceptionHandler;
 
 abstract class BaseApp
@@ -20,8 +20,9 @@ abstract class BaseApp
         {
             self::$instance = new App($environment);
             self::$instance->exceptionHandler =  ExceptionHandler::register($environment);
-            self::$instance->routing = new Routing();
-        }
+
+            self::$instance->routing = new Router();
+		}
 
         return self::$instance;
     }
@@ -31,7 +32,7 @@ abstract class BaseApp
         $this->environment = $environment;
     }
 
-    public function getRouting()
+    public function getRouter()
     {
         return $this->routing;
     }
