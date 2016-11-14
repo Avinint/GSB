@@ -2,7 +2,7 @@
 
 namespace App\Table;
 
-use \Core\Table\Table;
+use Core\Table\Table;
 
 class UtilisateurTable extends Table
 {
