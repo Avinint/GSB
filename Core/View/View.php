@@ -13,9 +13,8 @@ class View implements \ArrayAccess
     {
         $this->viewpath = ROOT.'/App/View/';
         $this->view = str_replace(':', D_S, $view);
-        //$this->addHelpers($helpers);
         $this->app = \App::getInstance();
-        $this->route = $this->app->getRouting();
+        $this->route = $this->app->getRouter();
     }
 
     public function render($parameters, $template ='default')

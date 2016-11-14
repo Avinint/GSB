@@ -6,8 +6,10 @@ class HomeController extends AppController
 {
     public function index()
     {
-        //$this->filterAccess('ROLE_DEFAULT');
-        $this->render('Home:index.php');
+        $name = "Jean Jean";
+        $this->render('Home:index.php', array(
+                'name' => $name
+            ));
     }
 
     public function show()

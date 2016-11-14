@@ -6,4 +6,4 @@ require ROOT.'/App/Config/globals.php';
 
 App::load();
 $app = App::getInstance('dev');
-$controller = $app->getRouting()->getRoute();
+$controller = $app->getRouter()->getRoute();

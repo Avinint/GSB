@@ -3,7 +3,7 @@
 return array(
     'access_control' => array(
         array(
-            'path' => '^\/yoyo',
+            'path' => '^\/admin',
             'roles' => 'ROLE_ADMIN',
         ),
 	)
