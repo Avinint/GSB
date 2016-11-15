@@ -72,6 +72,7 @@ class Table {
         $query = new QueryBuilder($this);
         if($alias === null){
             $alias = strtolower($this->getTable()[0]); // Si alias vide on utilise la premiere lettre de la classe
+            $alias = strtolower($this->getTable()[0]); // Si alias vide on utilise la premiere lettre de la classe
         }
 
         //$query->addAlias($alias, $this->getTable());
@@ -114,8 +115,7 @@ class Table {
             ->setParameter('criteria', key($criteria))
             ->setParameter('value', $criteria[key($criteria)])
             ;
-
-        var_dump($query);
+		var_dump($query);
         $query->getQuery();
         return $query->getSingleResult();
     }
