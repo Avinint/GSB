@@ -13,7 +13,7 @@ class HomeController extends AppController
         //$uti = $app->getTable('AppModule:Utilisateur')->find(1);
        // var_dump($uti);
 		//$utis = $app->getTable('utilisateur')->all();
-		$user = $app->getTable('AppModule:Utilisateur')->findOneBy(array('prenom' => 'Haitem'));
+		$user = $app->getTable('AppModule:Utilisateur')->find(1);
         var_dump($user);
         //var_dump($users);
         /* echo $uti->prenom.' '.$uti->nom.BR;

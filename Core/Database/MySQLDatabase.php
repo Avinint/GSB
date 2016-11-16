@@ -52,8 +52,8 @@ class MySQLDatabase extends Database{
 	{
         $data = null;
 		$req = $this->getPDO()->prepare($statement);
-        var_dump($req);
 		$res = $req->execute($attr);
+
 		if(
 			strpos($statement, 'UPDATE') === 0 ||
 			strpos($statement, 'INSERT') === 0 ||
@@ -61,7 +61,7 @@ class MySQLDatabase extends Database{
 		){
 			return $res;
 		}
-		
+
 		if(is_null($class)){
 			$req->setFetchMode(PDO::FETCH_OBJ);
 		}else{
@@ -79,6 +79,7 @@ class MySQLDatabase extends Database{
 		else if($one === false){
 			$data = $req->fetchAll();
 		}
+
 		return $data;
 	}
 	

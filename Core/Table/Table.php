@@ -40,14 +40,13 @@ class Table {
             $module = array_shift($class);
             $class = array_shift($class);
            $class = 'App\\'.$module.'\\Entity\\'.$class;
+
         }
         return $class;
     }
 
-
     private function getEntity()
     {
-
         $entity = $this->entity ?
         $this->getEntityClass() :
         preg_replace('/Table$/i', '', preg_replace('/Table/i', 'Entity', get_called_class(), 1), 1);
@@ -61,6 +60,7 @@ class Table {
         $this->db = $app->getDb();
         if($entity){
             $this->entity = $entity;
+            $entity = end(explode(':', $entity));
             $this->table = $app->decamelize($entity);
         }else{
             $this->getDbTableName();
@@ -71,7 +71,6 @@ class Table {
     {
         $query = new QueryBuilder($this);
         if($alias === null){
-            $alias = strtolower($this->getTable()[0]); // Si alias vide on utilise la premiere lettre de la classe
             $alias = strtolower($this->getTable()[0]); // Si alias vide on utilise la premiere lettre de la classe
         }
 
@@ -211,7 +210,7 @@ class Table {
         }
         //}
 
-        throw new Exception($this->_entityName, $fieldName, $method.$by);
+        throw new \Exception($this->entity, $fieldName, $method.$by);
     }
 
 
@@ -363,7 +362,6 @@ class Table {
 
 	public function query($statement, $attributes = null, $one = false, $class = null)
 	{
-
         $entity = $this->getEntity();
 		$app = App::getInstance();
 		if($attributes){

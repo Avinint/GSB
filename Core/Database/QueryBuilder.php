@@ -42,10 +42,14 @@ class QueryBuilder{
 
     public function getRepository()
     {
-        var_dump($this->getPrefix());
         return $this->repository;
     }
-	
+
+    public function getSqlPart($key)
+    {
+        return $this->sqlParts[$key];
+    }
+
 	public function getAliases()
 	{
 		return $this->aliases;
@@ -61,14 +65,21 @@ class QueryBuilder{
 	public function select($selection = '*')
 	{
         if(is_array($selection)){
-            $this->sqlParts['select'] =  $selection;
+            $this->sqlParts['select'] = $selection;
        }else{
             $this->sqlParts['select'] = array();
-            $this->sqlParts['select'][]= $selection;
-        }
+            $this->sqlParts['select'][] = $selection;
+       }
 		//$this->fields = func_get_args();
 		return $this;
 	}
+
+    public function distinct($flag = true)
+    {
+        $this->sqlParts['distinct'] = (bool) $flag;
+
+        return $this;
+    }
 
     // addSelect ajoute des champs à la selection
     public function addSelect($selection, $alias = null)
@@ -78,6 +89,7 @@ class QueryBuilder{
             $selection = $this->aliases[$selection];
             $aliases = array_keys($this->aliases, $selection);
             $this->sqlParts['select'] = array_shift($aliases).'.*'; //
+
             return $this;
 
         }else if(is_array($selection)){
@@ -94,34 +106,51 @@ class QueryBuilder{
         return $this;
     }
 
-	public function where($condition)
+	public function where($where, $type = '')
 	{
-        if(is_null($this->condition)){
-            $this->condition = ' WHERE '.$condition;
-        }else{
-            $this->condition .= ' AND '.$condition;
+        if ($type) {
+            $where = array('type' => $type, 'criteria' =>  $where);
+        } else {
+            $this->sqlParts['where'] = array(); // on vide le tableau pour premier where
         }
+        $this->sqlParts['where'][] = $where;
+
 		return $this;
 	}
 	
 	public function andWhere($condition)
 	{
-		$this->condition .= ' AND '.$condition;
-		return $this;
-	}
+        /*$where = array();
+        $where['type'] = 'AND';
+        $where['criteria'] =  $condition;
+        $this->sqlParts['where'][] = $where;
 
-	public function from($table, $alias = null)
-	{
-        $alias = $alias? : $this->repository->getTable()[0];
-        if (in_array($alias, $this->aliases)) {
-            $this->aliases[$alias] = $table;
-        }
-		if($alias){
-			$this->tables[] = $this->getPrefix().$table.'  AS '.$alias;
-		}else{
-			$this->tables[] = $this->getPrefix().$table.'  AS '.$alias;
-		}
-		return $this;
+        return $this;*/
+
+        return $this->where($condition, 'AND');
+    }
+
+    public function orWhere($condition)
+    {
+        /*$where = array();
+        $where['type'] = 'OR';
+        $where['criteria'] =  $condition;
+        $this->sqlParts['where'][] = $where;
+
+        return $this;*/
+
+        return $this->where($condition, 'OR');
+    }
+
+    public function from($table, $alias = null)
+    {
+        $alias = $alias ? : strtolower($this->repository->getTable()[0]);
+
+        $from['table'] = $table;
+        $from['alias'] = $alias;
+        $this->sqlParts['from'][] = $from;
+
+        return $this;
 	}
 
     public function setParameter($identifier, $value)
@@ -138,16 +167,23 @@ class QueryBuilder{
         return $this;
     }
 
-    public function orderBy($field, $mode = 'DESC')
+    public function orderBy($field, $order = null)
     {
-        $this->sortBy = ' ORDER BY '.$field.' '.$mode;
+        $orderBy = array();
+        $orderBy['field'] = $field;
+        if($order) {
+            $orderBy['order'] =  $order;
+        }
+
+        $this->sqlParts['orderBy'] = $orderBy;
+        //$this->sortBy = ' ORDER BY '.$field.' '.$mode;
 
         return $this;
     }
 
     public function leftJoin($join, $alias, $joinTable = null)
     {
-        $table = $joinTable? $this->getPrefix().$joinTable:
+        $table = $joinTable ? $this->getPrefix().$joinTable :
             $this->getPrefix().$this->parse_table($join);
          // si la foreign key n'a pas le même nom que la table de jointure
 
@@ -171,85 +207,91 @@ class QueryBuilder{
         return $this;
     }
 	
-	public function getQuery()
+	/*public function getQuery()
 	{
 		
 	    $this->query =  'SELECT '.implode(', ', array_reverse($this->fields)).' FROM '.
             implode(', ', $this->tables).' '.implode(' ', $this->joins).$this->condition.$this->sortBy;
 
         return $this;
-	}
-	
-	
+	}*/
+
 	public function getQuery()
 	{
-		$sql = 'SELECT '
-		.  ($this->sqlParts['distinct']===true ? ' DISTINCT' : '')
-		 . $this->writeSelect();
+		$this->query = 'SELECT '
+		. ($this->getSqlPart('distinct') === true ? ' DISTINCT' : '')
+		. $this->writeSelect()
+        . $this->writeFrom().$this->writeEnd();
 		;
-		
+
+        return $this;
 	}
-	
+
 	private function writeSelect()
 	{
-		return ' '.implode(', ', $this->sqlParts('select');
+        //var_dump(' '.implode(', ', $this->getSqlPart('select')));
+		return ' '.implode(', ', $this->getSqlPart('select'));
 	}
-	
+
+    private function writePart($partName, $options = array())
+    {
+        $queryPart = $this->getSqlPart($partName);
+
+        if (empty($queryPart)) {
+            return (isset($options['empty']) ? $options['empty'] : '');
+        }
+
+        if (self::is_assoc($queryPart) && isset($queryPart['criteria'])) {
+            $queryPart = implode(' ', $queryPart);
+        }
+
+
+        $separator = $options['separator'] ? : ', ';
+
+        return (isset($options['left']) ? $options['left'] : '')
+        .(is_array($queryPart) ? implode($separator, $queryPart) : $queryPart)
+        .(isset($options['right']) ? $options['right'] : '');
+    }
+
 	private function writeFrom()
 	{
 		$sql = '';
-		$fromParts = $this->sqlParts['from');
-        $joinParts = $this->sqlParts('join');
-		$clauses   = array();
-		
+		$fromParts = $this->getSqlPart('from');
+        $joinParts = $this->getSqlPart('join');
+        $fromClauses = array();
+
 		if (!empty($fromParts)) {
             $sql .= ' FROM ';
 
             foreach ($fromParts as $from) {
-                $fromClause = (string) $from;
-
+                $fromClause = $from['table'].' '.$from['alias'];
                 if (self::is_assoc($from) && isset($joinParts[$from['alias']])) {
+
                     foreach ($joinParts[$from['alias']] as $join) {
                         $fromClause .= ' ' . ((string) $join);
                     }
                 }
-
                 $fromClauses[] = $fromClause;
             }
         }
+        $sql .= implode(', ', $fromClauses);
+
+        return $sql;
 	}
-	
+
+    private function writeEnd()
+    {
+        $sql = $this->writePart('where', array('left' => ' WHERE '))
+        . $this->writePart('groupBy', array('left' => ' GROUP BY ', 'separator' => ', '))
+        . $this->writePart('having', array('left' => ' HAVING '))
+        . $this->writePart('orderBy', array('left' => ' ORDER BY ', 'separator' => ', '));
+
+        return $sql;
+    }
+
 	private static function is_assoc(array $array)
 	{
 		return count(array_filter(array_keys($array), 'is_string')) > 0;
-	}	
-	
-	private function getSQLQuery()
-	
-		$dql = 'SELECT'
-             . ($this->_dqlParts['distinct']===true ? ' DISTINCT' : '')
-             . $this->_getReducedDQLQueryPart('select', array('pre' => ' ', 'separator' => ', '));
-
-        $fromParts   = $this->getDQLPart('from');
-        $joinParts   = $this->getDQLPart('join');
-        $fromClauses = array();
-		
-		if ( ! empty($fromParts)) {
-            $dql .= ' FROM ';
-
-            foreach ($fromParts as $from) {
-                $fromClause = (string) $from;
-
-                if ($from instanceof Expr\From && isset($joinParts[$from->getAlias()])) {
-                    foreach ($joinParts[$from->getAlias()] as $join) {
-                        $fromClause .= ' ' . ((string) $join);
-                    }
-                }
-
-                $fromClauses[] = $fromClause;
-            }
-        }
-
 	}
 
     public function checkQuery()
@@ -264,12 +306,7 @@ class QueryBuilder{
 
     public function getSingleResult()
     {
-        // TODO WTF remove that
-        /*$table = $this->tables[0];
-        $table = explode(' ', $table);
-        $table = ucfirst(array_shift($table));*/
-
-        return $this->repository->query($this->query, array_values($this->parameters), true);
+        return $this->repository->query($this->query, $this->parameters, true);
     }
 
    private function parse_table($join)
