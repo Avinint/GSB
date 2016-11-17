@@ -9,18 +9,9 @@ class HomeController extends AppController
     public function index()
     {
         $app = \App::getInstance();
-		
-        //$uti = $app->getTable('AppModule:Utilisateur')->find(1);
-       // var_dump($uti);
-		//$utis = $app->getTable('utilisateur')->all();
-		$user = $app->getTable('AppModule:Utilisateur')->find(1);
-        var_dump($user);
-        //var_dump($users);
-        /* echo $uti->prenom.' '.$uti->nom.BR;
-        $user = Utilisateur::find(2);
-        echo $user->prenom.' '.$uti->nom;
-        */
-        //var_dump(Utilisateur::all());
+
+		//$user = $app->getTable('AppModule:Utilisateur')->findOneByNom('Avinint');
+
         //$this->filterAccess('ROLE_DEFAULT');
         $this->render('AppModule:Home:index.php');
     }

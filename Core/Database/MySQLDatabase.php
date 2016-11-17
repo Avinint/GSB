@@ -22,11 +22,12 @@ class MySQLDatabase extends Database{
 	
 	public function getPDO()
 	{
-		if($this->pdo === null){
+		if ($this->pdo === null) {
 			$this->pdo = new PDO('mysql:host='.$this->db_host.';dbname='.$this->db_name, $this->db_user, $this->db_pass);
+            $this->pdo->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
             $this->pdo->exec('SET NAMES utf8');
-			$this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		}
+
 		return $this->pdo;
 	}
 	
@@ -54,7 +55,7 @@ class MySQLDatabase extends Database{
 		$req = $this->getPDO()->prepare($statement);
 		$res = $req->execute($attr);
 
-		if(
+		if (
 			strpos($statement, 'UPDATE') === 0 ||
 			strpos($statement, 'INSERT') === 0 ||
 			strpos($statement, 'DELETE') === 0 

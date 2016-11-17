@@ -78,7 +78,7 @@ class Table {
         if($table === ''){
             $table = $this->getTable();
         }
-        $query->select($alias.'.*')->from($table, $alias);
+        $query->select($alias)->from($table, $alias);
 
         return $query;
     }
@@ -99,7 +99,9 @@ class Table {
         $query = $this
             ->createQueryBuilder('a')
             ->where('id = :id')
+            ->andWhere('role_id = :role_id')
             ->setParameter('id', $id)
+            ->setParameter('role_id', 1)
             ->getQuery()
         ;
 
@@ -108,36 +110,30 @@ class Table {
 
     public function findOneBy(array $criteria)
     {
-        $query = $this
-            ->createQueryBuilder('a')
-            ->where(':criteria = :value')
-            ->setParameter('criteria', key($criteria))
-            ->setParameter('value', $criteria[key($criteria)])
-            ;
-		var_dump($query);
-        $query->getQuery();
-        return $query->getSingleResult();
+        $query = $this->loadCriteria($criteria, $orderBy = array(), $limit = null, $offset = null);
+
+        return $query->getQuery()->getSingleResult();
     }
 
-    public function findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+    public function findBy(array $criteria, array $orderBy = array(), $limit = null, $offset = null)
     {
         // TODO support for limits
-        $query = $this
-            ->createQueryBuilder('a')
-            ->select('a.'.key($criteria));
-        if ($criteria) {
-            $query->where(':criteria = :value')
-                ->setParameter('criteria', key($criteria))
-                ->setParameter('value', $criteria[key($criteria)]);
-        }
-        if ($orderBy) {
-            $query->orderBy(':sort', ':order')
-            ->setParameter('sort', $orderBy[0])
-            ->setParameter('sort', $orderBy[1])
-            ->getQuery();
+        $query = $this->loadCriteria($criteria, $orderBy = array(), $limit = null, $offset = null);
+
+            if ($orderBy) {
+                $query->orderBy($orderBy[0], $orderBy[1])
+            ;
         }
 
-        return $query->getResults();
+        return $query->getQuery()->getResults();
+    }
+
+    private function loadCriteria(array $criteria, array $orderBy = array(), $limit = null, $offset = null)
+    {
+        $query = $this ->createQueryBuilder('a');
+
+        return $query->where(key($criteria).' = :'.key($criteria))
+            ->setParameter(key($criteria), $criteria[key($criteria)]);
     }
 
     public function findAll(array $orderBy = null)
@@ -155,14 +151,7 @@ class Table {
             ->getResults();
     }
 
-    /** Allows magic finders
-     * @param $method
-     * @param $arguments
-     * @return mixed
-     * @throws
-     * @throws \BadMethodCallException
-     * @throws
-     */
+   /**  Magic finder */
     public function __call($method, $arguments)
     {
         switch (true) {
@@ -182,14 +171,11 @@ class Table {
                     "either findBy or findOneBy!"
                 );
         }
-        var_dump($arguments);var_dump($method);
 
         if (empty($arguments)) {
-            throw new  \Exception($method.' requires parameters: '.$by);
+                $arguments = array();
         }
-
-
-;        $fieldName = lcfirst($by);var_dump($fieldName);var_dump(count($arguments));
+;        $fieldName = lcfirst($by);
 
         //if ($this->_class->hasField($fieldName) || $this->_class->hasAssociation($fieldName)) {
         switch (count($arguments)) {
@@ -256,7 +242,6 @@ class Table {
         if(!$entity instanceof Entity){
             throw new \Exception("Database problem");
         }
-
 
         //$filePath = $table === 'article'?'':D_S.$table.'s';
         //$path = ROOT.D_S.'public'.D_S.'img'.$filePath;
@@ -353,7 +338,7 @@ class Table {
 
 
 		return $this->query(
-		'DELETE  FROM '.$this->table.'
+		'DELETE FROM '.$this->table.'
 		 WHERE id = ?
 		',
 		array($id),
