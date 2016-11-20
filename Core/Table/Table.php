@@ -97,12 +97,13 @@ class Table {
     public function find($id)
     {
         $query = $this
-            ->createQueryBuilder('a')
-            ->where('id = :id')
-            ->andWhere('role_id = :role_id')
-            ->setParameter('id', $id)
-            ->setParameter('role_id', 1)
-            ->getQuery()
+        ->createQueryBuilder('a')
+        ->addSelect('p.nom pays_nom')
+         ->addSelect('c.nom continent_nom')
+        ->leftJoin('a.pays', 'p')
+        ->leftJoin('p.continent', 'c')
+        ->limit(0, 1)
+        ->getQuery()
         ;
 
         return $query->getSingleResult();
@@ -282,7 +283,7 @@ class Table {
         }
         return false;
 	}
-	
+
 	public function create($entity, $fields, $image = null, $table = '')
 	{
         if($table === ''){
@@ -327,7 +328,7 @@ class Table {
         }
         return false;
     }
-	
+
 	public function delete($id)
 	{
         $entity = $this->find($id);
@@ -336,13 +337,8 @@ class Table {
             $entity->removeFile($image);
         }
 
-
-		return $this->query(
-		'DELETE FROM '.$this->table.'
-		 WHERE id = ?
-		',
-		array($id),
-		true);
+		return $this->query('DELETE FROM '.$this->table.' WHERE id = ?',
+		array($id), true);
 	}
 
 	public function query($statement, $attributes = null, $one = false, $class = null)

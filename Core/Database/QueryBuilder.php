@@ -24,6 +24,8 @@ class QueryBuilder{
     private $query;
     private $joins = array();
     private $parameters = array();
+    private $start;
+    private $count;
 
     public function __construct(Table $repository)
     {
@@ -141,16 +143,6 @@ class QueryBuilder{
         return $this;
     }
 
-    public function getParameters()
-    {
-        return $this->parameters;
-    }
-
-    public function getParameter($key, $value)
-    {
-        return array(':'.$key => $value);
-    }
-
 
     public function orderBy($field, $order = null)
     {
@@ -166,46 +158,110 @@ class QueryBuilder{
         return $this;
     }
 
-    public function leftJoin($join, $alias, $joinTable = null)
+    public function limit ($start = 0, $count = 0)
     {
-        $table = $joinTable ? $this->getPrefix().$joinTable :
-            $this->getPrefix().$this->parse_table($join);
-         // si la foreign key n'a pas le même nom que la table de jointure
-
-        $join = ' LEFT JOIN '.$table. ' AS ' .$alias.' ON '.$alias.'.id = '.$join.'_id';
-        $this->joins[$alias] = $join;
-        $this->addAlias($alias, $table);
+        if ($start) {
+            $this->start = $start;
+        }
+        $this->count = $count;
 
         return $this;
     }
 
-    public function rightJoin($join, $alias, $joinTable = null)
+    public function count ($count)
     {
-        $table = $joinTable? $this->getPrefix().$joinTable:
-            $this->getPrefix().$this->parse_table($join);
-        // si la foreign key n'a pas le même nom que la table de jointure
-
-        $join = ' RIGHT JOIN '.$table. ' AS ' .$alias.' ON '.$alias.'.id = '.$join.'_id';
-        $this->joins[$alias] = $join;
-        $this->addAlias($alias, $table);
+        $this->count = $count;
 
         return $this;
     }
 
-    public function getQuery()
+    public function start ($start)
     {
-        $this->query = 'SELECT '
-        . ($this->getSqlPart('distinct') === true ? ' DISTINCT' : '')
-        . $this->writeSelect()
-        . $this->writeFrom().$this->writeEnd();
-        ;
+        $this->start = $start;
 
         return $this;
+    }
+
+    public function leftJoin($join, $alias, $conditionType = 'ON', $condition = null)
+    {
+        return $this->setJoin('LEFT', $join, $alias, $conditionType, $condition);
+    }
+
+    public function join($join, $alias, $conditionType = 'ON', $condition = null)
+    {
+        return $this->setJoin('INNER', $join, $alias, $conditionType, $condition);
+    }
+
+    public function rightJoin($join, $alias, $conditionType = 'ON', $condition = null)
+    {
+        return $this->setJoin('RIGHT', $join, $alias, $conditionType, $condition);;
+    }
+
+    private function setJoin($type, $join, $alias, $conditionType = 'ON', $condition = null)
+    {
+        $parentAlias = substr($join, 0, strpos($join, '.'));
+
+        $rootAlias = $this->findRootAlias($alias, $parentAlias);
+
+        // TODO replace $join.'_id' par un appel à un data mapper
+        $condition = $condition ? : $join.'_id = '.$alias.'.id';
+
+        $join = array(
+            'type'          => $type,
+            'table'         => $this->parse_table($join),
+            'alias'         => $alias,
+            'conditionType' => $conditionType,
+            'condition'     => $condition
+        );
+        $this->sqlParts['join'][$rootAlias][$parentAlias] = $join;
+
+        return $this;
+    }
+
+    public function getJoin($alias)
+    {
+        $sql = '';
+        if (isset($this->getSqlPart('join')[$alias])) {
+            foreach($this->getSqlPart('join')[$alias] as $join) {
+                $join = strtoupper($join['type']).' JOIN '.$this->getPrefix().$join['table'].' '.$join['alias'].' '
+                    .(isset($join['conditionType'])? $join['conditionType']
+                    :'ON').' '.$join['condition'].' ';
+                $sql .= $join;
+            }
+        }
+
+        return $sql;
+    }
+
+    private function findRootAlias($alias, $parentAlias)
+    {
+        $rootAlias = null;
+
+        if (in_array($parentAlias, $this->getRootAliases())) {
+            $rootAlias = $parentAlias;
+        } elseif (isset($this->aliases[$parentAlias])) {
+            $rootAlias = $this->aliases[$parentAlias];
+        } else {
+            $rootAlias = $this->$this->getRootAliases()[0];
+        }
+
+        $this->aliases[$alias] = $rootAlias;
+
+        return $rootAlias;
+    }
+
+    public function getRootAliases()
+    {
+        $aliases = array();
+        foreach ($this->sqlParts['from'] as $from) {
+            $aliases[] = $from['alias'];
+        }
+
+        return $aliases;
     }
 
     private function writeSelect()
     {
-        //var_dump(' '.implode(', ', $this->getSqlPart('select')));
         return implode(', ', array_map( array($this, 'getSelect'), $this->getSqlPart('select')));
     }
 
@@ -229,7 +285,6 @@ class QueryBuilder{
                 }
             }
         }
-
         $separator = isset($options['separator'])&& $options['separator'] ? $options['separator'] : ', ';
 
         return (isset($options['left']) ? $options['left'] : '')
@@ -240,6 +295,7 @@ class QueryBuilder{
     private function writeFrom()
     {
         $sql = '';
+
         $fromParts = $this->getSqlPart('from');
         $joinParts = $this->getSqlPart('join');
         $fromClauses = array();
@@ -248,11 +304,12 @@ class QueryBuilder{
             $sql .= ' FROM ';
 
             foreach ($fromParts as $from) {
-                $fromClause = $from['table'].' '.$from['alias'];
+                $fromClause = $this->getPrefix().$from['table'].' '.$from['alias'];
+
                 if (self::is_assoc($from) && isset($joinParts[$from['alias']])) {
 
-                    foreach ($joinParts[$from['alias']] as $join) {
-                        $fromClause .= ' ' . ((string) $join);
+                    foreach ($this->getSqlPart('join') as $join) {
+                        $fromClause .= ' ' . $this->getJoin($from['alias']);
                     }
                 }
                 $fromClauses[] = $fromClause;
@@ -268,22 +325,49 @@ class QueryBuilder{
         $sql = $this->writePart('where', array('left' => ' WHERE '))
         . $this->writePart('groupBy', array('left' => ' GROUP BY ', 'separator' => ', '))
         . $this->writePart('having', array('left' => ' HAVING '))
-        . $this->writePart('orderBy', array('left' => ' ORDER BY ', 'separator' => ', '));
+        . $this->writePart('orderBy', array('left' => ' ORDER BY ', 'separator' => ', '))
+        . $this->getLimit();
+        ;
 
         return $sql;
     }
 
-	private static function is_assoc($array)
-	{
-        if (!is_array($array)) {
-            return false;
-        }
-		return count(array_filter(array_keys($array), 'is_string')) > 0;
-	}
-
-    public function checkQuery()
+    private function getLimit()
     {
-        return $this->query;
+        if (isset($this->count)) {
+            $sql = ' LIMIT ';
+            if (isset($this-> start)) {
+                $sql .= $this->start.', '.$this->count;
+            }else{
+                $sql .= $this->count;
+            }
+
+            return $sql;
+        }
+
+        return '';
+    }
+
+    public function getParameters()
+    {
+        return $this->parameters;
+    }
+
+    public function getParameter($key, $value)
+    {
+        return array(':'.$key => $value);
+    }
+
+    public function getQuery()
+    {
+
+        $this->query = 'SELECT '
+            . ($this->getSqlPart('distinct') === true ? ' DISTINCT' : '')
+            . $this->writeSelect()
+            . $this->writeFrom().$this->writeEnd();
+        ;
+
+        return $this;
     }
 
     public function getResults()
@@ -294,6 +378,21 @@ class QueryBuilder{
     public function getSingleResult()
     {
         return $this->repository->query($this->query, $this->getParameters(), true);
+    }
+
+    public function readSql()
+    {
+        echo $this->query;
+
+        return $this;
+    }
+
+    private static function is_assoc($array)
+    {
+        if (!is_array($array)) {
+            return false;
+        }
+        return count(array_filter(array_keys($array), 'is_string')) > 0;
     }
 
    private function parse_table($join)

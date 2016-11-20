@@ -15,6 +15,7 @@ class Utilisateur extends Entity implements UserInterface{
     protected $email;
     protected $mdp;
     protected $role_id;
+    protected $pays_id;
 
     /**
      * @return string
@@ -135,6 +136,22 @@ class Utilisateur extends Entity implements UserInterface{
     public function getImage()
     {
         return $this->image;
+    }
+
+    /**
+     * @param mixed $pays_id
+     */
+    public function setPaysId($paysId)
+    {
+        $this->pays_id = $paysId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPaysId()
+    {
+        return $this->pays_id;
     }
 
     public function getFilePath()

@@ -9,9 +9,8 @@ class HomeController extends AppController
     public function index()
     {
         $app = \App::getInstance();
-
-		//$user = $app->getTable('AppModule:Utilisateur')->findOneByNom('Avinint');
-
+        $user = $app->getTable('AppModule:Utilisateur')->find(1);
+        var_dump($user);
         //$this->filterAccess('ROLE_DEFAULT');
         $this->render('AppModule:Home:index.php');
     }
