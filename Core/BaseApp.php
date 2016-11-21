@@ -4,15 +4,18 @@ use Core\Config;
 use Core\Database\MySQLDatabase;
 use Core\Component\Router;
 use Core\Component\Exception\ExceptionHandler;
+use Pimple\Container;
+
 
 abstract class BaseApp
 {
     protected static $instance;
     protected $db;
-    protected $routing;
+    protected $router;
     protected $accessControl;
     protected $exceptionHandler;
     protected $environment;
+    protected $container;
 
     public static function getInstance($environment = 'prod')
     {
@@ -20,21 +23,31 @@ abstract class BaseApp
         {
             self::$instance = new App($environment);
             self::$instance->exceptionHandler =  ExceptionHandler::register($environment);
-
-            self::$instance->routing = new Router();
 		}
 
         return self::$instance;
     }
 
+    public function getContainer($service = '')
+    {
+        if (empty($service)) {
+            return $this->container;
+        }
+
+        return $this->container[$service];
+    }
+
     public function __construct($environment)
     {
         $this->environment = $environment;
+        $this->container = new Container();
+        Core\Container\ContainerBuilder::init($this->container);
+		$this->router = $this->getContainer('router');
     }
 
     public function getRouter()
     {
-        return $this->routing;
+        return $this->router;
     }
 
     public function getEnvironment()
@@ -45,7 +58,8 @@ abstract class BaseApp
     public static function load()
     {
         session_start();
-        require ROOT.'/Core/Autoloader.php';
+        require_once ROOT.'/Core/Autoloader.php';
+        require_once ROOT.'/vendor/autoload.php';
         \Core\AutoLoader::register();
     }
 
@@ -65,7 +79,8 @@ abstract class BaseApp
 
     public function getConfig()
     {
-        return Config::getInstance(ROOT.'/App/Config/dbConfig.php', ROOT.'/App/Config/config.php', ROOT.'/App/Config/security.php');
+       return $this->getContainer('config');
+        //return Config::getInstance(ROOT.'/App/Config/dbConfig.php', ROOT.'/App/Config/config.php', ROOT.'/App/Config/security.php');
     }
 
     public function getDb()

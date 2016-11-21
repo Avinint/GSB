@@ -1,8 +1,8 @@
 ﻿<?php
 
 define('ROOT', dirname(__DIR__));
-require ROOT.'/App/App.php';
-require ROOT.'/App/Config/globals.php';
+require_once ROOT.'/App/Config/globals.php';
+require_once ROOT.'/App/App.php';
 
 App::load();
 $app = App::getInstance('prod');
