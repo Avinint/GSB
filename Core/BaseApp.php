@@ -11,7 +11,7 @@ abstract class BaseApp
 {
     protected static $instance;
     protected $db;
-    protected $routing;
+    protected $router;
     protected $accessControl;
     protected $exceptionHandler;
     protected $environment;
@@ -23,7 +23,6 @@ abstract class BaseApp
         {
             self::$instance = new App($environment);
             self::$instance->exceptionHandler =  ExceptionHandler::register($environment);
-            self::$instance->routing = new Router();
 		}
 
         return self::$instance;
@@ -43,11 +42,12 @@ abstract class BaseApp
         $this->environment = $environment;
         $this->container = new Container();
         Core\Container\ContainerBuilder::init($this->container);
+		$this->router = $this->getContainer('router');
     }
 
     public function getRouter()
     {
-        return $this->routing;
+        return $this->router;
     }
 
     public function getEnvironment()

@@ -11,7 +11,6 @@ class HomeController extends AppController
         $app = \App::getInstance();
 
         $container = $app->getContainer();
-        $uti = $app->getTable('AppModule:Utilisateur')->find(1);
        
 		//$utis = $app->getTable('utilisateur')->all();
 		//$users = Utilisateur::findByVille('Paris');
