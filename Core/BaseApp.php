@@ -1,17 +1,11 @@
 <?php 
 
-use Core\Config;
-use Core\Database\MySQLDatabase;
-use Core\Component\Router;
-use Core\Component\Exception\ExceptionHandler;
 use Pimple\Container;
-
 
 abstract class BaseApp
 {
     protected static $instance;
     protected $db;
-    protected $router;
     protected $accessControl;
     protected $exceptionHandler;
     protected $environment;
@@ -38,11 +32,8 @@ abstract class BaseApp
 
     public function __construct($environment)
     {
-        $this->environment = $environment;
-		
         $this->container = new Container();
 		$this->container['env'] = $environment;
-		//$this->exceptionHandler = ExceptionHandler::register($environment);
         Core\Container\ContainerBuilder::init($this->container);
 		$this->exceptionHandler = $this->getContainer('exception_handler');
     }
@@ -82,7 +73,6 @@ abstract class BaseApp
     public function getConfig()
     {
        return $this->getContainer('config');
-        //return Config::getInstance(ROOT.'/App/Config/dbConfig.php', ROOT.'/App/Config/config.php', ROOT.'/App/Config/security.php');
     }
 
     public function getDb()

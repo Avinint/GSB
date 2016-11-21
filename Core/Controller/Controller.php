@@ -11,14 +11,12 @@ use Core\Component\DbAuth;
 class Controller
 {
     protected $viewpath;
-    protected $route;
     protected $auth;
 	
     public function __construct()
     {
         // TODO Appliquer control access access  en fonction du fichier security.php
         $this->viewpath = ROOT.'/App/View/';
-        $this->route = $this->get('router');
         $this->auth = $this->get('auth');
     }
 
@@ -34,6 +32,11 @@ class Controller
         $view->render($variables);
     }
 
+    protected function getRouter()
+    {
+        return $this->get('router');
+    }
+
     // TODO remove
     protected function loadModel($model)
     {
@@ -47,14 +50,13 @@ class Controller
         return $app->getTable($model);
     }
 
-    public function controlAccess(Route $route)
+    public function controlAccess()
     {
         $ac = $this->get('access_control');
         foreach ($ac as $rule) {
-            if (preg_match('/'.$rule['path'].'/', $route->getPath())) {
+            if (preg_match('%'.$rule['path'].'%', $this->get('current_route')->getPath())) {
                 foreach ($rule['roles'] as $role) {
-                    if (true === $this->auth->isGranted($role)) {
-                        var_dump('good');
+                    if ($role === 'FREE_ACCESS' or true === $this->get('auth')->isGranted($role)) {
                         return;
                     }
                 }
@@ -152,7 +154,6 @@ class Controller
                         $_SESSION['auth'] = $id;
                     }
                     // TO DO redirect
-                    //var_dump($this->route->generateRoute('admin_article_index'));
                     $this->redirect($route);
                 }
             }else{// fin validate

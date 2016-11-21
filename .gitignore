@@ -1,3 +1,4 @@
 .idea/
 App/Config/dbConfig*
 vendor/
+Core/Container/*_old.php
