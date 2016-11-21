@@ -40,14 +40,13 @@ class Table {
             $module = array_shift($class);
             $class = array_shift($class);
            $class = 'App\\'.$module.'\\Entity\\'.$class;
+
         }
         return $class;
     }
 
-
     private function getEntity()
     {
-
         $entity = $this->entity ?
         $this->getEntityClass() :
         preg_replace('/Table$/i', '', preg_replace('/Table/i', 'Entity', get_called_class(), 1), 1);
@@ -61,23 +60,25 @@ class Table {
         $this->db = $app->getDb();
         if($entity){
             $this->entity = $entity;
+            $entity = end(explode(':', $entity));
             $this->table = $app->decamelize($entity);
         }else{
             $this->getDbTableName();
         }
     }
 
-    public function createQueryBuilder($alias = '', $table='')
+    public function createQueryBuilder($alias = '', $table = '')
     {
         $query = new QueryBuilder($this);
         if($alias === null){
-            $alias = $this->getTable()[0]; // Si alias vide on utilise la premiere lettre de la classe
+            $alias = strtolower($this->getTable()[0]); // Si alias vide on utilise la premiere lettre de la classe
         }
+
         //$query->addAlias($alias, $this->getTable());
         if($table === ''){
             $table = $this->getTable();
         }
-        $query->select($alias.'.*')->from($table, $alias);
+        $query->select($alias)->from($table, $alias);
 
         return $query;
     }
@@ -96,22 +97,109 @@ class Table {
     public function find($id)
     {
         $query = $this
-            ->createQueryBuilder('a')
-            ->where('id = :id')
-            ->setParameter('id', $id)
-            ->getQuery()
+        ->createQueryBuilder('a')
+        ->addSelect('p.nom pays_nom')
+         ->addSelect('c.nom continent_nom')
+        ->leftJoin('a.pays', 'p')
+        ->leftJoin('p.continent', 'c')
+        ->limit(0, 1)
+        ->getQuery()
         ;
 
         return $query->getSingleResult();
     }
 
-    public function findAll()
+    public function findOneBy(array $criteria)
+    {
+        $query = $this->loadCriteria($criteria, $orderBy = array(), $limit = null, $offset = null);
+
+        return $query->getQuery()->getSingleResult();
+    }
+
+    public function findBy(array $criteria, array $orderBy = array(), $limit = null, $offset = null)
+    {
+        // TODO support for limits
+        $query = $this->loadCriteria($criteria, $orderBy = array(), $limit = null, $offset = null);
+
+            if ($orderBy) {
+                $query->orderBy($orderBy[0], $orderBy[1])
+            ;
+        }
+
+        return $query->getQuery()->getResults();
+    }
+
+    private function loadCriteria(array $criteria, array $orderBy = array(), $limit = null, $offset = null)
+    {
+        $query = $this ->createQueryBuilder('a');
+
+        return $query->where(key($criteria).' = :'.key($criteria))
+            ->setParameter(key($criteria), $criteria[key($criteria)]);
+    }
+
+    public function findAll(array $orderBy = null)
     {
         $query = $this->createQueryBuilder('a');
+        if ($orderBy) {
+            $query->orderBy(':sort', ':order')
+            ->setParameter('sort', $orderBy[0])
+            ->setParameter('sort', $orderBy[1])
+            ->getQuery();
+        }
+
         return $query
             ->getQuery()
             ->getResults();
     }
+
+   /**  Magic finder */
+    public function __call($method, $arguments)
+    {
+        switch (true) {
+            case (0 === strpos($method, 'findBy')):
+                $by = substr($method, 6);
+                $method = 'findBy';
+                break;
+
+            case (0 === strpos($method, 'findOneBy')):
+                $by = substr($method, 9);
+                $method = 'findOneBy';
+                break;
+
+            default:
+                throw new \Exception(
+                    "Undefined method '$method'. The method name must start with ".
+                    "either findBy or findOneBy!"
+                );
+        }
+
+        if (empty($arguments)) {
+                $arguments = array();
+        }
+;        $fieldName = lcfirst($by);
+
+        //if ($this->_class->hasField($fieldName) || $this->_class->hasAssociation($fieldName)) {
+        switch (count($arguments)) {
+            case 1:
+                return $this->$method(array($fieldName => $arguments[0]));
+
+            case 2:
+                return $this->$method(array($fieldName => $arguments[0]), $arguments[1]);
+
+            case 3:
+                return $this->$method(array($fieldName => $arguments[0]), $arguments[1], $arguments[2]);
+
+            case 4:
+                return $this->$method(array($fieldName => $arguments[0]), $arguments[1], $arguments[2], $arguments[3]);
+
+            default:
+                // Do nothing
+        }
+        //}
+
+        throw new \Exception($this->entity, $fieldName, $method.$by);
+    }
+
 
     public function extract($key, $value)
     {
@@ -156,7 +244,6 @@ class Table {
             throw new \Exception("Database problem");
         }
 
-
         //$filePath = $table === 'article'?'':D_S.$table.'s';
         //$path = ROOT.D_S.'public'.D_S.'img'.$filePath;
         if(isset($image)){
@@ -196,7 +283,7 @@ class Table {
         }
         return false;
 	}
-	
+
 	public function create($entity, $fields, $image = null, $table = '')
 	{
         if($table === ''){
@@ -241,7 +328,7 @@ class Table {
         }
         return false;
     }
-	
+
 	public function delete($id)
 	{
         $entity = $this->find($id);
@@ -250,18 +337,12 @@ class Table {
             $entity->removeFile($image);
         }
 
-
-		return $this->query(
-		'DELETE  FROM '.$this->table.'
-		 WHERE id = ?
-		',
-		array($id),
-		true);
+		return $this->query('DELETE FROM '.$this->table.' WHERE id = ?',
+		array($id), true);
 	}
 
 	public function query($statement, $attributes = null, $one = false, $class = null)
 	{
-
         $entity = $this->getEntity();
 		$app = App::getInstance();
 		if($attributes){

@@ -63,9 +63,9 @@ abstract class BaseApp
         \Core\AutoLoader::register();
     }
 
-    public function getTable($name = '')
+    public function getTable($fullName = '')
     {
-        $name = explode(':', $name);
+        $name = explode(':', $fullName);
         $module = array_shift($name);
         $name = array_pop($name);
 
@@ -74,7 +74,7 @@ abstract class BaseApp
             $className = 'Core\\Table\\Table';
         }
 
-        return new $className($name);
+        return new $className($fullName);
     }
 
     public function getConfig()
