@@ -4,22 +4,16 @@ namespace Core\Controller;
 
 use \App;
 use Core\View\View;
-use Core\Component\Router;
-use Core\Component\Router\Route;
-use Core\Component\DbAuth;
 
 class Controller
 {
     protected $viewpath;
-    protected $route;
-    protected $auth;
+    protected $container;
 	
     public function __construct()
     {
-        // TODO Appliquer control access access  en fonction du fichier security.php
+        $this->initContainer();
         $this->viewpath = ROOT.'/App/View/';
-        $this->route = $this->get('router');
-        $this->auth = $this->get('auth');
     }
 
     protected function createForm($form)
@@ -32,6 +26,11 @@ class Controller
     {
         $view = new View($view);
         $view->render($variables);
+    }
+
+    protected function getRouter()
+    {
+        return $this->container['router'];
     }
 
     // TODO remove
@@ -47,14 +46,13 @@ class Controller
         return $app->getTable($model);
     }
 
-    public function controlAccess(Route $route)
+    public function controlAccess()
     {
-        $ac = $this->get('access_control');
+        $ac = $this->container['access_control'];
         foreach ($ac as $rule) {
-            if (preg_match('/'.$rule['path'].'/', $route->getPath())) {
+            if (preg_match('%'.$rule['path'].'%', $this->container['current_route']->getPath())) {
                 foreach ($rule['roles'] as $role) {
-                    if (true === $this->auth->isGranted($role)) {
-                        var_dump('good');
+                    if ($role === 'FREE_ACCESS' or true === $this->container['auth']->isGranted($role)) {
                         return;
                     }
                 }
@@ -66,7 +64,7 @@ class Controller
 
     protected function filterAccess($role = 'ROLE_DEFAULT', $msg = 'Impossible d\'accéder à cette page!')
     {
-        if (false === $this->auth->isGranted($role, $msg)) {
+        if (false === $this->container['auth']->isGranted($role, $msg)) {
             $this->forbidden($msg);
             // TODO  créer createAccessDeniedException
         }
@@ -152,7 +150,6 @@ class Controller
                         $_SESSION['auth'] = $id;
                     }
                     // TO DO redirect
-                    //var_dump($this->route->generateRoute('admin_article_index'));
                     $this->redirect($route);
                 }
             }else{// fin validate
@@ -206,11 +203,10 @@ class Controller
         }
     }
 
-    public function get($service)
+    public function initContainer()
     {
         $app = App::getInstance();
-        $container = $app->getContainer();
-
-        return $container[$service];
+        $this->container = $app->getContainer();
     }
+
 }

@@ -9,14 +9,13 @@ class HomeController extends AppController
     public function index()
     {
         $app = \App::getInstance();
-		
-        //$user = $app->getTable('AppModule:Utilisateur')->find(1);
+       // $user = $app->getTable('AppModule:Utilisateur')->find(1);
 		//$utis = $app->getTable('utilisateur')->all();
 		
         /* echo $uti->prenom.' '.$uti->nom.BR;
         $user = Utilisateur::find(2);
         echo $user->prenom.' '.$uti->nom;*/
-        //var_dump(Utilisateur::all());
+        //var_dump(Utilisateur::findByPrenom('Bruno', array('Prenom', "ASC"), 0 , 1));
         //$this->filterAccess('ROLE_DEFAULT');
         $this->render('AppModule:Home:index.php');
     }

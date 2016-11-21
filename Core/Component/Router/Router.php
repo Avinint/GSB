@@ -128,7 +128,7 @@ class Router
         if (!$controller instanceof Controller) {
             throw new \Exception("Something wrong happened...");
         }
-        $controller->controlAccess($this->currentRoute);
+        $controller->controlAccess();
         if(is_null($params)){
             $controller->$action($params);
         }else{
@@ -191,5 +191,14 @@ class Router
         }
 
         return null;
+    }
+
+    public function getCurrentRoute()
+    {
+        if (null == $this->currentRoute) {
+            $this->routeMatch();
+        }
+
+        return $this->currentRoute;
     }
 }

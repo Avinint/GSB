@@ -1,7 +1,7 @@
 <div>
     <h1>YO YO YO YO</h1>
     fsfsfse
-    <a href="<?php echo $this->route->generateURL('homepage') ?>"> homepage</a>
+    <a href="<?php echo $this->url('homepage') ?>"> homepage</a>
     sefsef
 </div>
 

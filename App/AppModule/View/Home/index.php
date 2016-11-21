@@ -11,25 +11,25 @@
   <!-- Wrapper for slides -->
 	<div class="carousel-inner" role="listbox">
 		<div class="item active">
-		  <img src="<?php echo $this->route->generatePath('img/pharmacy5.jpg');?>" alt="...">
+		  <img src="<?php echo $this->path('img/pharmacy5.jpg');?>" alt="...">
 		  <div class="carousel-caption">
 			<h1>Appli frais</h1>
 		  </div>
 		</div>
 		<div class="item">
-		  <img src="<?php echo $this->route->generatePath('img/pharmacy1.jpg');?>" alt="...">
+		  <img src="<?php echo $this->path('img/pharmacy1.jpg');?>" alt="...">
 		  <div class="carousel-caption">
 			<h1>Gestion Compte-rendus</h1>
 		  </div>
 		</div>
 		<div class="item">
-		  <img src="<?php echo $this->route->generatePath('img/pharmacy3.jpg');?>" alt="...">
+		  <img src="<?php echo $this->path('img/pharmacy3.jpg');?>" alt="...">
 		  <div class="carousel-caption">
 			<h1>Gestion des incidents</h1>
 		  </div>
 		</div>
 		<div class="item">
-		  <img src="<?php echo $this->route->generatePath('img/pharmacy4.jpg');?>" alt="...">
+		  <img src="<?php echo $this->path('img/pharmacy4.jpg');?>" alt="...">
 		  <div class="carousel-caption">
 			<h1>Back office</h1>
 		  </div>

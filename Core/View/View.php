@@ -7,16 +7,32 @@ class View implements \ArrayAccess
     protected $viewpath;
     protected $helpers = array();
     protected $app;
-    protected $route;
+    protected $container;
 
     public function __construct($view, array $helpers = array())
     {
+
         $view = explode(':', $view);
 		$module = array_shift($view);
         $this->view = implode(D_S, $view);
 		$this->viewpath = ROOT.D_S.'App'.D_S.$module.D_S.'View'.D_S;
-        $this->app = \App::getInstance();
-        $this->route = $this->app->getRouter();
+        $app = \App::getInstance();
+        $this->container = $app->getContainer();
+    }
+
+    public function getRouter()
+    {
+        return $this->container['router'];
+    }
+
+    public function path($path)
+    {
+        return $this->getRouter()->generatePath($path);
+    }
+
+    public function url($route)
+    {
+        return $this->getRouter()->generateURL($route);
     }
 
     public function render($parameters, $template ='default')
@@ -33,15 +49,13 @@ class View implements \ArrayAccess
         // Pour chaque attribut on rajoute le html, exemple: class="", et on les combine
         $attributes = [];
         if($attr){
-            foreach($attr as $k => $v){
-
+            foreach ($attr as $k => $v) {
                 $attributes[$k] = empty($attr[$k])? '': ' '.$k.'="'.$v.'"';
             }
             $attributes = implode(' ', $attributes);
         }else{
             $attributes ='';
         }
-
 
         $result = '<'.$tag.$attributes.'>'.$html.'</'.$tag.'>';
         $result = $this->addParentTag($result, $parent);
@@ -89,6 +103,11 @@ class View implements \ArrayAccess
         return $excerpt;
     }
 
+    public function getPath()
+    {
+        return $this->container['viewPath'];
+    }
+
     public function offsetGet($name)
     {
         return $this->get($name);
@@ -129,5 +148,13 @@ class View implements \ArrayAccess
         foreach ($helpers as $alias => $helper) {
             $this->set($helper, is_int($alias) ? null : $alias);
         }
+    }
+
+    public function getContainer($service)
+    {
+        $app = App::getInstance();
+        $container = $app->getContainer();
+
+        return $container[$service];
     }
 }

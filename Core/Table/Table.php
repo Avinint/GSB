@@ -57,7 +57,8 @@ class Table {
     public function __construct($entity = null)
     {
         $app = App::getInstance();
-        $this->db = $app->getDb();
+        $this->db = $app->getContainer('db');
+
         if($entity){
             $this->entity = $entity;
             $entity = end(explode(':', $entity));
@@ -151,6 +152,7 @@ class Table {
    /**  Magic finder */
     public function __call($method, $arguments)
     {
+        var_dump($arguments);
         switch (true) {
             case (0 === strpos($method, 'findBy')):
                 $by = substr($method, 6);
@@ -191,7 +193,6 @@ class Table {
             default:
                 // Do nothing
         }
-        //}
 
         throw new \Exception($this->entity, $fieldName, $method.$by);
     }

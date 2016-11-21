@@ -120,6 +120,7 @@ class Entity
         return new $repo() ;
     }
 
+    /* Wrapper methods for NOOB mode aka Ruby mode */
     public static function all()
     {
         return static::getTable()->findAll();
@@ -128,5 +129,61 @@ class Entity
     public static function find($id)
     {
         return static::getTable()->find($id);
+    }
+
+    public static function findBy($criteria)
+    {
+        return static::getTable()->findBy($criteria);
+    }
+
+    public static function findOneBy($criteria)
+    {
+        return static::getTable()->findOneBy($criteria);
+    }
+
+    public  static function __callstatic($method, $arguments)
+    {
+        switch (true) {
+            case (0 === strpos($method, 'findBy')):
+                $by = substr($method, 6);
+                $method = 'findBy';
+                break;
+
+            case (0 === strpos($method, 'findOneBy')):
+                $by = substr($method, 9);
+                $method = 'findOneBy';
+                break;
+
+            default:
+                throw new \Exception(
+                    "Undefined method '$method'. The method name must start with ".
+                    "either findBy or findOneBy!"
+                );
+        }
+
+        if (empty($arguments)) {
+            $arguments = array();
+        }
+        $fieldName = lcfirst($by);
+
+        //if ($this->_class->hasField($fieldName) || $this->_class->hasAssociation($fieldName)) {
+        switch (count($arguments)) {
+            case 1:
+                return static::getTable()->$method(array($fieldName => $arguments[0]));
+
+            case 2:
+                return static::getTable()->$method(array($fieldName => $arguments[0]), $arguments[1]);
+
+            case 3:
+                return static::getTable()->$method(array($fieldName => $arguments[0]), $arguments[1], $arguments[2]);
+
+            case 4:
+                return static::getTable()->$method(array($fieldName => $arguments[0]), $arguments[1], $arguments[2], $arguments[3]);
+
+            default:
+                // Do nothing
+        }
+
+        throw new \Exception(static::getTable()->getEntity(), $fieldName, $method.$by);
     }
 }
