@@ -35,13 +35,13 @@ class Table {
     public function getEntityClass()
     {
         $module = ''; $class = '';
-        if($this->entity){
+        if ($this->entity) {
             $class = explode(':', $this->entity);
             $module = array_shift($class);
             $class = array_shift($class);
            $class = 'App\\'.$module.'\\Entity\\'.$class;
-
         }
+		
         return $class;
     }
 
@@ -98,10 +98,6 @@ class Table {
     {
         $query = $this
         ->createQueryBuilder('a')
-        ->addSelect('p.nom pays_nom')
-         ->addSelect('c.nom continent_nom')
-        ->leftJoin('a.pays', 'p')
-        ->leftJoin('p.continent', 'c')
         ->limit(0, 1)
         ->getQuery()
         ;

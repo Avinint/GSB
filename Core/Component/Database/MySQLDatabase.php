@@ -1,6 +1,6 @@
 <?php
 
-namespace Core\Database;
+namespace Core\Component\Database;
 
 use \PDO;
 
@@ -51,9 +51,6 @@ class MySQLDatabase extends Database{
 
     public function prepare($statement, $attr, $class = null, $one = false, $ctor = null)
     {
-        var_dump('yo');
-
-        $data = null;
         $req = $this->getPDO()->prepare($statement);
         $res = $req->execute($attr);
 
@@ -75,8 +72,6 @@ class MySQLDatabase extends Database{
                 $req->setFetchMode(PDO::FETCH_CLASS, $class);
             }
         }
-
-
 
         if($one){
             $data = $req->fetch();

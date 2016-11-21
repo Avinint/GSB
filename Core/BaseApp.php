@@ -22,7 +22,6 @@ abstract class BaseApp
         if(is_null(self::$instance))
         {
             self::$instance = new App($environment);
-            self::$instance->exceptionHandler =  ExceptionHandler::register($environment);
 		}
 
         return self::$instance;
@@ -40,19 +39,22 @@ abstract class BaseApp
     public function __construct($environment)
     {
         $this->environment = $environment;
+		
         $this->container = new Container();
+		$this->container['env'] = $environment;
+		//$this->exceptionHandler = ExceptionHandler::register($environment);
         Core\Container\ContainerBuilder::init($this->container);
-		$this->router = $this->getContainer('router');
+		$this->exceptionHandler = $this->getContainer('exception_handler');
     }
 
     public function getRouter()
     {
-        return $this->router;
+        return $this->getContainer('router');
     }
 
     public function getEnvironment()
     {
-        return $this->environment;
+        return $this->getContainer('env');
     }
 
     public static function load()
@@ -85,31 +87,11 @@ abstract class BaseApp
 
     public function getDb()
     {
-        if (is_null($this->db)) {
-            $config = $this->getConfig();
-            $this->db = new MySQLDatabase($config->get('db_name'), $config->get('db_user'), $config->get('db_pass'), $config->get('db_host'));
-        }
-
-        return $this->db;
-    }
-
-    public function getAccessControl()
-    {
-        if (is_null($this->accessControl)) {
-            $this->accessControl = $this->getConfig()->get('access_control');
-        }
-
-        return $this->accessControl;
-    }
-
-    public function getExceptionHandler()
-    {
-        return $this->exceptionHandler;
+        return $this->getContainer('db');
     }
 
     public function decamelize($string)
     {
         return strtolower(preg_replace('/(?|([a-z\d])([A-Z])|([^\^])([A-Z][a-z]))/', '$1_$2', $string));
     }
-
 }

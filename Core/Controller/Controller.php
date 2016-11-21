@@ -19,7 +19,7 @@ class Controller
         // TODO Appliquer control access access  en fonction du fichier security.php
         $this->viewpath = ROOT.'/App/View/';
         $this->route = $this->get('router');
-        $this->auth =  new DbAuth();
+        $this->auth = $this->get('auth');
     }
 
     protected function createForm($form)
@@ -49,8 +49,7 @@ class Controller
 
     public function controlAccess(Route $route)
     {
-        $app = App::getInstance();
-        $ac = $app->getAccessControl();
+        $ac = $this->get('access_control');
         foreach ($ac as $rule) {
             if (preg_match('/'.$rule['path'].'/', $route->getPath())) {
                 foreach ($rule['roles'] as $role) {
@@ -67,8 +66,6 @@ class Controller
 
     protected function filterAccess($role = 'ROLE_DEFAULT', $msg = 'Impossible d\'accéder à cette page!')
     {
-        $app = App::getInstance();
-        $auth = new DbAuth();
         if (false === $this->auth->isGranted($role, $msg)) {
             $this->forbidden($msg);
             // TODO  créer createAccessDeniedException

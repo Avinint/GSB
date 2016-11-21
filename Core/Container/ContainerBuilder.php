@@ -10,5 +10,9 @@ class ContainerBuilder
     {
         $container->register(new ConfigProvider());
 		$container->register(new RouterProvider());
+		$container->register(new ExceptionHandlerProvider());
+		$container->register(new AuthProvider());
+		$container->register(new AccessControlProvider());
+		$container->register(new DatabaseProvider());
     }
 } 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Core\Component;
+namespace Core\Component\Auth;
 
 use Core\Database\Database;
 use Core\Entity\UserInterface;
@@ -39,4 +39,13 @@ class DbAuth
 		}
 		return false;
 	}
+	
+	public function getAccessControl()
+    {
+        if (is_null($this->accessControl)) {
+            $this->accessControl = $this->getConfig()->get('access_control');
+        }
+
+        return $this->accessControl;
+    }
 }
