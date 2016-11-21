@@ -104,8 +104,8 @@ class Controller
         throw new \Exception("redirection"); // TDODO test and remove?
     }
 
-    public function handleRequest($form, $object, $route){
-
+    public function handleRequest($form, $object, $route)
+    {
         if(!empty($_POST) || !empty($_FILES)){
 
             $fields = $form->parseFields($_POST);
@@ -207,5 +207,13 @@ class Controller
             $fields = array_intersect_key($fields, $object['entity']->getVars());
             $files = array_intersect_key($files, $object['entity']->getVars());
         }
+    }
+
+    public function get($service)
+    {
+        $app = App::getInstance();
+        $container = $app->getContainer();
+
+        return $container[$service];
     }
 }

@@ -13,6 +13,7 @@ class Config
 		{
 			self::$_instance = new Config($parameters, $config, $security);
 		}
+
 		return self::$_instance;
 	}
 	
@@ -23,6 +24,11 @@ class Config
 			 require($config), 
 			 require($security));
 	}
+
+    public function load($parameters, $config, $security)
+    {
+        return self::$_instance;
+    }
 	
 	public function get($key)
 	{
