@@ -9,11 +9,9 @@ class HomeController extends AppController
     public function index()
     {
         $app = \App::getInstance();
-        $user = $app->getTable('AppModule:Utilisateur')->find(1);
-        var_dump($user);
-       
+        //$user = $app->getTable('AppModule:Utilisateur')->find(1);
 		//$utis = $app->getTable('utilisateur')->all();
-		//$users = Utilisateur::findByVille('Paris');
+		
         /* echo $uti->prenom.' '.$uti->nom.BR;
         $user = Utilisateur::find(2);
         echo $user->prenom.' '.$uti->nom;

@@ -98,10 +98,6 @@ class Table {
     {
         $query = $this
         ->createQueryBuilder('a')
-        ->addSelect('p.nom pays_nom')
-         ->addSelect('c.nom continent_nom')
-        ->leftJoin('a.pays', 'p')
-        ->leftJoin('p.continent', 'c')
         ->limit(0, 1)
         ->getQuery()
         ;
