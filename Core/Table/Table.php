@@ -57,7 +57,8 @@ class Table {
     public function __construct($entity = null)
     {
         $app = App::getInstance();
-        $this->db = $app->getDb();
+        $this->db = $app->getContainer('db');
+
         if($entity){
             $this->entity = $entity;
             $entity = end(explode(':', $entity));

@@ -67,7 +67,7 @@ abstract class BaseApp
             $className = 'Core\\Table\\Table';
         }
 
-        return new $className($fullName);
+        return new $className($name);
     }
 
     public function getConfig()

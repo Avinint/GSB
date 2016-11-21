@@ -4,7 +4,7 @@ namespace Core\Component\Database;
 
 use \PDO;
 
-class MySQLDatabase extends Database{
+class MySQLDatabase {
 
     private $db_name;
     private $db_user;
@@ -51,6 +51,7 @@ class MySQLDatabase extends Database{
 
     public function prepare($statement, $attr, $class = null, $one = false, $ctor = null)
     {
+        $data = null;
         $req = $this->getPDO()->prepare($statement);
         $res = $req->execute($attr);
 

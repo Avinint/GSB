@@ -1,6 +1,6 @@
 <?php
 
-namespace Core\DataBase;
+namespace Core\Component\DataBase;
 
 class DataBase
 {

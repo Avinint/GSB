@@ -4,20 +4,16 @@ namespace Core\Controller;
 
 use \App;
 use Core\View\View;
-use Core\Component\Router;
-use Core\Component\Router\Route;
-use Core\Component\DbAuth;
 
 class Controller
 {
     protected $viewpath;
-    protected $auth;
+    protected $container;
 	
     public function __construct()
     {
-        // TODO Appliquer control access access  en fonction du fichier security.php
+        $this->initContainer();
         $this->viewpath = ROOT.'/App/View/';
-        $this->auth = $this->get('auth');
     }
 
     protected function createForm($form)
@@ -34,7 +30,7 @@ class Controller
 
     protected function getRouter()
     {
-        return $this->get('router');
+        return $this->container['router'];
     }
 
     // TODO remove
@@ -52,11 +48,11 @@ class Controller
 
     public function controlAccess()
     {
-        $ac = $this->get('access_control');
+        $ac = $this->container['access_control'];
         foreach ($ac as $rule) {
-            if (preg_match('%'.$rule['path'].'%', $this->get('current_route')->getPath())) {
+            if (preg_match('%'.$rule['path'].'%', $this->container['current_route']->getPath())) {
                 foreach ($rule['roles'] as $role) {
-                    if ($role === 'FREE_ACCESS' or true === $this->get('auth')->isGranted($role)) {
+                    if ($role === 'FREE_ACCESS' or true === $this->container['auth']->isGranted($role)) {
                         return;
                     }
                 }
@@ -68,7 +64,7 @@ class Controller
 
     protected function filterAccess($role = 'ROLE_DEFAULT', $msg = 'Impossible d\'accéder à cette page!')
     {
-        if (false === $this->auth->isGranted($role, $msg)) {
+        if (false === $this->container['auth']->isGranted($role, $msg)) {
             $this->forbidden($msg);
             // TODO  créer createAccessDeniedException
         }
@@ -207,11 +203,10 @@ class Controller
         }
     }
 
-    public function get($service)
+    public function initContainer()
     {
         $app = App::getInstance();
-        $container = $app->getContainer();
-
-        return $container[$service];
+        $this->container = $app->getContainer();
     }
+
 }
