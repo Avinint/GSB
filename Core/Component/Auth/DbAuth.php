@@ -14,7 +14,7 @@ class DbAuth
 	*/
     public function login(UserInterface $user, $password)
     {
-        if($user->getMdp() === hash('sha512', $password)){
+        if($user->getMdp() === password_hash($password, PASSWORD_BCRYPT)){
             $_SESSION['auth'] = $user->getId();
             $_SESSION['role'] = $user->getRole_id();
             return true;

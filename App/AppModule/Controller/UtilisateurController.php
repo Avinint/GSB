@@ -62,7 +62,7 @@ class UtilisateurController extends AppController
 
                 if($_POST['signup_mdp'] === $_POST['signup_mdpConf']){
 
-                    $_POST['signup_mdp'] = hash('sha512', $_POST['signup_mdp']);
+                    $_POST['signup_mdp'] =  password_hash($_POST['signup_mdp'], PASSWORD_BCRYPT );
                     $user = new Utilisateur();
                     //unset($_POST['signup_mdp_conf']);
 
