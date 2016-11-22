@@ -30,7 +30,7 @@ class Controller
 	
 	protected function generateURL($routeName, $parameters = array())
 	{
-		return $this->container['router']->generateURL($routeName, $parameters)
+		return $this->container['router']->generateURL($routeName, $parameters);
 	}
 
     // TODO remove
