@@ -24,8 +24,8 @@ class Controller
 
     protected function render($view, $variables = [], $template = 'default')
     {
-        $view = new View($view, $template);
-        $view->render($variables);
+        $view = new View($view);
+        $view->render($variables, $template);
     }
 	
 	protected function generateURL($routeName, $parameters = array())
