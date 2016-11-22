@@ -22,16 +22,16 @@ class Controller
         return new $form();
     }
 
-    protected function render($view, $variables = [])
+    protected function render($view, $variables = [], $template = 'default')
     {
-        $view = new View($view);
+        $view = new View($view, $template);
         $view->render($variables);
     }
-
-    protected function getRouter()
-    {
-        return $this->container['router'];
-    }
+	
+	protected function generateURL($routeName, $parameters = array())
+	{
+		return $this->container['router']->generateURL($routeName, $parameters)
+	}
 
     // TODO remove
     protected function loadModel($model)
@@ -203,7 +203,7 @@ class Controller
         }
     }
 
-    public function initContainer()
+    private function initContainer()
     {
         $app = App::getInstance();
         $this->container = $app->getContainer();
