@@ -7,16 +7,16 @@ use App\AppModule\Form\ProfilForm;
 use App\AppModule\Entity\Utilisateur;
 use App\AppModule\Form\ContactForm;
 use App\AppModule\Form\InscriptionForm;
-use Core\AppModule\Component\DbAuth;
+use Core\Component\Auth;
 
 class UtilisateurController extends AppController
 {
-    public function __construct()
+    /*public function __construct()
     {
         parent::__construct();
         $this->loadModel('Article');
         $this->loadModel('Utilisateur');
-    }
+    }*/
 
     /*public function login()
     {
@@ -41,10 +41,10 @@ class UtilisateurController extends AppController
     {
         $logout = $this->logout();
         if(isset($_SESSION['auth'])){
-            $user =  $this->Utilisateur->findNoPassword($_SESSION['auth']);
+            $user =  $this->getTable('AppModule:Utilisateur')->findNoPassword($_SESSION['auth']);
         }
         $login = $this->login();
-        $headlines = $this->Article->extract('id', 'titre');
+        $headlines = $this->getTable('AppModule:Article')->extract('id', 'titre');
         $page = 'Contactez nous:';
         $form = new ContactForm();
         $this->render('User:contact.php', array('form'=> $form,'page'=> $page, 'login'=> $login, 'logout'=> $logout, 'User'=>$user, 'headlines'=> $headlines));
@@ -55,10 +55,10 @@ class UtilisateurController extends AppController
         $error = false;
         $form = new InscriptionForm();
         if(!empty($_POST) && $_POST['signup_action'] == 'signup'){
+            ;
+            $auth = $this->container['auth'];
 
-            $auth = new DBAuth();
-
-            if($this->Utilisateur->valueAvailable('pseudo', $_POST['signup_pseudo'])){
+            if($this->getTable('AppModule:Utilisateur')->valueAvailable('pseudo', $_POST['signup_pseudo'])){
 
                 if($_POST['signup_mdp'] === $_POST['signup_mdpConf']){
 
@@ -66,12 +66,13 @@ class UtilisateurController extends AppController
                     $user = new Utilisateur();
                     //unset($_POST['signup_mdp_conf']);
 
+                    var_dump('hello');
                     $object = array('entity' => $user,
                         'login' => true,
                         'children' => array(
                         ));
 
-                    $this->handleRequest($form, $object, $this->route->generateURL('utilisateur_profil_edit'));
+                    $this->handleRequest($form, $object, $this->generateURL('utilisateur_profil_edit'));
                 }
             }
 
@@ -80,11 +81,11 @@ class UtilisateurController extends AppController
             }
 
 
-        $headlines = $this->Article->extract('id', 'titre');
+       // $headlines = $this->getTable('AppModule:Utilisateur')->extract('id', 'titre');
 
-        $login = $this->login();
+       // $login = $this->login();
         $page = 'Inscription:';
 
-        $this->render('User:inscription.php', compact('form','page', 'login', 'headlines'));
+        $this->render('AppModule:User:inscription.php', compact('form','page'), 'no_template');
     }
 }

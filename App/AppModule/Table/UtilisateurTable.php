@@ -41,6 +41,6 @@ class UtilisateurTable extends Table
             ->getQuery()
             ;
 
-        return !$query->getSingleResult();
+        return false === $query->getSingleResult();
     }
 }

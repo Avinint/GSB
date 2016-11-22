@@ -8,10 +8,9 @@ class HomeController extends AppController
 {
     public function index()
     {
-        $app = \App::getInstance();
-		
-		echo password_hash('riveton', PASSWORD_BCRYPT);
-		var_dump(hash_equals(password_hash('riveton', PASSWORD_BCRYPT), '$2y$10$qdulqZfFgNMxG3866JK5v.eES0k2artaFRiogVCpYRqWlOk463y/i'))."\n"; die();
+		//echo password_hash('riveton', PASSWORD_BCRYPT);if(!function_exists('hash_equals'))
+
+
        // $user = $app->getTable('AppModule:Utilisateur')->find(1);
 		//$utis = $app->getTable('utilisateur')->all();
 		

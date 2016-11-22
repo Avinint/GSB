@@ -17,10 +17,6 @@ return array(
         'path' => '/yoyo',
         'controller' => 'AppModule:HomeController:show',
     ),
-    'yoyolalapage' => array(
-        'path' => '/yoyo/lala',
-        'controller' => 'AppModule:HomeController:show',
-    ),
     'admin_control_panel' => array(
         'path' => '/control/panel',
         'controller' => 'AppModule:Admin:AdminController:panel',
