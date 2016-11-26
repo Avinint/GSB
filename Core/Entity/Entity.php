@@ -25,7 +25,7 @@ class Entity
 	}
 
 
-    public function getClassName()
+    public function getTableName()
     {
         $class = explode("\\", get_called_class());
         $class = strtolower(end($class));

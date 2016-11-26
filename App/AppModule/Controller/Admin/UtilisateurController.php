@@ -45,8 +45,8 @@ class UtilisateurController extends AdminController
 
         if(!empty($_POST) && $_POST['uti_action'] == 'uti'){
             if($_POST['uti_mdp'] !== ''){
-                $_POST['uti_mdp'] = hash('sha512', $_POST['uti_mdp']);
-                $_POST['uti_mdpConf'] = hash('sha512', $_POST['uti_mdpConf']);
+                //$_POST['uti_mdp'] = hash('sha512', $_POST['uti_mdp']);
+                //$_POST['uti_mdpConf'] = hash('sha512', $_POST['uti_mdpConf']);
             }
 
             $object = array(
@@ -75,8 +75,8 @@ class UtilisateurController extends AdminController
 
         if(!empty($_POST) && $_POST['uti_action'] == 'uti'){
             if($_POST['uti_mdp'] !== ''){
-                $_POST['uti_mdp'] = hash('sha512', $_POST['uti_mdp']);
-                $_POST['uti_mdpConf'] = hash('sha512', $_POST['uti_mdpConf']);
+               // $_POST['uti_mdp'] = hash('sha512', $_POST['uti_mdp']);
+              //  $_POST['uti_mdpConf'] = hash('sha512', $_POST['uti_mdpConf']);
             }
 
             $object = array(
@@ -113,8 +113,8 @@ class UtilisateurController extends AdminController
         if(!empty($_POST) && $_POST['profil_action'] == 'editProfil'){
 
             if($_POST['profil_mdp'] !== ''){
-                $_POST['profil_mdp'] = hash('sha512', $_POST['profil_mdp']);
-                $_POST['profil_mdpConf'] = hash('sha512', $_POST['profil_mdpConf']);
+               // $_POST['profil_mdp'] = hash('sha512', $_POST['profil_mdp']);
+                //$_POST['profil_mdpConf'] = hash('sha512', $_POST['profil_mdpConf']);
             }
             $object = array('entity' => $user);
 

@@ -63,6 +63,7 @@ class Utilisateur extends Entity implements UserInterface{
      */
     public function setMdp($mdp)
     {
+        $mdp = password_hash ($mdp, PASSWORD_BCRYPT);
         $this->mdp = $mdp;
     }
 

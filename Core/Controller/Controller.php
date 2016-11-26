@@ -119,9 +119,8 @@ class Controller
                     }
                 }
                 foreach ($form->all() as $name => $options){
-                    if ($options['type'] === 'password'){
-                        if(isset($options['confirmation']) || $fields[$name] === ''){
-
+                    if ($options['type'] === 'password') {
+                        if (isset($options['confirmation']) || $fields[$name] === '') {
                             unset($fields[$name]);
                         }
                     }
@@ -129,30 +128,36 @@ class Controller
                 $this->cascadeRelations($fields, $files, $object);
                 echo 'Donnees valides';
 
-                $class = ucfirst($object['entity']->getClassName());
-                if($object['entity']->getId()){
-                    $result = $this->$class->update(
+
+                $class = ucfirst($object['entity']->getClass());
+
+                if ($object['entity']->getId()) {
+                    $result = $this->getTable($class)->update(
                         $object['entity'], $fields, $files
                     );
-                }else{
+                } else {
                     if(array_key_exists('date', $object['entity']->getVars())){
                         $fields['date'] = $this->insertDate();
                     }
-                    $result = $this->$class->create(
+                    var_dump($this->getTable($class));
+                    $result = $this->getTable($class)->create(
                         $object['entity'],$fields, extract($files)
                     );
+
+
                 }
 
-                if($result){
+                if ($result){
                     /* Si c'est une inscription on logue le nouvel utilisateur */
-                    if(isset($object['login'])){
-                        $id =  $this->$class->lastInsertId();
+                    if (isset($object['login'])) {
+                        $id =  $this->getTable($class)->lastInsertId();
                         $_SESSION['auth'] = $id;
                     }
                     // TO DO redirect
+                    var_dump($route);
                     $this->redirect($route);
                 }
-            }else{// fin validate
+            } else {// fin validate
                 echo 'formulaire non valide';
             }
         }

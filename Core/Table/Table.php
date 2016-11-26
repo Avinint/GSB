@@ -61,7 +61,8 @@ class Table {
 
         if($entity){
             $this->entity = $entity;
-            $entity = end(explode(':', $entity));
+            $entity = explode(':', $entity);
+            $entity = end($entity);
             $this->table = $app->decamelize($entity);
         }else{
             $this->getDbTableName();

@@ -54,19 +54,17 @@ class UtilisateurController extends AppController
     {
         $error = false;
         $form = new InscriptionForm();
-        if(!empty($_POST) && $_POST['signup_action'] == 'signup'){
-            ;
+        if (!empty($_POST) && $_POST['signup_action'] == 'signup') {
+
             $auth = $this->container['auth'];
 
             if($this->getTable('AppModule:Utilisateur')->valueAvailable('pseudo', $_POST['signup_pseudo'])){
 
                 if($_POST['signup_mdp'] === $_POST['signup_mdpConf']){
-
-                    $_POST['signup_mdp'] =  password_hash($_POST['signup_mdp'], PASSWORD_BCRYPT );
+                    //$_POST['signup_mdp'] =  password_hash($_POST['signup_mdp'], PASSWORD_BCRYPT );
                     $user = new Utilisateur();
                     //unset($_POST['signup_mdp_conf']);
 
-                    var_dump('hello');
                     $object = array('entity' => $user,
                         'login' => true,
                         'children' => array(
@@ -75,10 +73,9 @@ class UtilisateurController extends AppController
                     $this->handleRequest($form, $object, $this->generateURL('utilisateur_profil_edit'));
                 }
             }
-
-            }else{
-                $error = 'identifiants d\'inscription non corrects';
-            }
+        } else {
+            $error = 'identifiants d\'inscription non corrects';
+        }
 
 
        // $headlines = $this->getTable('AppModule:Utilisateur')->extract('id', 'titre');
