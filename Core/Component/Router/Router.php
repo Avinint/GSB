@@ -11,7 +11,7 @@ class Router
 
     public function __construct()
     {
-        $this->initRoutes(require ROOT.D_S.'App'.D_S.'Config'.D_S.'routes.php');
+        $this->initRoutes(require ROOT.D_S.'App'.D_S.'config'.D_S.'routes.php');
         $this->currentRoute = new Route();
     }
 

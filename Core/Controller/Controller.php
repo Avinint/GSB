@@ -99,7 +99,7 @@ class Controller
         throw new \Exception("redirection"); // TDODO test and remove?
     }
 
-    public function handleRequest($form, $object, $route)
+    public function handleRequestBack($form, $data, $route)
     {
         if(!empty($_POST) || !empty($_FILES)){
 
@@ -109,12 +109,11 @@ class Controller
 
             if($form->validate($fields)){
 
-                if(isset($object['fk'])){
-
-                    foreach($object['fk'] as $k => $v){
+                if(isset($data['fk'])){
+                    foreach($data['fk'] as $k => $v){
                         if(array_key_exists($k, $fields)){
-                            $fields[$v] = $fields[$k];
-                            unset($fields[$k]);
+                            $fields[$v] = $fields[$k]; // $fields['role_id'] = $fields ['role']
+                            unset($fields[$k]);  //unset role
                         }
                     }
                 }
@@ -125,32 +124,28 @@ class Controller
                         }
                     }
                 }
-                $this->cascadeRelations($fields, $files, $object);
+                $this->cascadeRelations($fields, $files, $data);
                 echo 'Donnees valides';
 
+                $class = ucfirst($data['entity']->getClass());
 
-                $class = ucfirst($object['entity']->getClass());
-
-                if ($object['entity']->getId()) {
+                if ($data['entity']->getId()) {
                     $result = $this->getTable($class)->update(
-                        $object['entity'], $fields, $files
+                        $data['entity'], $fields, $files
                     );
                 } else {
-                    if(array_key_exists('date', $object['entity']->getVars())){
+                    if(array_key_exists('date', $data['entity']->getVars())){
                         $fields['date'] = $this->insertDate();
                     }
-                    var_dump($this->getTable($class));
                     $result = $this->getTable($class)->create(
-                        $object['entity'],$fields, extract($files)
+                        $data['entity'],$fields, extract($files)
                     );
-
-
                 }
 
-                if ($result){
+                if ($result) {
                     /* Si c'est une inscription on logue le nouvel utilisateur */
-                    if (isset($object['login'])) {
-                        $id =  $this->getTable($class)->lastInsertId();
+                    if (isset($data['login'])) {
+                        $id = $this->getTable($class)->lastInsertId();
                         $_SESSION['auth'] = $id;
                     }
                     // TO DO redirect
@@ -163,48 +158,123 @@ class Controller
         }
     }
 
-    public function cascadeRelations(&$fields, &$files, $object)
+    public function cascadeRelations(&$fields, &$files, $data)
     {
         $result = null;
         $childObject = array();
         $childFiles = array();
 
-        if(isset($object['children'])){
-            $children = $object['children'];
-            foreach($children as $class => $child){
-                $object = $child['entity'];
+        if (isset($data['children'])) {
+            $children = $data['children'];
+            foreach ($children as $class => $child) {
+                $data = $child['entity'];
                 // var_dump($object->getVars());
-                if($object){
-                    foreach ($object->getVars() as $key => $value){
-
-                        if(array_key_exists($key, $fields)){
-                            $childObject = array_intersect_key($fields, $object->getVars());
-                            $fields = array_diff_key($fields, $object->getVars());
+                if ($data) {
+                    foreach ($data->getVars() as $key => $value) {
+                        if (array_key_exists($key, $fields)) {
+                            $childObject = array_intersect_key($fields, $data->getVars());
+                            $fields = array_diff_key($fields, $data->getVars());
                         }
-                        if(array_key_exists($key, $files)){
-                            $childFiles = array_intersect_key($files, $object->getVars());
-                            $files = array_diff_key($files, $object->getVars());
+                        if (array_key_exists($key, $files)) {
+                            $childFiles = array_intersect_key($files, $data->getVars());
+                            $files = array_diff_key($files, $data->getVars());
                         }
                     }
 
-                    if($object->getId() === null){
+                    if ($data->getId() === null) {
                         $result = $this->$class->create(
-                            $object, $childObject, $childFiles, $class
+                            $data, $childObject, $childFiles, $class
                         );
-                        if($result){
+                        if ($result) {
                             $id =  $this->$class->lastInsertId();
                             $fields[$children[key($children)]['db_name']] = $id;
                         }
-                    }else{
+                    } else {
                         $result = $this->$class->update(
-                            $object, $childObject, $childFiles, $class
+                            $data, $childObject, $childFiles, $class
                         );
                     }
                 }
             }
-        }else{
-            $fields = array_intersect_key($fields, $object['entity']->getVars());
-            $files = array_intersect_key($files, $object['entity']->getVars());
+        } else {
+            $fields = array_intersect_key($fields, $data['entity']->getVars());
+            $files = array_intersect_key($files, $data['entity']->getVars());
+        }
+    }
+
+    public function handleRequest($form, $data)
+    {
+        if(!empty($_POST) || !empty($_FILES)){
+
+            $fields = $form->parseFields($_POST);
+            $files = $form->parseFields($_FILES);
+            $result = null;
+
+            if ($form->validate($fields)) {
+                if(isset($data['fk'])){
+                    foreach($data['fk'] as $k => $v){
+                        if(array_key_exists($k, $fields)){
+                            $fields[$v] = $fields[$k]; // $fields['role_id'] = $fields ['role']
+                            unset($fields[$k]);  //unset role
+                        }
+                    }
+                }
+                foreach ($form->all() as $name => $options){
+                    if ($options['type'] === 'password') {
+                        if (isset($options['confirmation']) || $fields[$name] === '') {
+                            unset($fields[$name]);
+                        }
+                    }
+                }
+
+                $class = ucfirst($data['entity']->getClass());
+                if ($data['entity']->getId()) {
+                    $result = $this->getTable($class)->update(
+                        $data['entity'], $fields, $files
+                    );
+                } else {
+                    if(array_key_exists('date', $data['entity']->getVars())){
+                        $fields['date'] = $this->insertDate();
+                    }
+                    $result = $this->getTable($class)->create(
+                        $data['entity'],$fields, extract($files)
+                    );
+                }
+
+            } else {// fin validate
+                echo 'formulaire non valide';
+            }
+        }
+    }
+
+    public function save($object, $route)
+    {
+        $this->cascadeRelations($fields, $files, $object);
+
+        $class = ucfirst($object['entity']->getClass());
+
+        if ($object['entity']->getId()) {
+            $result = $this->getTable($class)->update(
+                $object['entity'], $fields, $files
+            );
+        } else {
+            if(array_key_exists('date', $object['entity']->getVars())){
+                $fields['date'] = $this->insertDate();
+            }
+            $result = $this->getTable($class)->create(
+                $object['entity'],$fields, extract($files)
+            );
+        }
+
+        if ($result) {
+            /* Si c'est une inscription on logue le nouvel utilisateur */
+            if (isset($data['login'])) {
+                $id = $this->getTable($class)->lastInsertId();
+                $_SESSION['auth'] = $id;
+            }
+            // TO DO redirect
+            var_dump($route);
+            $this->redirect($route);
         }
     }
 

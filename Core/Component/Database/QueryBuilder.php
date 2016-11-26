@@ -1,6 +1,6 @@
 <?php
 
-namespace Core\Database;
+namespace Core\Component\Database;
 
 use Core\Table\Table;
 
@@ -142,7 +142,6 @@ class QueryBuilder{
 
         return $this;
     }
-
 
     public function orderBy($field, $order = null)
     {

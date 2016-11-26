@@ -3,7 +3,7 @@
 namespace Core\Table;
 
 use Core\Database\Database;
-use Core\Database\QueryBuilder;
+use Core\Component\Database\QueryBuilder;
 use \App;
 use Core\Config;
 use Core\Entity\Entity;
@@ -366,7 +366,7 @@ class Table {
 
     public function getPrefix()
     {
-        $config = Config::getInstance(ROOT.'/Config/dbConfig.php', ROOT.'/Config/config.php', ROOT.'/Config/security.php');
+        $config = Config::getInstance(ROOT.'/config/dbConfig.php', ROOT.'/config/config.php', ROOT.'/config/security.php');
         return $config->get('db_prefix');
     }
 }

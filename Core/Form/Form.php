@@ -5,6 +5,7 @@ namespace Core\Form;
 abstract class Form{
 	
 	protected $data;
+    protected $errors;
     protected $clicked;
     protected $fields = array();
     protected $entityLists = array();
@@ -75,6 +76,15 @@ abstract class Form{
     public abstract function buildForm(FormBuilder $builder);
 
 
+    public function isValid()
+    {
+        if (count($this->errors) > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function validate($data)
     {
         $errors = array();
@@ -91,12 +101,11 @@ abstract class Form{
                 $errors[$key]['emptyField'] = 'Ce champ ne peut pas être vide.';
             }
 
-            if($field['type'] === 'password' ){
-                if(!isset($field['options']['doNotHydrate'])){
-                    if(strlen($data[$key]) <3 || strlen($data[$key]) > 255){
+            if ($field['type'] === 'password') {
+                if (!isset($field['options']['doNotHydrate'])) {
+                    if (strlen($data[$key]) <3 || strlen($data[$key]) > 60) {
                         $errors[$key]['textNotValid'] = 'Ce texte n\'est pas valide.';
                     }
-
                 }
                 if(isset($field['options']['confirmation'])){
                     if($data[$key] !== $data[$field['options']['confirmation']]){
@@ -113,7 +122,9 @@ abstract class Form{
            /* if($field['type'] === 'text'){
                 if($field)
             }*/
-        var_dump($errors);
+
+        $this->$errors = $errors;
+
         return empty($errors);
     }
 
