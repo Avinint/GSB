@@ -2,14 +2,13 @@
 
 namespace App\Controller\Admin;
 
-use App\Form\LoginForm;
-use App\Form\ProfilForm;
-use App\Form\UtilisateurForm;
-use App\Form\UtilisateurAddForm;
-use App\Entity\Utilisateur;
-use App\Form\ContactForm;
-use App\Form\InscriptionForm;
-use Core\Auth\DbAuth;
+use App\AppModule\Form\LoginForm;
+use App\AppModule\Form\ProfilForm;
+use App\AppModule\Form\UtilisateurForm;
+use App\AppModule\Form\UtilisateurAddForm;
+use App\AppModule\Entity\Utilisateur;
+use App\AppModule\Form\ContactForm;
+use App\AppModule\Form\InscriptionForm;
 
 class UtilisateurController extends AdminController
 {
@@ -23,9 +22,9 @@ class UtilisateurController extends AdminController
     public function index()
     {
         $logout = $this->logout();
-        $user =  $this->Utilisateur->findNoPassword($_SESSION['auth']);
+        $user =  $this->getTable('AppBundle:Utilisateur')->findNoPassword($_SESSION['auth']);
 
-        $utis = $this->Utilisateur->findAll();
+        $utis = $this->getTable('AppModule:Utilisateur')->findAll();
         $this->render('Admin:User:index.php', array(
                 'logout' => $logout,
                 'utis' => $utis,
@@ -37,8 +36,8 @@ class UtilisateurController extends AdminController
     {
         extract($id);
         $logout = $this->logout();
-        $user =  $this->Utilisateur->findNoPassword($_SESSION['auth']);
-        $uti =  $this->Utilisateur->find($id);
+        $user =  $this->getTable('AppModule:Utilisateur')->findNoPassword($_SESSION['auth']);
+        $uti =  $this->getTable('AppModule:Utilisateur')->find($id);
         $form = new UtilisateurForm($this->route->generateURL('admin_utilisateur_edit', array(
                 'id' => $id,
             )), $uti);
@@ -49,12 +48,12 @@ class UtilisateurController extends AdminController
                 //$_POST['uti_mdpConf'] = hash('sha512', $_POST['uti_mdpConf']);
             }
 
-            $object = array(
+            $data = array(
                 'entity' => $uti,
                 'fk' => array('role' => 'role_id')
                 );
 
-            $this->handleRequest($form, $object, $this->route->generateURL('admin_utilisateur_index'));
+            $this->handleRequest($data, $object, $this->route->generateURL('admin_utilisateur_index'));
         }
 
         $this->render('Admin:User:edit.php', array(
@@ -68,7 +67,7 @@ class UtilisateurController extends AdminController
     public function add()
     {
         $logout = $this->logout();
-        $user =  $this->Utilisateur->findNoPassword($_SESSION['auth']);
+        $user =  $this->getTable('AppModule:Utilisateur')->findNoPassword($_SESSION['auth']);
         $uti =  new Utilisateur();
         $form = new UtilisateurAddForm($this->route->generateURL('admin_utilisateur_add'
             ), $uti);
@@ -79,12 +78,12 @@ class UtilisateurController extends AdminController
               //  $_POST['uti_mdpConf'] = hash('sha512', $_POST['uti_mdpConf']);
             }
 
-            $object = array(
+            $data = array(
                 'entity' => $uti,
                 'fk' => array('role' => 'role_id')
             );
 
-            $this->handleRequest($form, $object, $this->route->generateURL('admin_utilisateur_index'));
+            $this->handleRequest($form, $data, $this->route->generateURL('admin_utilisateur_index'));
         }
 
         $this->render('Admin:Article:add.php', array(
@@ -97,8 +96,8 @@ class UtilisateurController extends AdminController
     public function delete()
     {
         if(!empty($_POST)){
-            if($this->Utilisateur->delete($_POST['id'])){
-                $this->redirect($this->route->generateURL('admin_utilisateur_index'));
+            if($this->getTable('AppModule:Utilisateur')->delete($_POST['id'])){
+                $this->redirect($this->generateURL('admin_utilisateur_index'));
             }
         }
     }
@@ -106,9 +105,9 @@ class UtilisateurController extends AdminController
     public function editProfil()
     {
         $logout = $this->logout();
-        $user =  $this->Utilisateur->findNoPassword($_SESSION['auth']);
+        $user =  $this->getTable('AppModule:Utilisateur')->findNoPassword($_SESSION['auth']);
 
-        $form = new ProfilForm($this->route->generateURL('utilisateur_profil_edit'), $user);
+        $form = new ProfilForm($this->generateURL('utilisateur_profil_edit'), $user);
 
         if(!empty($_POST) && $_POST['profil_action'] == 'editProfil'){
 
@@ -118,7 +117,7 @@ class UtilisateurController extends AdminController
             }
             $object = array('entity' => $user);
 
-            $this->handleRequest($form, $object, $this->route->generateURL('admin_control_panel'));
+            $this->handleRequest($form, $object, $this->generateURL('admin_control_panel'));
         }
 
         $headlines = $this->Article->extract('id', 'titre');
