@@ -31,23 +31,23 @@ return array(
     ),
     'utilisateur_profil_edit' => array(
         'path' => '/profil/edit',
-        'controller' => 'AppModule:Admin:UtilisateurController:editProfil',
+        'controller' => 'AppModule:BackOfficeController:editProfil',
     ),
-    'admin_utilisateur_index' => array(
+    'utilisateur_index' => array(
         'path' => '/admin/utilisateur/index',
-        'controller' => 'AppModule:Admin:UtilisateurController:index',
+        'controller' => 'AppModule:BackOfficeController:index',
     ),
-    'admin_utilisateur_edit' => array(
+    'utilisateur_edit' => array(
         'path' => '/admin/utilisateur/edit/{id}',
-        'controller' => 'AppModule:Admin:UtilisateurController:edit',
+        'controller' => 'AppModule:BackOfficeController:edit',
     ),
-    'admin_utilisateur_add' => array(
+    'utilisateur_add' => array(
         'path' => '/admin/utilisateur/add',
-        'controller' => 'AppModule:Admin:UtilisateurController:add',
+        'controller' => 'AppModule:BackOfficeController:add',
     ),
-    'admin_utilisateur_delete' => array(
+    'utilisateur_delete' => array(
         'path' => '/admin/utilisateur/delete',
-        'controller' => 'AppModule:Admin:UtilisateurController:delete',
+        'controller' => 'AppModule:BackOfficeController:delete',
     ),
    
 );

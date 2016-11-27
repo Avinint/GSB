@@ -123,7 +123,7 @@ abstract class Form{
                 if($field)
             }*/
 
-        $this->$errors = $errors;
+        $this->errors = $errors;
 
         return empty($errors);
     }

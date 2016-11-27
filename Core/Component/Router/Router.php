@@ -52,12 +52,13 @@ class Router
             $basepath = array_filter(explode('/', $_SERVER['SCRIPT_NAME']));
             $uri = array_map(function ($a) { return "/".$a ;}, $basepath );
             $uri = str_replace($uri, '', $_SERVER['REQUEST_URI']);
+
             $uri = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $uri);
             $uri = preg_replace('|/dev(?=/)|', '', $uri);
             $uri = preg_replace('|/dev$|', '', $uri);
             $uri = str_replace('/index_dev.php', '', $uri);
-            //  /dev or /dev/removed but not /devine
 
+            //  /dev or /dev/removed but not /devine
             $this->currentRoute->setPath($uri);
         }
 
@@ -83,11 +84,12 @@ class Router
                     // On remplira le tableau avec les valeurs récupérés dans l
                 }
 
-                $routePath = $this->currentRoute->getPath();
+                $routePath = $this->currentRoute->getPath() ? : '/';
 
                 if(!$this->currentRoute->getParameters()) {
                     if($routePath !== $path){
                         $data = str_replace($path.'/', '', $routePath);
+
                         $data = ltrim($data, '/');
                         $data = explode('/', $data);
                         $paramKeys = array_keys($params);
@@ -101,7 +103,7 @@ class Router
                 }
 
                 // stripos: pour differencier les routes avec des parametres de l'equivalent sans
-                if(($path === $this->currentRoute->getPath())xor(stripos($routePath, $path) !== false && $count > 0)) {
+                if(($path === $routePath)xor(stripos($routePath, $path) !== false && $count > 0)) {
                     $this->currentRoute->setName($name);
                     $this->currentRoute->setController($route['controller']);
 

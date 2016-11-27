@@ -43,7 +43,7 @@ class Controller
     {
         $app = App::getInstance();
 
-        return $app->getTable($model);
+        return strpos($model, ':')?$app->getTable($model) : $app->getTableFromEntity($model);
     }
 
     public function controlAccess()
@@ -117,18 +117,21 @@ class Controller
                         }
                     }
                 }
-                foreach ($form->all() as $name => $options){
-                    if ($options['type'] === 'password') {
-                        if (isset($options['confirmation']) || $fields[$name] === '') {
+                foreach ($form->all() as $name => $def){
+
+                    if ($def['type'] === 'password') {
+                        if (isset($def['options']['confirmation']) || $fields[$name] === '') {
                             unset($fields[$name]);
                         }
+                    }
+                    if($def['type'] === 'hidden' && $name === 'action') {
+                        unset($fields[$name]);
                     }
                 }
                 $this->cascadeRelations($fields, $files, $data);
                 echo 'Donnees valides';
 
                 $class = ucfirst($data['entity']->getClass());
-
                 if ($data['entity']->getId()) {
                     $result = $this->getTable($class)->update(
                         $data['entity'], $fields, $files
@@ -148,8 +151,7 @@ class Controller
                         $id = $this->getTable($class)->lastInsertId();
                         $_SESSION['auth'] = $id;
                     }
-                    // TO DO redirect
-                    var_dump($route);
+
                     $this->redirect($route);
                 }
             } else {// fin validate

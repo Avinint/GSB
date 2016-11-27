@@ -83,6 +83,6 @@ class Route
 
     public function __toString()
     {
-        return "/";
+        return $this->getName();
     }
 }
