@@ -2,7 +2,6 @@
 
 namespace Core\Component\Auth;
 
-use Core\Database\Database;
 use Core\Entity\UserInterface;
 
 class DbAuth
@@ -14,7 +13,8 @@ class DbAuth
 	*/
     public function login(UserInterface $user, $password)
     {
-        if($user->getMdp() === hash('sha512', $password)){
+
+        if( password_verify($password, $user->getMdp())){
             $_SESSION['auth'] = $user->getId();
             $_SESSION['role'] = $user->getRole_id();
             return true;

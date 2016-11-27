@@ -63,6 +63,7 @@ class Utilisateur extends Entity implements UserInterface{
      */
     public function setMdp($mdp)
     {
+        $mdp = password_hash ($mdp, PASSWORD_BCRYPT);
         $this->mdp = $mdp;
     }
 
@@ -156,6 +157,6 @@ class Utilisateur extends Entity implements UserInterface{
 
     public function getFilePath()
     {
-        return  ROOT.D_S.'public'.D_S.'img'.D_S.'avatars';
+        return  ROOT.D_S.'public'.D_S.'img'.D_S.'avatars'.D_S;
     }
 }

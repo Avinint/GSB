@@ -25,9 +25,9 @@ class View implements \ArrayAccess
         return $this->container['router'];
     }
 
-    public function path($path)
+    public function asset($path)
     {
-        return $this->getRouter()->generatePath($path);
+        return $this->getRouter()->getAsset($path);
     }
 
     public function url($route)
@@ -35,8 +35,25 @@ class View implements \ArrayAccess
         return $this->getRouter()->generateURL($route);
     }
 
+    public function display($file)
+    {
+        $file = str_replace (':', D_S, $file);
+        include $this->viewpath.$file.'.php';
+    }
+
+    public function header()
+    {
+        include $this->viewpath.'Template'.D_S.'header.php';
+    }
+
+    public function footer()
+    {
+        include $this->viewpath.'Template'.D_S.'footer.php';
+    }
+
     public function render($parameters, $template ='default')
     {
+        $this->template = $template;
         ob_start();
         extract($parameters);
         require $this->viewpath.$this->view;

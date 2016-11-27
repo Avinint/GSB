@@ -1,0 +1,9 @@
+body{
+    width: 100%;
+}
+.form-box{
+    width: 250px;
+    margin:  0 auto;
+    padding: 10px;
+    background-color: dodgerblue;
+}

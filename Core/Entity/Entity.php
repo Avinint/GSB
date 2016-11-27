@@ -25,7 +25,7 @@ class Entity
 	}
 
 
-    public function getClassName()
+    public function getTableName()
     {
         $class = explode("\\", get_called_class());
         $class = strtolower(end($class));
@@ -48,12 +48,9 @@ class Entity
     }
 
     // retourne le chemin jusqu'au répertoire img ou un
-    public function getFilePath($folder = '')
+    public function getFilePath()
     {
-        if (!is_null($folder)) {
-            $folder = D_S.$folder;
-        }
-        return  ROOT.D_S.'public'.D_S.'img'.$folder;
+        return  ROOT.D_S.'public'.D_S.'img'.D_S;
     }
 
     public function getFilePathFromClass()

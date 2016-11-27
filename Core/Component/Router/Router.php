@@ -52,9 +52,13 @@ class Router
             $basepath = array_filter(explode('/', $_SERVER['SCRIPT_NAME']));
             $uri = array_map(function ($a) { return "/".$a ;}, $basepath );
             $uri = str_replace($uri, '', $_SERVER['REQUEST_URI']);
+
             $uri = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $uri);
-            $uri =  '/'.ltrim($uri, '/dev');
-            $uri =  '/'.ltrim($uri, '/index_dev.php');
+            $uri = preg_replace('|/dev(?=/)|', '', $uri);
+            $uri = preg_replace('|/dev$|', '', $uri);
+            $uri = str_replace('/index_dev.php', '', $uri);
+
+            //  /dev or /dev/removed but not /devine
             $this->currentRoute->setPath($uri);
         }
 
@@ -67,12 +71,12 @@ class Router
         $params = array();
 
         if(!$this->currentRoute->getName()) {
-            foreach($this->routes as $name => $route) {
+            foreach ($this->routes as $name => $route) {
                 $count = 0;
                 $path = $route['path'];
 
                 // On récupère les caractères entre accolades comme paramètres de la route
-                while(strpos($path, '{') !== false && strpos($path, '}') !== false){
+                while(strpos($path, '{') !== false && strpos($path, '}') !== false) {
                     $key = $this->getParams($path);
                     $count++;
                     $params[$key] = null;
@@ -80,15 +84,15 @@ class Router
                     // On remplira le tableau avec les valeurs récupérés dans l
                 }
 
-                $routePath = $this->currentRoute->getPath();
+                $routePath = $this->currentRoute->getPath() ? : '/';
 
                 if(!$this->currentRoute->getParameters()) {
                     if($routePath !== $path){
                         $data = str_replace($path.'/', '', $routePath);
+
                         $data = ltrim($data, '/');
                         $data = explode('/', $data);
                         $paramKeys = array_keys($params);
-
                         foreach ($paramKeys as $value => $key){
                             if($value < count($data)){
                                 $params[$key] = $data[$value];
@@ -99,7 +103,7 @@ class Router
                 }
 
                 // stripos: pour differencier les routes avec des parametres de l'equivalent sans
-                if(($path === $this->currentRoute->getPath())xor(stripos($routePath, $path) !== false && $count > 0)) {
+                if(($path === $routePath)xor(stripos($routePath, $path) !== false && $count > 0)) {
                     $this->currentRoute->setName($name);
                     $this->currentRoute->setController($route['controller']);
 
@@ -116,7 +120,6 @@ class Router
     // launches the controller action that matches the  route
     public function dispatch($controller,  $params = array())
     {
-		
         $controller = explode(':', $controller);
 		$namespace = array_shift($controller);
         $action = array_pop($controller);
@@ -136,11 +139,19 @@ class Router
         }
     }
 
-    public function generatePath($path)
+    public function getAsset($path)
     {
-        $uri = '//'.$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'];
+       // $uri = '//'.$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'];
         // $basepath = implode('/', array_slice(explode('/', $_SERVER['SCRIPT_NAME']), 0, -1)) . '/';;
-        $basepath = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $uri);
+        $basepath = dirname( '//'.$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']).'/';
+        $path = $basepath.$path;
+
+        return $path;
+    }
+    public function getTemplate($path)
+    {
+        $basepath = dirname( '//'.$_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']).'/';
+        $basepath = str_replace('public', 'App/View', $basepath);
         $path = $basepath.$path;
 
         return $path;
