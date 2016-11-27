@@ -49,6 +49,11 @@ abstract class Form{
         $this->data = $data;
     }
 
+    public function getData()
+    {
+        return $this->data;
+    }
+
     public function getName()
     {
         return 'form';
@@ -525,5 +530,95 @@ abstract class Form{
     {
         header('Location: ' . $url, true, $statusCode);
         die();
+    }
+
+    public function handleRequest($data)
+    {
+        $this->setData($data['entity']);
+        echo "data";
+        var_dump($this->getData());
+        if(!empty($_POST) || !empty($_FILES)){
+
+            $fields = $this->parseFields($_POST);
+            $files = $this->parseFields($_FILES);
+            $result = null;
+
+            if ($this->validate($fields)) {
+                if(isset($data['fk'])){
+                    foreach($data['fk'] as $k => $v){
+                        if(array_key_exists($k, $fields)){
+                            $fields[$v] = $fields[$k]; // $fields['role_id'] = $fields ['role']
+                            unset($fields[$k]);  //unset role
+                        }
+                    }
+                }
+                foreach ($this->all() as $name => $def){
+                    if ($def['type'] === 'password') {
+                        if (isset($def['options']['confirmation']) || $fields[$name] === '') {
+                            unset($fields[$name]);
+                        }
+                    }
+                    if($def['type'] === 'hidden' && $name === 'action') {
+                        unset($fields[$name]);
+                    }
+                }
+                $this->cascadeRequest($fields, $files, $data);
+
+                $entity = ($data['entity']);
+                foreach ($fields as $attr => $value) {
+                    $method = 'set'.ucfirst($attr);
+                    $entity->$method($value);
+                }
+                var_dump($entity);
+
+            } else {// fin validate
+                echo 'formulaire non valide';
+            }
+        }
+    }
+
+    public function cascadeRequest(&$fields, &$files, $data)
+    {
+        $result = null;
+        $childObject = array();
+        $childFiles = array();
+
+        if (isset($data['children'])) {
+            $children = $data['children'];
+            foreach ($children as $class => $child) {
+                $obj = $child['entity'];
+                // var_dump($object->getVars());
+                if ($obj) {
+                    foreach ($obj->getVars() as $key => $value) {
+                        if (array_key_exists($key, $fields)) {
+                            $childObject = array_intersect_key($fields, $obj->getVars());
+                            $fields = array_diff_key($fields, $data->getVars());
+                        }
+                        if (array_key_exists($key, $files)) {
+                            $childFiles = array_intersect_key($files, $obj->getVars());
+                            $files = array_diff_key($files, $data->getVars());
+                        }
+                    }
+
+                    /* if ($data->getId() === null) {
+                        $result = $this->getTable($class)->create(
+                            $data, $childObject, $childFiles, $class
+                        );
+                        if ($result) {
+                            $id =  $this->getTable($class)->lastInsertId();
+
+                            $fields[$children[key($children)]['db_name']] = $id;
+                        }
+                    } else {
+                        $result = $this->getTable($class)->update(
+                            $data, $childObject, $childFiles, $class
+                        );
+                    }*/
+                }
+            }
+        } else {
+            $fields = array_intersect_key($fields, $data['entity']->getVars());
+            $files = array_intersect_key($files, $data['entity']->getVars());
+        }
     }
 }

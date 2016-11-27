@@ -71,7 +71,11 @@ class UtilisateurController extends AppController
                         'children' => array(
                         ));
 
-                    $this->handleRequest($form, $data, $this->generateURL('utilisateur_profil_edit'));
+                    $form->handleRequest($data, $this->generateURL('utilisateur_profil_edit'));
+
+                if ($form->isValid()) {
+                    $this->save($data);
+                }
                //}
             }
         } else {
