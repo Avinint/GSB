@@ -43,7 +43,7 @@ class Controller
     {
         $app = App::getInstance();
 
-        return $app->getTable($model);
+        return strpos($model, ':')?$app->getTable($model) : $app->getTableFromEntity($model);
     }
 
     public function controlAccess()
@@ -118,19 +118,21 @@ class Controller
                         }
                     }
                 }
-                foreach ($form->all() as $name => $options){
-                    if ($options['type'] === 'password') {
-                        if (isset($options['confirmation']) || $fields[$name] === '') {
+                foreach ($form->all() as $name => $def){
+
+                    if ($def['type'] === 'password') {
+                        if (isset($def['options']['confirmation']) || $fields[$name] === '') {
                             unset($fields[$name]);
                         }
+                    }
+                    if($def['type'] === 'hidden' && $name === 'action') {
+                        unset($fields[$name]);
                     }
                 }
                 $this->cascadeRelations($fields, $files, $object);
                 echo 'Donnees valides';
 
-
                 $class = ucfirst($object['entity']->getClass());
-
                 if ($object['entity']->getId()) {
                     $result = $this->getTable($class)->update(
                         $object['entity'], $fields, $files
@@ -139,12 +141,9 @@ class Controller
                     if(array_key_exists('date', $object['entity']->getVars())){
                         $fields['date'] = $this->insertDate();
                     }
-                    var_dump($this->getTable($class));
                     $result = $this->getTable($class)->create(
                         $object['entity'],$fields, extract($files)
                     );
-
-
                 }
 
                 if ($result){
@@ -153,8 +152,7 @@ class Controller
                         $id =  $this->getTable($class)->lastInsertId();
                         $_SESSION['auth'] = $id;
                     }
-                    // TO DO redirect
-                    var_dump($route);
+
                     $this->redirect($route);
                 }
             } else {// fin validate
@@ -173,7 +171,6 @@ class Controller
             $children = $object['children'];
             foreach($children as $class => $child){
                 $object = $child['entity'];
-                // var_dump($object->getVars());
                 if($object){
                     foreach ($object->getVars() as $key => $value){
 

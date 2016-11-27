@@ -4,11 +4,14 @@ allow from all
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-	RewriteBase "/gsb/"
+	RewriteBase "/gsb"
 
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^dev(/?.*)$ public/index_dev\.php/%1   [QSA,L]
+    RewriteRule ^dev(.*)$ public/index_dev\.php%1   [QSA,L]
 
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^(/?.*)$ public/index\.php/%1  [QSA,L]
+        RewriteRule ^public/dev(.*)$ public/index_dev\.php%1   [QSA,L]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ public/index\.php%1  [QSA,L]
 </IfModule>

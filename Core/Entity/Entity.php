@@ -48,12 +48,9 @@ class Entity
     }
 
     // retourne le chemin jusqu'au répertoire img ou un
-    public function getFilePath($folder = '')
+    public function getFilePath()
     {
-        if (!is_null($folder)) {
-            $folder = D_S.$folder;
-        }
-        return  ROOT.D_S.'public'.D_S.'img'.$folder;
+        return  ROOT.D_S.'public'.D_S.'img'.D_S;
     }
 
     public function getFilePathFromClass()

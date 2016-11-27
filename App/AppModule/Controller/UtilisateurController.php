@@ -58,20 +58,21 @@ class UtilisateurController extends AppController
 
             $auth = $this->container['auth'];
 
-            if($this->getTable('AppModule:Utilisateur')->valueAvailable('pseudo', $_POST['signup_pseudo'])){
-
-                if($_POST['signup_mdp'] === $_POST['signup_mdpConf']){
+            if ($this->getTable('AppModule:Utilisateur')->valueAvailable('pseudo', $_POST['signup_pseudo']) &&
+                $this->getTable('AppModule:Utilisateur')->valueAvailable('email', $_POST['signup_pseudo'])
+            ) {
+                // if ($_POST['signup_mdp'] === $_POST['signup_mdpConf']) {
                     //$_POST['signup_mdp'] =  password_hash($_POST['signup_mdp'], PASSWORD_BCRYPT );
                     $user = new Utilisateur();
                     //unset($_POST['signup_mdp_conf']);
 
-                    $object = array('entity' => $user,
+                    $data = array('entity' => $user,
                         'login' => true,
                         'children' => array(
                         ));
 
-                    $this->handleRequest($form, $object, $this->generateURL('utilisateur_profil_edit'));
-                }
+                    $this->handleRequest($form, $data, $this->generateURL('utilisateur_profil_edit'));
+               //}
             }
         } else {
             $error = 'identifiants d\'inscription non corrects';

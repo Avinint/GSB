@@ -157,6 +157,6 @@ class Utilisateur extends Entity implements UserInterface{
 
     public function getFilePath()
     {
-        return  ROOT.D_S.'public'.D_S.'img'.D_S.'avatars';
+        return  ROOT.D_S.'public'.D_S.'img'.D_S.'avatars'.D_S;
     }
 }

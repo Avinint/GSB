@@ -24,7 +24,7 @@ class Table {
 
     public function getDbTableName()
     {
-        if(is_null($this->table)){
+        if (empty($this->table)) {
             $app = App::getInstance();
             $class = explode("\\", get_called_class());
             $class = end($class);
@@ -59,12 +59,12 @@ class Table {
         $app = App::getInstance();
         $this->db = $app->getContainer('db');
 
-        if($entity){
+        if ($entity) {
             $this->entity = $entity;
             $entity = explode(':', $entity);
             $entity = end($entity);
             $this->table = $app->decamelize($entity);
-        }else{
+        } else {
             $this->getDbTableName();
         }
     }
@@ -153,7 +153,6 @@ class Table {
    /**  Magic finder */
     public function __call($method, $arguments)
     {
-        var_dump($arguments);
         switch (true) {
             case (0 === strpos($method, 'findBy')):
                 $by = substr($method, 6);
@@ -285,10 +284,11 @@ class Table {
 	public function create($entity, $fields, $image = null, $table = '')
 	{
         if($table === ''){
-            $table = $this->getPrefix().$this->getTable();
+            $table = $this->getPrefix().$this->table;
         }else{
             $table = $this->getPrefix().$table;
         }
+
 
         if(empty($image) || $image['image']['name'] === ''){
             unset($image);
@@ -300,7 +300,6 @@ class Table {
         if(isset($image)){
             $fields['image'] = $entity->preUpload($image['image']);
         }
-
 		$sql_parts = [];
 		$attributes = [];
 
@@ -309,7 +308,6 @@ class Table {
 			$attributes[] = "$v";
 		}
 		$sql = implode(', ', $sql_parts);
-
         if($this->query(
             'INSERT INTO '.$table.'
             SET '.$sql,
@@ -322,8 +320,10 @@ class Table {
                     echo "Fichier non telecharge";
                 }
             }
+
             return true;
         }
+
         return false;
     }
 

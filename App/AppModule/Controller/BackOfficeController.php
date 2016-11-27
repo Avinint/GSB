@@ -1,6 +1,6 @@
 <?php 
 
-namespace App\Controller\Admin;
+namespace App\AppModule\Controller;
 
 use App\AppModule\Form\LoginForm;
 use App\AppModule\Form\ProfilForm;
@@ -10,15 +10,8 @@ use App\AppModule\Entity\Utilisateur;
 use App\AppModule\Form\ContactForm;
 use App\AppModule\Form\InscriptionForm;
 
-class UtilisateurController extends AdminController
+class BackOfficeController extends AppController
 {
-    public function __construct()
-    {
-        parent::__construct();
-        $this->loadModel('Article');
-        $this->loadModel('Utilisateur');
-    }
-
     public function index()
     {
         $logout = $this->logout();
@@ -38,7 +31,7 @@ class UtilisateurController extends AdminController
         $logout = $this->logout();
         $user =  $this->getTable('AppModule:Utilisateur')->findNoPassword($_SESSION['auth']);
         $uti =  $this->getTable('AppModule:Utilisateur')->find($id);
-        $form = new UtilisateurForm($this->route->generateURL('admin_utilisateur_edit', array(
+        $form = new UtilisateurForm($this->generateURL('admin_utilisateur_edit', array(
                 'id' => $id,
             )), $uti);
 
@@ -53,7 +46,7 @@ class UtilisateurController extends AdminController
                 'fk' => array('role' => 'role_id')
                 );
 
-            $this->handleRequest($data, $object, $this->route->generateURL('admin_utilisateur_index'));
+            $this->handleRequest($data, $object, $this->generateURL('admin_utilisateur_index'));
         }
 
         $this->render('Admin:User:edit.php', array(
@@ -69,7 +62,7 @@ class UtilisateurController extends AdminController
         $logout = $this->logout();
         $user =  $this->getTable('AppModule:Utilisateur')->findNoPassword($_SESSION['auth']);
         $uti =  new Utilisateur();
-        $form = new UtilisateurAddForm($this->route->generateURL('admin_utilisateur_add'
+        $form = new UtilisateurAddForm($this->generateURL('admin_utilisateur_add'
             ), $uti);
 
         if(!empty($_POST) && $_POST['uti_action'] == 'uti'){
@@ -83,7 +76,7 @@ class UtilisateurController extends AdminController
                 'fk' => array('role' => 'role_id')
             );
 
-            $this->handleRequest($form, $data, $this->route->generateURL('admin_utilisateur_index'));
+            $this->handleRequest($form, $data, $this->generateURL('admin_utilisateur_index'));
         }
 
         $this->render('Admin:Article:add.php', array(
@@ -117,10 +110,8 @@ class UtilisateurController extends AdminController
             }
             $object = array('entity' => $user);
 
-            $this->handleRequest($form, $object, $this->generateURL('admin_control_panel'));
+            $this->handleRequest($form, $object, $this->generateURL('utilisateur_profil_edit'));
         }
-
-        $headlines = $this->Article->extract('id', 'titre');
 
         //$login = $this->login();
         $page = 'Mettre à jour mon profil:';
@@ -130,7 +121,6 @@ class UtilisateurController extends AdminController
                 'logout' => $logout,
                 'page' => $page,
                 'User' => $user,
-                'headlines' => $headlines,
             ));
     }
 }

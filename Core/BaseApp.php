@@ -70,6 +70,14 @@ abstract class BaseApp
         return new $className($name);
     }
 
+    public function getTableFromEntity($name)
+    {
+        $className = str_replace('Entity', 'Table', $name).'Table';
+        $name = explode('\\', $name);
+        $name = strtolower(end($name));
+        return new $className($name);
+    }
+
     public function getConfig()
     {
        return $this->getContainer('config');
