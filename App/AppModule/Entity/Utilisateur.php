@@ -9,7 +9,7 @@ use Core\Entity\UserInterface;
 class Utilisateur extends Entity implements UserInterface{
 
     protected $id;
-    protected $pseudo;
+    protected $login;
     protected $nom;
     protected $prenom;
     protected $email;
@@ -26,19 +26,19 @@ class Utilisateur extends Entity implements UserInterface{
     }
 
     /**
-     * @param mixed $pseudo
+     * @param mixed $login
      */
-    public function setPseudo($pseudo)
+    public function setLogin($login)
     {
-        $this->pseudo = $pseudo;
+        $this->login = $login;
     }
 
     /**
      * @return mixed
      */
-    public function getPseudo()
+    public function getLogin()
     {
-        return $this->pseudo;
+        return $this->login;
     }
 
 

@@ -95,7 +95,7 @@ class Controller
 
     public function redirect($url, $statusCode = 303)
     {
-        header('Location: ' . $url, true, $statusCode);
+        header('Location: ' . $url);
         throw new \Exception("redirection"); // TDODO test and remove?
     }
 
@@ -187,8 +187,6 @@ class Controller
                     }
                 }
 
-
-
                 $this->cascadeRelations($fields, $files, $data);
 
                 $entity = ($data['entity']);
@@ -196,7 +194,6 @@ class Controller
                     $method = 'set'.ucfirst($attr);
                     $entity->$method($value);
                 }
-                var_dump($entity);
 
             } else {// fin validate
                 echo 'formulaire non valide';
@@ -210,7 +207,7 @@ class Controller
         $childObject = array();
         $childFiles = array();
 
-        if (isset($data['children'])) {
+        /*if (isset($data['children'])) {
             $children = $data['children'];
             foreach ($children as $class => $child) {
                 $data = $child['entity'];
@@ -246,25 +243,25 @@ class Controller
         } else {
             $fields = array_intersect_key($fields, $data['entity']->getVars());
             $files = array_intersect_key($files, $data['entity']->getVars());
-        }
+        } */
     }
 
     public function save($object)
     {
-        $this->cascadePersist($fields, $files, $object);
+        //$this->cascadePersist($fields, $files, $object);
+        $class = ucfirst($object->getClass());
 
-        $class = ucfirst($object['entity']->getClass());
-
-        if ($object['entity']->getId()) {
+        if ($object->getId()) {
             $result = $this->getTable($class)->update(
-                $object['entity'], $fields, $files
+                $object //, $files
             );
         } else {
-            if(array_key_exists('date', $object['entity']->getVars())){
-                $fields['date'] = $this->insertDate();
+            if(array_key_exists('date', $object->getVars())){
+                $object->setData($this->insertDate());
             }
+			
             $result = $this->getTable($class)->create(
-                $object['entity'],$fields, $files
+                $object // , $files
             );
         }
 
@@ -303,7 +300,7 @@ class Controller
 
                     if ($data->getId() === null) {
                         $result = $this->getTable($class)->create(
-                            $data, $childObject, $childFiles, $class
+                            $data//, $childObject, $childFiles, $class
                         );
                         if ($result) {
                             $id =  $this->getTable($class)->lastInsertId();
@@ -312,7 +309,7 @@ class Controller
                         }
                     } else {
                         $result = $this->getTable($class)->update(
-                            $data, $childObject, $childFiles, $class
+                            $data//, $childObject, $childFiles, $class
                         );
                     }
                 }

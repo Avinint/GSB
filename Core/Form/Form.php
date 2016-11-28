@@ -13,7 +13,7 @@ abstract class Form{
     protected $name;
     protected $parentForm = null;
 	
-	public function __construct($action = null, $data = null, array $lists = array())
+	public function __construct($data = null, $action = null, array $lists = array())
 	{
         if(!isset($this->options['action'])){
             $this->options['action'] ='';
@@ -534,9 +534,8 @@ abstract class Form{
 
     public function handleRequest($data)
     {
-        $this->setData($data['entity']);
-        echo "data";
-        var_dump($this->getData());
+        $entity = $this->getData();
+        
         if(!empty($_POST) || !empty($_FILES)){
 
             $fields = $this->parseFields($_POST);
@@ -562,14 +561,13 @@ abstract class Form{
                         unset($fields[$name]);
                     }
                 }
+				
                 $this->cascadeRequest($fields, $files, $data);
-
-                $entity = ($data['entity']);
+                
                 foreach ($fields as $attr => $value) {
                     $method = 'set'.ucfirst($attr);
                     $entity->$method($value);
                 }
-                var_dump($entity);
 
             } else {// fin validate
                 echo 'formulaire non valide';

@@ -15,8 +15,8 @@ class InscriptionForm extends Form
     public function buildForm(FormBuilder $builder)
     {
         return $builder
-        ->add('pseudo', 'text', array(
-            'label' => 'Pseudo:',
+        ->add('login', 'text', array(
+            'label' => 'Login:',
                 'labelType' => 'block',
                     'required' => true,
                         'unique' => true,

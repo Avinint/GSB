@@ -224,8 +224,10 @@ class Table {
         return $entity;
     }
 
-	public function update($entity, $fields, $image = null, $table = '')
+	public function update($entity, $image = null, $table = '')
 	{
+		$fields = $entity->getVars();
+		
         if($table === ''){
             $table = $this->getPrefix().$this->getTable();
         }else{
@@ -281,14 +283,14 @@ class Table {
         return false;
 	}
 
-	public function create($entity, $fields, $image = null, $table = '')
+	public function create($entity, $image = null, $table = '')
 	{
         if($table === ''){
             $table = $this->getPrefix().$this->table;
         }else{
             $table = $this->getPrefix().$table;
         }
-
+		$fields = $entity->getVars();
 
         if(empty($image) || $image['image']['name'] === ''){
             unset($image);
@@ -302,12 +304,16 @@ class Table {
         }
 		$sql_parts = [];
 		$attributes = [];
-
+		
 		foreach($fields as $k => $v){
 			$sql_parts[] = "$k = ?";
 			$attributes[] = "$v";
 		}
+		var_dump($fields);
 		$sql = implode(', ', $sql_parts);
+		var_dump($this->query(
+            'INSERT INTO '.$table.'
+            SET '.$sql));
         if($this->query(
             'INSERT INTO '.$table.'
             SET '.$sql,
@@ -323,6 +329,7 @@ class Table {
 
             return true;
         }
+		
 
         return false;
     }

@@ -7,14 +7,14 @@ return array(
         'id' => array(
             'type' => 'primaryKey',
         ),
-        'pseudo' => array(),
+        'login' => array(),
         'nom'  => array(),
         'prenom' => array(),
         'email' => array(),
         'mdp' => array(
-            'length' => 100,
+            'maxLength' => 100,
         ),
-        'manyToMany' => array(
+        'ManyToOne' => array(
             'role' => array(
                 'targetEntity' => 'Role',
                 'foreignKey' => array( // optionnel
@@ -24,5 +24,4 @@ return array(
             )
         )
     ),
-
 );
