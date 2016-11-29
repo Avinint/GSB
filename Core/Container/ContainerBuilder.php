@@ -16,5 +16,6 @@ class ContainerBuilder
 		$container->register(new DatabaseProvider());
         $container->register(new CurrentRouteProvider());
 		$container->register(new ToolProvider());
+        $container->register(new DataMapperProvider());
     }
 } 

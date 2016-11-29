@@ -34,8 +34,10 @@ abstract class BaseApp
     {
         $this->container = new Container();
 		$this->container['env'] = $environment;
+        $this->container['kernel'] = $this;
         Core\Container\ContainerBuilder::init($this->container);
 		$this->exceptionHandler = $this->getContainer('exception_handler');
+
     }
 
     public function getRouter()
@@ -86,10 +88,5 @@ abstract class BaseApp
     public function getDb()
     {
         return $this->getContainer('db');
-    }
-
-    public function decamelize($string)
-    {
-        return strtolower(preg_replace('/(?|([a-z\d])([A-Z])|([^\^])([A-Z][a-z]))/', '$1_$2', $string));
     }
 }

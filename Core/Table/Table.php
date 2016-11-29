@@ -343,7 +343,7 @@ class Table {
 				 $entity->setPersistedId($this->lastInsertId()); // on set l'id
 				 //$entity = $this->find($this->lastInsertId()); // ou  on récupere l'entite avec l'ID
 			}
-           
+
             return true;
         }
 

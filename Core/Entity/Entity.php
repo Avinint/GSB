@@ -2,6 +2,9 @@
 
 namespace Core\Entity;
 
+use Core\Component\Database\DataMapper;
+use Core\Component\Database\Metadata;
+
 class Entity
 {
 	public function __get($key)
@@ -11,16 +14,8 @@ class Entity
 			$this->$key = $this->$method();
         }else if(method_exists($this, $m = $method.'_id')){
             $this->$key = $this->$m();
-		}else{
-            foreach($this->getUploadRefs() as $type){
+		}
 
-                $method = 'get'.ucfirst($type);
-                if(method_exists($this, $method)){
-                    $this->$key = $this->$method();
-                    break;
-                }
-            }
-        }
         return $this->$key;
     }
 
@@ -143,16 +138,21 @@ class Entity
 		static::$metadata = include ROOT.'App'.D_S.'AppModule'.D_S.'config'.D_S.'dataMapper'.D_S.$class.'Mapper.php';
 	}*/
 
-	public function getMetadata($field = null)
+    public function setDataMapper()
     {
-        $meta =  include ROOT.D_S.'App'.D_S.static::getModule().D_S.'config'.D_S.'dataMapper'.D_S.static::getShortClass().'Mapper.php';
-		if ($field) {
-			return $meta[$field];
-		}
-		
-		return $meta;
+       return new DataMapper(ROOT.D_S.'App'.D_S.static::getModule().D_S.'config'.D_S.'dataMapper'.D_S.static::getShortClass().'Mapper.php');
     }
-	
+
+	public function getDataMapper(DataMapper $metadata, $field = null)
+    {
+        $meta = $this->setDataMapper();
+        if ($field) {
+            return $meta[$field];
+        }
+
+        return $meta;
+    }
+
     /* Wrapper methods for NOOB mode aka Ruby mode */
     public static function all()
     {

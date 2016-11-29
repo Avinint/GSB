@@ -4,12 +4,12 @@ namespace Core\Controller;
 
 use \App;
 use Core\View\View;
+use Core\Container\ContainerAware;
 
-class Controller
+class Controller extends ContainerAware
 {
     protected $viewpath;
-    protected $container;
-	
+
     public function __construct()
     {
         $this->initContainer();
@@ -319,10 +319,6 @@ class Controller
         }
     }
 
-    private function initContainer()
-    {
-        $app = App::getInstance();
-        $this->container = $app->getContainer();
-    }
+
 
 }

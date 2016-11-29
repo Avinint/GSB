@@ -12,6 +12,7 @@ abstract class Form{
     protected $options = array();
     protected $name;
     protected $parentForm = null;
+    protected $container;
 	
 	public function __construct($data = null, $action = null, array $lists = array())
 	{
