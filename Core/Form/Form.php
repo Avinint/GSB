@@ -289,7 +289,6 @@ abstract class Form{
                     .$required.$disabled.'>';
             }
 
-
             $input  = $this->addParentTag($input, $fieldParent);
 		}
 
@@ -534,16 +533,14 @@ abstract class Form{
 
     public function handleRequest($data)
     {
-        $entity = $this->getData();
-
-        if(!empty($_POST) || !empty($_FILES)){
+        if (!empty($_POST) || !empty($_FILES)) {
 
             $fields = $this->parseFields($_POST);
             $files = $this->parseFields($_FILES);
             $result = null;
-
+			
             if ($this->validate($fields)) {
-                if(isset($data['fk'])){
+                if(isset($data['fk'])) {
                     foreach($data['fk'] as $k => $v){
                         if(array_key_exists($k, $fields)){
                             $fields[$v] = $fields[$k]; // $fields['role_id'] = $fields ['role']
@@ -564,6 +561,8 @@ abstract class Form{
 				
                 $this->cascadeRequest($fields, $files, $data);
                 
+				$entity = $this->getData();
+				$entity->getMetadata('fields');
                 foreach ($fields as $attr => $value) {
                     $method = 'set'.ucfirst($attr);
                     $entity->$method($value);

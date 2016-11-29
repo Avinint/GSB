@@ -8,6 +8,11 @@ class HomeController extends AppController
 {
     public function index()
     {
+		$user = new Utilisateur();
+		
+		//$this->container['tool']->debug($user->getMetadata());
+		$user->getTableName();
+		
 		//echo password_hash('riveton', PASSWORD_BCRYPT);if(!function_exists('hash_equals'))
 
 

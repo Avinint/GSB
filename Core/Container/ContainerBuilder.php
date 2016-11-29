@@ -15,5 +15,6 @@ class ContainerBuilder
 		$container->register(new AccessControlProvider());
 		$container->register(new DatabaseProvider());
         $container->register(new CurrentRouteProvider());
+		$container->register(new ToolProvider());
     }
 } 

@@ -251,16 +251,16 @@ class Table {
 
         $fields = array_filter($entity->getVars());
         /* * * * * A mettre dans handleRequest ? */  // on n'update que ce que le champs mis à jours
-        if($entity->getId()) {
+        if ($entity->getId()) {
             $preUpdateState = $fields = $entity->getId() ? $this->find($entity->getId())->getVars() : array();
             $fields = array_diff_assoc($fields, $preUpdateState);
+			$imageBackup = method_exists($entity, 'getImage') ? $entity->getImage(): '';
         }
-
 
         if(empty($image) || $image['image']['name'] === ''){
             unset($image);
         }
-        $imageBackup = method_exists($entity, 'getImage') ? $entity->getImage(): '';
+        
         //$filePath = $table === 'article'?'':D_S.$table.'s';
         //$path = ROOT.D_S.'public'.D_S.'img'.$filePath;
         if (isset($image)) {
@@ -287,9 +287,9 @@ class Table {
         ', $attributes,true)) {
             if (isset($image)) {
                if ($uploaded = $entity->upload($image['image'], $fields['image'])) {
-                   $entity->removeFile($imageBackup);
+                   $entity->getId()? $entity->removeFile($imageBackup): NULL;
                } else {
-                   $entity->setImage($imageBackup);
+                    $entity->getId()? $entity->setImage($imageBackup): NULL;
                    echo "Fichier non telecharge";
                }
             }
@@ -339,8 +339,11 @@ class Table {
                 }
             }
 
-            $entity->setPersistedId($this->lastInsertId()); // on set l'id
-            //$entity = $this->find($this->lastInsertId()); // ou  on récupere l'entite avec l'ID
+			if (!$entity->getId()) {
+				 $entity->setPersistedId($this->lastInsertId()); // on set l'id
+				 //$entity = $this->find($this->lastInsertId()); // ou  on récupere l'entite avec l'ID
+			}
+           
             return true;
         }
 

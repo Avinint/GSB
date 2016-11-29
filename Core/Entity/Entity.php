@@ -24,20 +24,37 @@ class Entity
         return $this->$key;
     }
 
-
     public function setPersistedId($id)
     {
         if (property_exists(get_called_class(), 'id') && !$this->id) {
             $this->id = $id;
         }
     }
+	
+	public static function getShortClass()
+	{
+		$class = new \ReflectionClass(get_called_class());
+        
+		return $class->getShortName();
+	}
 
     public function getTableName()
     {
+		if ($this->getMetadata() &&  $this->getMetadata('table')) {
+			return $this->getMetadata()['table'];
+		}
+		
         $class = explode("\\", get_called_class());
-        $class = strtolower(end($class));
+        
+        return strtolower(static::getShortClass());;
+    }
+	
+	public static function getTable()
+    {
+        $class = new \ReflectionClass(get_called_class());
+        $repo = 'App'.D_S.static::getModule().D_S.'Table'.D_S.static::getShortClass().'Table';
 
-        return $class;
+        return new $repo() ;
     }
 
     private static function getModule()
@@ -107,24 +124,35 @@ class Entity
         return get_object_vars($this);
     }
 
-    public static function loadMetadata(Metadata $metadata)
+   /* public static function loadMetadata(Metadata $metadata)
     {
         $builder = new MetadataBuilder($metadata);
-    }
+    }*/
 
-    public static function getMetadata()
+    /*public static function getMetadata()
     {
-        //return self::$metadata;
+		if(empty(static::$metadata) {
+			static::function
+		}
+		
+        return static::$metadata;
     }
+	
+	private static function setMetaData()
+	{
+		static::$metadata = include ROOT.'App'.D_S.'AppModule'.D_S.'config'.D_S.'dataMapper'.D_S.$class.'Mapper.php';
+	}*/
 
-    public static function getTable()
+	public function getMetadata($field = null)
     {
-        $class = new \ReflectionClass(get_called_class());
-        $repo = 'App'.D_S.self::getModule().D_S.'Table'.D_S.$class->getShortName().'Table';
-
-        return new $repo() ;
+        $meta =  include ROOT.D_S.'App'.D_S.static::getModule().D_S.'config'.D_S.'dataMapper'.D_S.static::getShortClass().'Mapper.php';
+		if ($field) {
+			return $meta[$field];
+		}
+		
+		return $meta;
     }
-
+	
     /* Wrapper methods for NOOB mode aka Ruby mode */
     public static function all()
     {
