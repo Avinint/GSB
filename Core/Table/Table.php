@@ -2,7 +2,6 @@
 
 namespace Core\Table;
 
-use Core\Database\Database;
 use Core\Component\Database\QueryBuilder;
 use \App;
 use Core\Config;
@@ -34,14 +33,11 @@ class Table {
 
     public function getEntityClass()
     {
-        $module = ''; $class = '';
-        if ($this->entity) {
-            $class = explode(':', $this->entity);
-            $module = array_shift($class);
-            $class = array_shift($class);
-           $class = 'App\\'.$module.'\\Entity\\'.$class;
-        }
-		
+        $class = explode(':', $this->entity);
+        $module = array_shift($class);
+        $class = array_shift($class);
+        $class = 'App\\'.$module.'\\Entity\\'.$class;
+
         return $class;
     }
 
@@ -208,6 +204,27 @@ class Table {
         return $return;
     }
 
+    public function pluck($args)
+    {
+        $args = func_get_args($args);
+        $id = is_int($args[0]) ? array_shift($args) : 0 ;
+        $args = array_map(function($arg) {
+                return 't'.$arg;
+            }, $args);
+
+        $query = $this->createQueryBuilder('t')->select($args);
+        if ($id) {
+            return $query
+                ->where('id = :id')
+                ->setParameter('id', $id)
+                ->getQuery()
+                ->getSingleResult();
+        }
+        return $query
+            ->getQuery()
+            ->getResults();
+    }
+
     public function refresh($entity, $fields)
     {
         if(!$entity instanceof Entity){
@@ -224,29 +241,29 @@ class Table {
         return $entity;
     }
 
-	public function update($entity, $image = null, $table = '')
-	{
-		$fields = $entity->getVars();
-		
+    public function update($entity, $image = null, $table = '')
+    {
         if($table === ''){
             $table = $this->getPrefix().$this->getTable();
         }else{
             $table = $this->getPrefix().$table;
         }
 
+        $fields = array_filter($entity->getVars());
+        /* * * * * A mettre dans handleRequest ? */  // on n'update que ce que le champs mis à jours
+        if($entity->getId()) {
+            $preUpdateState = $fields = $entity->getId() ? $this->find($entity->getId())->getVars() : array();
+            $fields = array_diff_assoc($fields, $preUpdateState);
+        }
+
+
         if(empty($image) || $image['image']['name'] === ''){
             unset($image);
         }
-        $imageBackup = method_exists($entity, 'getImage') ?$entity->getImage(): '';
-
-        if(!$entity instanceof Entity){
-            throw new \Exception("Database problem");
-        }
-
+        $imageBackup = method_exists($entity, 'getImage') ? $entity->getImage(): '';
         //$filePath = $table === 'article'?'':D_S.$table.'s';
         //$path = ROOT.D_S.'public'.D_S.'img'.$filePath;
-        if(isset($image)){
-
+        if (isset($image)) {
             $fields['image'] = $entity->preUpload($image['image']);
         }
 
@@ -263,43 +280,41 @@ class Table {
 
 		$sql = implode(', ', $sql_parts);
 
-
-        if($this->query(
-		'UPDATE '.$table.'
-		 SET '.$sql.'
-		 WHERE id = ?
-		', $attributes,true)){
-            if(isset($image)){
-
-               if( $uploaded = $entity->upload($image['image'], $fields['image'])){
+        if ($this->query (
+        'UPDATE '.$table.'
+        SET '.$sql.'
+        WHERE id = ?
+        ', $attributes,true)) {
+            if (isset($image)) {
+               if ($uploaded = $entity->upload($image['image'], $fields['image'])) {
                    $entity->removeFile($imageBackup);
-               }else{
+               } else {
                    $entity->setImage($imageBackup);
                    echo "Fichier non telecharge";
                }
             }
+
             return true;
         }
+
         return false;
 	}
 
-	public function create($entity, $image = null, $table = '')
+	public function create(&$entity, $image = null, $table = '')
 	{
         if($table === ''){
-            $table = $this->getPrefix().$this->table;
+            $table = $this->getPrefix().$this->getTable();
         }else{
             $table = $this->getPrefix().$table;
         }
-		$fields = $entity->getVars();
-
+		$fields = array_filter($entity->getVars());
         if(empty($image) || $image['image']['name'] === ''){
             unset($image);
         }
         //$filePath = $table === 'article'?'':D_S.$table.'s';
         //$path = ROOT.D_S.'public'.D_S.'img'.$filePath;
         //var_dump($image);
-
-        if(isset($image)){
+        if (isset($image)) {
             $fields['image'] = $entity->preUpload($image['image']);
         }
 		$sql_parts = [];
@@ -309,27 +324,25 @@ class Table {
 			$sql_parts[] = "$k = ?";
 			$attributes[] = "$v";
 		}
-		var_dump($fields);
+
 		$sql = implode(', ', $sql_parts);
-		var_dump($this->query(
-            'INSERT INTO '.$table.'
-            SET '.$sql));
-        if($this->query(
+
+        if ($this->query(
             'INSERT INTO '.$table.'
             SET '.$sql,
-            $attributes,
-            true)){
-            if(isset($image)){
-                if( $uploaded = $entity->upload($image['image'], $fields['image'])){
+            $attributes,true)) {
+            if (isset($image)) {
+                if ($uploaded = $entity->upload($image['image'], $fields['image'])) {
 
                 }else{
                     echo "Fichier non telecharge";
                 }
             }
 
+            $entity->setPersistedId($this->lastInsertId()); // on set l'id
+            //$entity = $this->find($this->lastInsertId()); // ou  on récupere l'entite avec l'ID
             return true;
         }
-		
 
         return false;
     }

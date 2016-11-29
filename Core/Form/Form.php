@@ -535,7 +535,7 @@ abstract class Form{
     public function handleRequest($data)
     {
         $entity = $this->getData();
-        
+
         if(!empty($_POST) || !empty($_FILES)){
 
             $fields = $this->parseFields($_POST);
@@ -551,7 +551,7 @@ abstract class Form{
                         }
                     }
                 }
-                foreach ($this->all() as $name => $def){
+                foreach ($this->all() as $name => $def) {
                     if ($def['type'] === 'password') {
                         if (isset($def['options']['confirmation']) || $fields[$name] === '') {
                             unset($fields[$name]);

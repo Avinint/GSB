@@ -267,11 +267,10 @@ class Controller
 
         if ($result) {
             /* Si c'est une inscription on logue le nouvel utilisateur */
-            if (isset($data['login'])) {
+            /*if (isset($data['login'])) {
                 $id = $this->getTable($class)->lastInsertId();
                 $_SESSION['auth'] = $id;
-            }
-
+            }*/
         }
     }
 

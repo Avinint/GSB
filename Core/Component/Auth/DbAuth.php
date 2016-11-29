@@ -13,18 +13,25 @@ class DbAuth
 	*/
     public function login(UserInterface $user, $password)
     {
+        return password_verify($password, $user->getMdp()) ? $this->authenticate($user) :  false;
+    }
 
-        if( password_verify($password, $user->getMdp())){
-            $_SESSION['auth'] = $user->getId();
-            $_SESSION['role'] = $user->getRole_id();
-            return true;
-        }
-        return false;
+    public function authenticate($user, $id = null)
+    {
+        $_SESSION['auth'] = $id ? : $user->getId();
+        $_SESSION['role'] = $user->getRole_id();
+
+        return  $_SESSION['logged'] = true;
+    }
+
+    public function isLogged()
+    {
+        return isset($_SESSION['logged']);
     }
 
 	public function logged()
 	{
-		 return isset($_SESSION['auth']);
+		return $_SESSION['logged'];
 	}
 	
 	public function isGranted($role = 1)

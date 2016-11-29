@@ -22,8 +22,15 @@ class Entity
             }
         }
         return $this->$key;
-	}
+    }
 
+
+    public function setPersistedId($id)
+    {
+        if (property_exists(get_called_class(), 'id') && !$this->id) {
+            $this->id = $id;
+        }
+    }
 
     public function getTableName()
     {
@@ -32,15 +39,15 @@ class Entity
 
         return $class;
     }
-	
-	private static function getModule()
-	{
-		$class = explode("\\", get_called_class());
-		array_shift($class);
-		$module = array_shift($class);
-		
+
+    private static function getModule()
+    {
+        $class = explode("\\", get_called_class());
+        array_shift($class);
+        $module = array_shift($class);
+
         return $module;
-	}
+    }
 
     public function getClass()
     {
@@ -58,32 +65,33 @@ class Entity
         return  ROOT.D_S.'public'.D_S.'img'.D_S.$this->getClassName().'s';
     }
 
-    public function preUpload($fichier)
+    public function preUpload($file)
     {
-        $pos_extension = strpos($fichier['name'], '.');
-        $extension = substr($fichier['name'], $pos_extension);
+        $pos_extension = strpos($file['name'], '.');
+        $extension = substr($file['name'], $pos_extension);
         $newName = uniqid().$extension;
 
         return $newName;
     }
 
-	public function upload($fichier, $name, $dir = null)
+	public function upload($file, $name, $dir = null)
 	{
         $dir = $dir? $dir: $this->getFilePath();
         if(!is_dir($dir)){
             if(!mkdir($dir, '0777', true )){
                 throw new \Exception('repertoire non cree');
             }
-            //chmod($repertoire, '0777');
 		}
 	    $name = $dir.D_S.$name;
-		$moved = move_uploaded_file($fichier['tmp_name'], $name);
-		if($moved){
-			return $name;
-		}else{
-			return false;
-		}
-	}
+        if( $file['file']['error'] === UPLOAD_ERR_OK && is_uploaded_file($file['tmp_name'])) {
+            $moved = move_uploaded_file($file['tmp_name'], $name);
+            if ($moved) {
+                return $name;
+            } // TODO else throw exception
+        }
+
+        return false;
+    }
 
     public function removeFile($filename, $dir = null)
     {
