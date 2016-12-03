@@ -7,6 +7,9 @@ use Core\Component\Database\Metadata;
 
 class Entity
 {
+    protected static $mapper;
+    protected $changeset = array();
+
 	public function __get($key)
 	{	
 		$method = 'get'.ucfirst($key);
@@ -25,25 +28,25 @@ class Entity
             $this->id = $id;
         }
     }
-	
-	public static function getShortClass()
-	{
-		$class = new \ReflectionClass(get_called_class());
-        
-		return $class->getShortName();
-	}
+
+    public static function getShortClass()
+    {
+        $class = new \ReflectionClass(get_called_class());
+
+        return $class->getShortName();
+    }
 
     public function getTableName()
     {
-		if ($this->getMetadata() &&  $this->getMetadata('table')) {
-			return $this->getMetadata()['table'];
-		}
-		
+        if ($this->getDataMapper() && $this->getDataMapper()->hasTable()) {
+            return $this->getDataMapper()->getTable();
+        }
+
         $class = explode("\\", get_called_class());
         
-        return strtolower(static::getShortClass());;
+        return strtolower(static::getShortClass());
     }
-	
+
 	public static function getTable()
     {
         $class = new \ReflectionClass(get_called_class());
@@ -119,6 +122,20 @@ class Entity
         return get_object_vars($this);
     }
 
+    public function setChanges($changes)
+    {
+        if ($this->changeset === array()) {
+            $this->changeset = $changes;
+        } else {
+            $this->changeset = array_flip(array_flip(array_merge($this->changeset, $changes)));
+        }
+    }
+
+    public function getChanges()
+    {
+        return $this->changeset;
+    }
+
    /* public static function loadMetadata(Metadata $metadata)
     {
         $builder = new MetadataBuilder($metadata);
@@ -138,19 +155,70 @@ class Entity
 		static::$metadata = include ROOT.'App'.D_S.'AppModule'.D_S.'config'.D_S.'dataMapper'.D_S.$class.'Mapper.php';
 	}*/
 
-    public function setDataMapper()
+    public static function setDataMapper()
     {
        return new DataMapper(ROOT.D_S.'App'.D_S.static::getModule().D_S.'config'.D_S.'dataMapper'.D_S.static::getShortClass().'Mapper.php');
     }
 
-	public function getDataMapper(DataMapper $metadata, $field = null)
+	public static function dataMapper($field = null)
     {
-        $meta = $this->setDataMapper();
-        if ($field) {
-            return $meta[$field];
+        if (!isset(static::$mapper)) {
+            static::$mapper = static::setDataMapper();
         }
 
-        return $meta;
+        return static::$mapper;
+    }
+
+    public static function hasDataMapper()
+    {
+        return file_exists(ROOT.D_S.'App'.D_S.static::getModule().D_S.'config'.D_S.'dataMapper'.D_S.static::getShortClass().'Mapper.php');
+    }
+
+    public function getDataMapper()
+    {
+        return static::dataMapper();
+    }
+
+    public function trackChanges(self $entity)
+    {
+        $class = get_called_class();
+        if(!$entity instanceof $class) {
+            throw new \Exception('method cannot compare instances of different classes');
+        }
+        $guestVars = array_filter(get_object_vars($entity), function($v) {return !is_array($v);});
+        $hostVars = array_filter(get_object_vars($this), function($v) {return !is_array($v);});
+
+        return array_keys(array_diff_assoc($hostVars, $guestVars));
+    }
+
+    //Not Tested
+    public function trackArrayChanges(self $entity)
+    {
+        $class = get_called_class();
+        if(!$entity instanceof $class) {
+            throw new \Exception('method cannot compare instances of different classes');
+        }
+        $guestVars = array_filter(get_object_vars($entity), function($v) {return is_array($v);});
+        $hostVars = array_filter(get_object_vars($this), function($v) {return is_array($v);});
+
+        $differences = array();
+        foreach ($hostVars as $key => $var ) {
+            if($this->arrayEqual($var, $guestVars[$key]) == true && $key !== 'changeset') {
+                $differences[] = $key;
+            }
+        }
+
+        return $differences;
+    }
+
+    //Not tested
+    private function arrayEqual($a, $b)
+    {
+        return (
+            is_array($a) && is_array($b) &&
+            count($a) == count($b) &&
+            array_diff($a, $b) === array_diff($b, $a)
+        );
     }
 
     /* Wrapper methods for NOOB mode aka Ruby mode */
@@ -218,5 +286,10 @@ class Entity
         }
 
         throw new \Exception(static::getTable()->getEntity(), $fieldName, $method.$by);
+    }
+
+    public function __toString()
+    {
+        return strtolower(static::getShortClass());
     }
 }

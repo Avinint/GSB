@@ -79,7 +79,8 @@ class UtilisateurForm extends Form
                                         'div' => 'form-group'
                                     )
                 ))
-            ->add('role', 'number', array(
+            ->add('role', 'entity', array(
+                    'class' => 'AppModule:Role',
                     'label' => 'Role:',
                     'labelType' => 'block',
                     'required' => true,

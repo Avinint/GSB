@@ -54,10 +54,10 @@ class UtilisateurController extends AppController
     {
         $user = new Utilisateur();
         $form = new InscriptionForm($user);
-        if (!empty($_POST) && $_POST['signup_action'] == 'signup') {
+        if (!empty($_POST) && $_POST['signup']['action'] == 'signup') {
             $auth = $this->container['auth'];
-            if ($this->getTable('AppModule:Utilisateur')->valueAvailable('login', $_POST['signup_login']) &&
-                $this->getTable('AppModule:Utilisateur')->valueAvailable('email', $_POST['signup_login'])) {
+            if ($this->getTable('AppModule:Utilisateur')->valueAvailable('login', $_POST['signup']['login']) &&
+                $this->getTable('AppModule:Utilisateur')->valueAvailable('email', $_POST['signup']['login'])) {
                 // if ($_POST['signup_mdp'] === $_POST['signup_mdpConf']) {
                     //$_POST['signup_mdp'] =  password_hash($_POST['signup_mdp'], PASSWORD_BCRYPT );
 

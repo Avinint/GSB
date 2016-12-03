@@ -3,6 +3,7 @@
 return array(
     'entity' => 'App\AppModule\Entity\Utilisateur',
     'table' => 'utilisateur',
+    "primaryKey" => array('type' => 'integer', 'strategy' => 'auto_increment'),
     'properties' => array(
         'id' => array(
             'type' => 'primaryKey',
@@ -16,12 +17,19 @@ return array(
         ),
         'ManyToOne' => array(
             'role' => array(
-                'targetEntity' => 'Role',
+                'targetEntity' => 'App\AppModule\Entity\Role',
                 'foreignKey' => array( // optionnel
                     'name' => 'role_id', // opttionnel
                     'referencedColumnName' => 'id', // optionnel
-                )
-            )
+                ),
+            ),
+             'pays' => array(
+                'targetEntity' => 'App\AppModule\Entity\Pays',
+                'foreignKey' => array( // optionnel
+                'name' => 'pays_id', // opttionnel
+                'referencedColumnName' => 'id', // optionnel
+    )
+)
         )
     ),
 );

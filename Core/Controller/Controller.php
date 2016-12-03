@@ -12,7 +12,7 @@ class Controller extends ContainerAware
 
     public function __construct()
     {
-        $this->initContainer();
+        parent::__construct();
         $this->viewpath = ROOT.'/App/View/';
     }
 
@@ -248,7 +248,7 @@ class Controller extends ContainerAware
 
     public function save($object)
     {
-        //$this->cascadePersist($fields, $files, $object);
+        $this->saveChildren($object/*, $files, $object*/);
         $class = ucfirst($object->getClass());
 
         if ($object->getId()) {
@@ -272,15 +272,52 @@ class Controller extends ContainerAware
                 $_SESSION['auth'] = $id;
             }*/
         }
+
+        return $result;
     }
 
-    public function saveChildren(&$fields, &$files, $data)
+    public function saveChildren(&$entity/*, &$files, $data*/)
     {
         $result = null;
         $childObject = array();
         $childFiles = array();
+        if (!$entity instanceof \Core\Entity\Entity) {
+            throw new \Exception ("Form data not valid.");
+        }
+        $associationTypes = $entity->getDataMapper()->getAssociations();
+        foreach ($associationTypes as $typeName => $type) {
 
-        if (isset($data['children'])) {
+            if ($fields = array_values(array_intersect($entity->getChanges(), array_keys($type)))) {
+
+                foreach ($fields as $prop ) {
+
+                    $fk = $type[$prop]['foreignKey']['name']?  :$prop.'_id';
+
+                    // envoyer uodate ou create avec le bon type de données
+                    $get = 'get'.ucfirst($prop);
+                    $child = $entity->$get();
+                    $class = $type[$prop]['targetEntity'];
+                    if(!$child->getId()) {
+                        $result = $this->getTable($class)->create(
+                            $child//, $childObject, $childFiles, $class
+                        );
+
+                    } else {
+                        $result = $this->getTable($class)->update(
+                            $child//, $childObject, $childFiles, $class
+                        );
+                    }
+
+                    if ($result) {
+                        $id =  $this->getTable($class)->lastInsertId();
+
+                        //$fields[$children[key($children)]['db_name']] = $id;
+                    }
+                }
+            }
+        }
+
+     /*   if (isset($data['children'])) {
             $children = $data['children'];
             foreach ($children as $class => $child) {
                 $data = $child['entity'];
@@ -316,7 +353,7 @@ class Controller extends ContainerAware
         } else {
             $fields = array_intersect_key($fields, $data['entity']->getVars());
             $files = array_intersect_key($files, $data['entity']->getVars());
-        }
+        }*/
     }
 
 

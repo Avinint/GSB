@@ -27,7 +27,7 @@ class Table {
             $app = App::getInstance();
             $class = explode("\\", get_called_class());
             $class = end($class);
-            $this->table = $app->decamelize(str_replace('Table', '', $class));
+            $this->table =  $app->getContainer('tool')->decamelize(str_replace('Table', '', $class));
         }
     }
 
@@ -54,16 +54,17 @@ class Table {
     {
         $app = App::getInstance();
         $this->db = $app->getContainer('db');
-
         if ($entity) {
             $this->entity = $entity;
             $entity = explode(':', $entity);
             $entity = end($entity);
-            $this->table = $app->decamelize($entity);
+            $this->table = $app->getContainer('tool')->decamelize($entity);
         } else {
             $this->getDbTableName();
         }
     }
+
+
 
     public function createQueryBuilder($alias = '', $table = '')
     {
@@ -95,9 +96,11 @@ class Table {
     public function find($id)
     {
         $query = $this
-        ->createQueryBuilder('a')
+        ->createQueryBuilder($this->table[0])
+        ->where('id = :id')
+        ->setParameter('id', $id)
         ->limit(0, 1)
-        ->getQuery()
+            ->getQuery()
         ;
 
         return $query->getSingleResult();
@@ -243,6 +246,8 @@ class Table {
 
     public function update($entity, $image = null, $table = '')
     {
+        var_dump('update');
+        var_dump($_POST);
         if($table === ''){
             $table = $this->getPrefix().$this->getTable();
         }else{
@@ -302,6 +307,8 @@ class Table {
 
 	public function create(&$entity, $image = null, $table = '')
 	{
+
+        var_dump('create');
         if($table === ''){
             $table = $this->getPrefix().$this->getTable();
         }else{

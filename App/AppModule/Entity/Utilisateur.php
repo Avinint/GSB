@@ -14,8 +14,8 @@ class Utilisateur extends Entity implements UserInterface{
     protected $prenom;
     protected $email;
     protected $mdp;
-    protected $role_id;
-    protected $pays_id;
+    protected $role;
+    protected $pays;
 
     /**
      * @return string
@@ -108,19 +108,19 @@ class Utilisateur extends Entity implements UserInterface{
     }
 
     /**
-     * @param mixed $roleId
+     * @param Role $role
      */
-    public function setRole_id($roleId)
+    public function setRole($role)
     {
-        $this->role_id = $roleId;
+        $this->role = $role;
     }
 
     /**
      * @return mixed
      */
-    public function getRole_id()
+    public function getRole()
     {
-        return $this->role_id;
+        return $this->role;
     }
 
     /**
@@ -142,17 +142,17 @@ class Utilisateur extends Entity implements UserInterface{
     /**
      * @param mixed $pays_id
      */
-    public function setPaysId($paysId)
+    public function setPays($pays)
     {
-        $this->pays_id = $paysId;
+        $this->pays = $pays;
     }
 
     /**
      * @return mixed
      */
-    public function getPaysId()
+    public function getPays()
     {
-        return $this->pays_id;
+        return $this->pays;
     }
 
     public function getFilePath()

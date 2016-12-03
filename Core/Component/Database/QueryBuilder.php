@@ -359,7 +359,6 @@ class QueryBuilder{
 
     public function getQuery()
     {
-
         $this->query = 'SELECT '
             . ($this->getSqlPart('distinct') === true ? ' DISTINCT' : '')
             . $this->writeSelect()

@@ -20,5 +20,6 @@ class ConfigProvider implements ServiceProviderInterface
         $container['config'] = function ($c) {
             return Config::getInstance($c['paths']['db'], $c['paths']['config'], $c['paths']['security']);
         };
+
     }
 } 
