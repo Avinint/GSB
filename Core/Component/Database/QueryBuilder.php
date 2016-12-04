@@ -62,11 +62,29 @@ class QueryBuilder{
 	public function select($selection = '*')
 	{
         $selection = is_array($selection) ? $selection : func_get_args();
+
+         /*foreach ($selection as $prop) {
+            $this->parseSelect($prop);
+        }*/
+
         $this->sqlParts['select'] = $selection;
 
 		//$this->fields = func_get_args();
 		return $this;
 	}
+
+    public  function parseSelect($prop)
+    {
+        $separator = strpos($prop, '.');
+        if($separator !== false)  {
+            $select = explode('.', $prop);
+            $oolumnName = array_pop($select);
+            $meta = $this->repository->getEntity()->getDataMapper();
+            $columnName = $meta->getColumnFromProperty($oolumnName);
+            $alias = array_shift($select);
+            $this->addAlias($alias, $columnName);
+        }
+    }
 
     public function distinct($flag = true)
     {
@@ -119,6 +137,7 @@ class QueryBuilder{
         $alias = $alias ? : strtolower($table[0]);
         $from['table'] = $table;
         $from['alias'] = $alias;
+        $this->addAliasKey($alias);
         $this->sqlParts['from'] = array();
         $this->sqlParts['from'][] = $from;
 
@@ -131,9 +150,17 @@ class QueryBuilder{
 
         $from['table'] = $table;
         $from['alias'] = $alias;
+        $this->addAliasKey($alias);
         $this->sqlParts['from'][] = $from;
 
         return $this;
+    }
+
+    public function addAliasKey($alias)
+    {
+        if(!array_key_exists($alias, $this->aliases)) {
+            $this->aliases[$alias] = array();
+        }
     }
 
     public function setParameter($identifier, $value)
@@ -266,7 +293,7 @@ class QueryBuilder{
 
     private function getSelect($select)
     {
-        return strpos($select, '.') === false? $select.'.*': $select;
+        return strpos($select, '.') === false && array_key_exists($select,$this->aliases) ? $select.'.*': $select;
     }
 
     private function writePart($partName, $options = array())

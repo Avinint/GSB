@@ -249,16 +249,15 @@ class Controller extends ContainerAware
     {
         $foreignKeys = $this->saveChildren($object/*, $files, $object*/);
         $class = ucfirst($object->getClass());
-        $data = $object->getDataMapper()->getColumns();
-        $changes = $object->getChanges();
+        $data = $object->getDataMapper()->getFields();
+        $changes = $this->getTable($class)->getChanges();
         $data = array_intersect($data, $changes); // ajout des champs en fonction des changements suivis
-        var_dump($data);
         foreach ($data as $prop => &$value) {
 
             $value = $object->$prop; // zjout de valeurs aux champs
         }
         $data = array_merge($data, $foreignKeys); // ajout  des clés étrangeres aux champs
-       /* if ($object->getId()) {
+        if ($object->getId()) {
             $data['id'] = $object->getId();
             $result = $this->getTable($class)->update(
                 $data //, $files
@@ -275,19 +274,15 @@ class Controller extends ContainerAware
 
         if ($result) {
             $object->setId($this->getTable($class)->lastInsertId());
-            /* Si c'est une inscription on logue le nouvel utilisateur */
-            /*if (isset($data['login'])) {
-                $id = $this->getTable($class)->lastInsertId();
-                $_SESSION['auth'] = $id;
-            }*/
-        /*}
+        }
 
-        return $result;*/
+        return $result;
     }
 
     public function saveChildren(&$entity/*, &$files, $data*/)
     {
         $fkeys = array();
+        $class = ucfirst($entity->getClass());
         $result = null;
         if (!$entity instanceof \Core\Entity\Entity) {
             throw new \Exception ("Form data not valid.");
@@ -295,17 +290,16 @@ class Controller extends ContainerAware
 
         $associationTypes = $entity->getDataMapper()->getAssociations();
         foreach ($associationTypes as $typeName => $type) {
-            if ($fields = array_flip(array_intersect($entity->getChanges(), array_keys($type)))) {
+            if ($fields = array_flip(array_intersect($this->getTable($class)->getChanges(), array_keys($type)))) {
                 foreach ($fields as $prop => $child) {
-                    // var_dump($prop);
-                    // var_dump($child);
+
                     // envoyer uodate ou create avec le bon type de données
                     $get = 'get'.ucfirst($prop);
                     $class = $type[$prop]['targetEntity'];
                     $child = $entity->$get();
                     $fk = $type[$prop]['foreignKey']?  :$prop.'_id';
                     $data = $child->getVars();
-                    $data = array_flip(array_intersect($data, $entity->getChanges()));
+                    $data = array_flip(array_intersect($data, $this->getTable($class)->getChanges()));
                     // compare sub object data TODO test
 
                     /* if(!$child->getId()) {

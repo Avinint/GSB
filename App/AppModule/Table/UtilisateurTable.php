@@ -22,7 +22,7 @@ class UtilisateurTable extends Table
     {
         $query = $this
             ->createQueryBuilder('u')
-            ->select(array('u.id','u.pseudo', 'u.nom', 'u.prenom', 'u.email', 'u.image', 'u.role_id', 'u.newsletter'))
+            ->select(array('u.id','u.login', 'u.nom', 'u.prenom', 'u.email', 'u.image', 'u.role'))
             ->where('id = :id')
             ->setParameter('id', $id)
             ->getQuery()

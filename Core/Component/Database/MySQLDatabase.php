@@ -38,7 +38,7 @@ class MySQLDatabase {
         if(is_null($class)){
             $req->setFetchMode(PDO::FETCH_OBJ);
         }else{
-            $req->setFetchMode(PDO::FETCH_CLASS, $class);
+            $req->setFetchMode(PDO::FETCH_ASSOC);
         }
         if($one === true){
             $data = $req->fetch();
@@ -51,6 +51,7 @@ class MySQLDatabase {
 
     public function prepare($statement, $attr, $class = null, $one = false, $ctor = null)
     {
+        var_dump($statement);
         $data = null;
         $req = $this->getPDO()->prepare($statement);
         $res = $req->execute($attr);
@@ -64,7 +65,7 @@ class MySQLDatabase {
         }
 
         if (is_null($class)) {
-            $req->setFetchMode(PDO::FETCH_OBJ);
+            $req->setFetchMode(PDO::FETCH_ASSOC);
         } else {
             if (!is_null($ctor)) {
                 $req->setFetchMode(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE, $class, $ctor);
@@ -80,7 +81,6 @@ class MySQLDatabase {
         else if($one === false){
            $data = $req->fetchAll();
         }
-
         return $data;
     }
 

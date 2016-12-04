@@ -83,17 +83,30 @@ class DataMapper
 
     public function getPropertyFromColumn($column)
     {
-        $field = '';
         //var_dump(array_key_exists($column, $this->columns));
         if (array_key_exists($column, $this->columns)) {
             return $this->columns[$column];
         }
-
-        return false;
     }
+
+    public function getColumnFromProperty($property)
+    {
+        //var_dump(array_key_exists($column, $this->columns));
+        if (array_key_exists($property, $this->fields)) {
+            return $this->fields[$property];
+        }
+        return 0;
+    }
+
+    public function getPrimaryKey()
+    {
+        return $this->pkType;
+    }
+
 
     public function getProperties(Array $columns)
     {
+
         //var_dump( array_map(array($this, 'getPropertyFromColumn'), $this->columns));
         return array_map(array($this, 'getPropertyFromColumn'), array_keys($columns));
     }
@@ -132,7 +145,7 @@ class DataMapper
     {
         //$keys = array_map('function', array_keys($data));
         $entity = new $class();
-        var_dump($class);
+
         $fields = $this->getProperties($data);
         $data = array_combine($fields, array_values($data));
 
@@ -144,26 +157,22 @@ class DataMapper
         $associationTypes = $this->getAssociations();
         foreach ($associationTypes as $name => $associations) {
             if ($name === 'ManyToOne') {
-                var_dump('data');
-                var_dump($data);
-                var_dump('type');
-                var_dump($name);
-                var_dump($associations);
+
                 $associations = array_intersect_key($data , $associations);
 
-                var_dump(count($associations));
+                var_dump($associations);
                 foreach ($associations as $prop => $value) {
 
                     $class = $this->getFields();
                     $set = 'set'.$class;
                     $child = new $class();
-                    var_dump('child');
-                    var_dump($child);
+
                 }
             }
         }
         $associations = array_intersect_key($data, $this->getFields());
 
+        var_dump($entity);
         return $entity;
     }
 

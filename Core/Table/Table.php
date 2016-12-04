@@ -13,6 +13,21 @@ class Table {
 	protected $db;
     protected $entity;
     protected $count = 1;
+    protected $changeset = array();
+
+    public function __construct($entity = null)
+    {
+        $app = App::getInstance();
+        $this->db = $app->getContainer('db');
+        if ($entity) {
+            $this->entity = $entity;
+            $entity = explode(':', $entity);
+            $entity = end($entity);
+            $this->table = $app->getContainer('tool')->decamelize($entity);
+        } else {
+            $this->getDbTableName();
+        }
+    }
 
     public function getTable()
     {
@@ -50,18 +65,60 @@ class Table {
         return $entity;
     }
 
-    public function __construct($entity = null)
+    public function setChanges($changes)
     {
-        $app = App::getInstance();
-        $this->db = $app->getContainer('db');
-        if ($entity) {
-            $this->entity = $entity;
-            $entity = explode(':', $entity);
-            $entity = end($entity);
-            $this->table = $app->getContainer('tool')->decamelize($entity);
+        if ($this->changeset === array()) {
+            $this->changeset = $changes;
         } else {
-            $this->getDbTableName();
+            $this->changeset = array_flip(array_flip(array_merge($this->changeset, $changes)));
         }
+    }
+
+    public function getChanges()
+    {
+        return $this->changeset;
+    }
+
+    public function trackChanges($entity, $clone)
+    {
+        $class = $this->getEntity();
+        if(!$entity instanceof $class && !$clone instanceof $class) {
+            throw new \Exception('method cannot compare instances of different classes');
+        }
+        $guestVars = array_filter(get_object_vars($clone), function($v) {return !is_array($v);});
+        $hostVars = array_filter(get_object_vars($entity), function($v) {return !is_array($v);});
+
+        return array_keys(array_diff_assoc($hostVars, $guestVars));
+    }
+
+    //Not Tested
+    public function trackArrayChanges($entity, $clone)
+    {
+        $class = $this->getEntity();
+        if(!$entity instanceof $class && !$clone instanceof $class) {
+            throw new \Exception('method cannot compare instances of different classes');
+        }
+        $guestVars = array_filter(get_object_vars($clone), function($v) {return is_array($v);});
+        $hostVars = array_filter(get_object_vars($entity), function($v) {return is_array($v);});
+
+        $differences = array();
+        foreach ($hostVars as $key => $var ) {
+            if($this->arrayEqual($var, $guestVars[$key]) == true && $key !== 'changeset') {
+                $differences[] = $key;
+            }
+        }
+
+        return $differences;
+    }
+
+    //Not tested
+    private function arrayEqual($a, $b)
+    {
+        return (
+            is_array($a) && is_array($b) &&
+            count($a) == count($b) &&
+            array_diff($a, $b) === array_diff($b, $a)
+        );
     }
 
     public function createQueryBuilder($alias = '', $table = '')
@@ -383,9 +440,10 @@ class Table {
 		}
 
         $meta = $entity::dataMapper();
-        if($scalar || !$data) {
-            return $data;
+        if($scalar || $data === false) {
+;            return $data;
         } else {
+            var_dump($data);
             return $one ? $meta->hydrate($data, $entity) : $meta->hydrateAll($data, $entity);
         }
 	}

@@ -147,7 +147,7 @@ abstract class Form extends ContainerAware{
                     }
                     if ($fkType === 'integer') {
 
-                        if(!is_int($data[$key])) {
+                        if(!intval($data[$key]) < 0) {
                             throw new  \Exception("invalid foreign key");
                         }
                     }else if ($fkType === 'string') {
@@ -162,6 +162,7 @@ abstract class Form extends ContainerAware{
                 }
             }
         }
+
 
             /*if($key['options']['confirmation']){
                 var_dump($key['options']['confirmation']);
@@ -628,21 +629,20 @@ abstract class Form extends ContainerAware{
                 }
                 if ($entity = $this->getData()) {
                     $clone = clone $entity;
-                    $entity->setChanges($entity->trackChanges($clone));
+                    $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
+
                    // var_dump($entity->getChanges());
+
                     $scalars = array_intersect_key($fields, $entity->getDataMapper()->getFields());
                    // var_dump($scalars);
+
                     foreach ($scalars as $attr => $value) {
                         $method = 'set'.ucfirst($attr);
                         $entity->$method($value);
                     }
 
-                    $entity->setChanges($entity->trackChanges($clone));
-                    //var_dump($scalars);
-                    //var_dump($clone);
-                    //var_dump($entity);
+                    $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
                     $this->cascadeRequest($fields, $files);
-                    var_dump($entity->getChanges());
                 }
 
             } else {// fin validate
@@ -692,8 +692,8 @@ abstract class Form extends ContainerAware{
             }
         }
         // one to one or array many to one relationships
-        $entity->setChanges($entity->trackChanges($clone));
+        $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
         // many to many or one to many relationships
-        $entity->setChanges($entity->trackArrayChanges($clone));
+        $entity::getTable()->setChanges($entity::getTable()->trackArrayChanges($entity, $clone));
     }
 }

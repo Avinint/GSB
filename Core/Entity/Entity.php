@@ -8,7 +8,6 @@ use Core\Component\Database\Metadata;
 class Entity
 {
     protected static $mapper;
-    protected $changeset = array();
 
 	public function __get($key)
 	{	
@@ -120,26 +119,11 @@ class Entity
     public function getVars()
     {
         $vars = get_object_vars($this);
-        if (isset($vars['changeset'])) {
-           unset($vars['changeset']);
-        }
 
         return $vars;
     }
 
-    public function setChanges($changes)
-    {
-        if ($this->changeset === array()) {
-            $this->changeset = $changes;
-        } else {
-            $this->changeset = array_flip(array_flip(array_merge($this->changeset, $changes)));
-        }
-    }
 
-    public function getChanges()
-    {
-        return $this->changeset;
-    }
 
    /* public static function loadMetadata(Metadata $metadata)
     {
@@ -182,48 +166,6 @@ class Entity
     public function getDataMapper()
     {
         return static::dataMapper();
-    }
-
-    public function trackChanges(self $entity)
-    {
-        $class = get_called_class();
-        if(!$entity instanceof $class) {
-            throw new \Exception('method cannot compare instances of different classes');
-        }
-        $guestVars = array_filter(get_object_vars($entity), function($v) {return !is_array($v);});
-        $hostVars = array_filter(get_object_vars($this), function($v) {return !is_array($v);});
-
-        return array_keys(array_diff_assoc($hostVars, $guestVars));
-    }
-
-    //Not Tested
-    public function trackArrayChanges(self $entity)
-    {
-        $class = get_called_class();
-        if(!$entity instanceof $class) {
-            throw new \Exception('method cannot compare instances of different classes');
-        }
-        $guestVars = array_filter(get_object_vars($entity), function($v) {return is_array($v);});
-        $hostVars = array_filter(get_object_vars($this), function($v) {return is_array($v);});
-
-        $differences = array();
-        foreach ($hostVars as $key => $var ) {
-            if($this->arrayEqual($var, $guestVars[$key]) == true && $key !== 'changeset') {
-                $differences[] = $key;
-            }
-        }
-
-        return $differences;
-    }
-
-    //Not tested
-    private function arrayEqual($a, $b)
-    {
-        return (
-            is_array($a) && is_array($b) &&
-            count($a) == count($b) &&
-            array_diff($a, $b) === array_diff($b, $a)
-        );
     }
 
     /* Wrapper methods for NOOB mode aka Ruby mode */
