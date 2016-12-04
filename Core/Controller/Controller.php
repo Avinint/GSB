@@ -42,8 +42,7 @@ class Controller extends ContainerAware
     protected function getTable($model)
     {
         $app = App::getInstance();
-
-        return strpos($model, ':')?$app->getTable($model) : $app->getTableFromEntity($model);
+        return strpos($model, ':')? $app->getTable($model) : $app->getTableFromEntity($model);
     }
 
     public function controlAccess()
@@ -248,76 +247,86 @@ class Controller extends ContainerAware
 
     public function save($object)
     {
-        $this->saveChildren($object/*, $files, $object*/);
+        $foreignKeys = $this->saveChildren($object/*, $files, $object*/);
         $class = ucfirst($object->getClass());
+        $data = $object->getDataMapper()->getColumns();
+        $changes = $object->getChanges();
+        $data = array_intersect($data, $changes); // ajout des champs en fonction des changements suivis
+        var_dump($data);
+        foreach ($data as $prop => &$value) {
 
-        if ($object->getId()) {
+            $value = $object->$prop; // zjout de valeurs aux champs
+        }
+        $data = array_merge($data, $foreignKeys); // ajout  des clés étrangeres aux champs
+       /* if ($object->getId()) {
+            $data['id'] = $object->getId();
             $result = $this->getTable($class)->update(
-                $object //, $files
+                $data //, $files
             );
         } else {
             if(array_key_exists('date', $object->getVars())){
-                $object->setData($this->insertDate());
+                $data->setDate($this->insertDate());
             }
 			
             $result = $this->getTable($class)->create(
-                $object // , $files
+                $data // , $files
             );
         }
 
         if ($result) {
+            $object->setId($this->getTable($class)->lastInsertId());
             /* Si c'est une inscription on logue le nouvel utilisateur */
             /*if (isset($data['login'])) {
                 $id = $this->getTable($class)->lastInsertId();
                 $_SESSION['auth'] = $id;
             }*/
-        }
+        /*}
 
-        return $result;
+        return $result;*/
     }
 
     public function saveChildren(&$entity/*, &$files, $data*/)
     {
+        $fkeys = array();
         $result = null;
-        $childObject = array();
-        $childFiles = array();
         if (!$entity instanceof \Core\Entity\Entity) {
             throw new \Exception ("Form data not valid.");
         }
+
         $associationTypes = $entity->getDataMapper()->getAssociations();
         foreach ($associationTypes as $typeName => $type) {
-
-            if ($fields = array_values(array_intersect($entity->getChanges(), array_keys($type)))) {
-
-                foreach ($fields as $prop ) {
-
-                    $fk = $type[$prop]['foreignKey']['name']?  :$prop.'_id';
-
+            if ($fields = array_flip(array_intersect($entity->getChanges(), array_keys($type)))) {
+                foreach ($fields as $prop => $child) {
+                    // var_dump($prop);
+                    // var_dump($child);
                     // envoyer uodate ou create avec le bon type de données
                     $get = 'get'.ucfirst($prop);
-                    $child = $entity->$get();
                     $class = $type[$prop]['targetEntity'];
-                    if(!$child->getId()) {
+                    $child = $entity->$get();
+                    $fk = $type[$prop]['foreignKey']?  :$prop.'_id';
+                    $data = $child->getVars();
+                    $data = array_flip(array_intersect($data, $entity->getChanges()));
+                    // compare sub object data TODO test
+
+                    /* if(!$child->getId()) {
                         $result = $this->getTable($class)->create(
-                            $child//, $childObject, $childFiles, $class
+                            $data//, $childObject, $childFiles, $class
                         );
-
-                    } else {
+                    } else if ($child->getChanges()) {
                         $result = $this->getTable($class)->update(
-                            $child//, $childObject, $childFiles, $class
+                            $data//, $childObject, $childFiles, $class
                         );
                     }
-
-                    if ($result) {
-                        $id =  $this->getTable($class)->lastInsertId();
-
-                        //$fields[$children[key($children)]['db_name']] = $id;
-                    }
+                    if ($result || !$child->getChanges()) {
+                        $id = $child->getId()? : $this->getTable($class)->lastInsertId();
+                        $fkeys[$fk] = $id;
+                    }*/
                 }
             }
         }
+        return $fkeys;
 
-     /*   if (isset($data['children'])) {
+        /*   if (isset($data['children'])) {
             $children = $data['children'];
             foreach ($children as $class => $child) {
                 $data = $child['entity'];
@@ -355,7 +364,4 @@ class Controller extends ContainerAware
             $files = array_intersect_key($files, $data['entity']->getVars());
         }*/
     }
-
-
-
 }

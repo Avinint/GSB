@@ -8,7 +8,7 @@ if($error):
 endif;
 ?>
 <form method="post">
-<?=$form->input('pseudo', 'Pseudo'); ?>
+<?=$form->input('login', 'Login'); ?>
 <?=$form->password('mdp', 'Mot de passe'); ?>
 <?=$form->submit('connexion'); ?>
 </form>

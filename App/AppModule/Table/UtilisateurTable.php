@@ -10,8 +10,8 @@ class UtilisateurTable extends Table
     {
         $query = $this->createQueryBuilder('u');
         $query
-            ->where('u.pseudo = :pseudo')
-            ->setParameter('pseudo', $username)
+            ->where('u.login = :login')
+            ->setParameter('login', $username)
             ->getQuery()
         ;
 

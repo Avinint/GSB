@@ -70,7 +70,7 @@ abstract class BaseApp
                 $className = 'Core\\Table\\Table';
             }
 
-            return new $className($name);
+            return new $className($fullName);
 
         } else {
             return $this->getTableFromEntity($fullName);

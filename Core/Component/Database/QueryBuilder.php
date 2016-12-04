@@ -376,12 +376,21 @@ class QueryBuilder{
     public function getSingleResult()
     {
         return $this->repository->query($this->query, $this->getParameters(), true);
+
+    }
+
+    public function getSingleScalarResult()
+    {
+
     }
 
     public function readSql()
     {
-        echo $this->query;
-
+        echo 'SELECT '
+            . ($this->getSqlPart('distinct') === true ? ' DISTINCT' : '')
+            . $this->writeSelect()
+            . $this->writeFrom().$this->writeEnd();
+        ;
         return $this;
     }
 

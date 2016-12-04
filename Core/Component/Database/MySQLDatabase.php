@@ -50,7 +50,7 @@ class MySQLDatabase {
     }
 
     public function prepare($statement, $attr, $class = null, $one = false, $ctor = null)
-    {
+    {;
         $data = null;
         $req = $this->getPDO()->prepare($statement);
         $res = $req->execute($attr);
@@ -59,18 +59,18 @@ class MySQLDatabase {
             strpos($statement, 'UPDATE') === 0 ||
             strpos($statement, 'INSERT') === 0 ||
             strpos($statement, 'DELETE') === 0
-        ){
+        ) {
             return $res;
         }
 
-        if(is_null($class)){
+        if (is_null($class)) {
             $req->setFetchMode(PDO::FETCH_OBJ);
-        }else{
-            if(!is_null($ctor)){
+        } else {
+            if (!is_null($ctor)) {
                 $req->setFetchMode(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE, $class, $ctor);
-            }
-            else{
-                $req->setFetchMode(PDO::FETCH_CLASS, $class);
+            } else {
+                //$req->setFetchMode(PDO::FETCH_CLASS, $class);
+                $req->setFetchMode(PDO::FETCH_ASSOC);
             }
         }
 
@@ -78,7 +78,7 @@ class MySQLDatabase {
             $data = $req->fetch();
         }
         else if($one === false){
-            $data = $req->fetchAll();
+           $data = $req->fetchAll();
         }
 
         return $data;

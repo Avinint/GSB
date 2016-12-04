@@ -3,7 +3,7 @@
 return array(
     'utilisateur_login' => array(
         'path' => '/login',
-        'controller' => 'AppModule:AppController:login',
+        'controller' => 'AppModule:UtilisateurController:login',
     ),
     'utilisateur_logout' => array(
         'path' => '/logout',

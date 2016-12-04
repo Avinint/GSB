@@ -19,8 +19,7 @@ class DbAuth
     public function authenticate($user, $id = null)
     {
         $_SESSION['auth'] = $id ? : $user->getId();
-        $_SESSION['role'] = $user->getRole_id();
-
+        $_SESSION['role'] = $user->getRole();
         return  $_SESSION['logged'] = true;
     }
 

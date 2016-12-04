@@ -18,24 +18,27 @@ class UtilisateurController extends AppController
         $this->loadModel('Utilisateur');
     }*/
 
-    /*public function login()
+    public function login()
     {
         $error = false;
-        if(!empty($_POST)){
-            $auth = new DBAuth(\App::getInstance()->getDb());
-            var_dump($this->Utilisateur->findByUsername($_POST['pseudo']));
-            if($auth->login($this->Utilisateur->findByUsername($_POST['pseudo']), $_POST['mdp'])){
+        if (!empty($_POST)) {
+            //$auth = $this->container['auth'];
 
-            $this->redirect($this->route->generateURL('admin_article_index' ));
+            var_dump($this->getTable('AppModule:Utilisateur')->findByUsername($_POST['login']['login'])); die();
+            if ($auth->login($this->getTable('AppModule:Utilisateur')->findByUsername($_POST['login']['login']),
+
+                    $_POST['login']['mdp'])) {
+            $this->redirect($this->generateURL('utilisateur_profil_edit'));
 
             }else{
                 $error = true;
+                echo 'fuck'; die();
             }
         }
         $form = new LoginForm();
 
-        $this->render('User:login.php', compact('form', 'error'));
-    }*/
+        $this->render('AppModule:User:login.php', compact('form', 'error'));
+    }
 
     public function contact()
     {
@@ -55,9 +58,12 @@ class UtilisateurController extends AppController
         $user = new Utilisateur();
         $form = new InscriptionForm($user);
         if (!empty($_POST) && $_POST['signup']['action'] == 'signup') {
+
             $auth = $this->container['auth'];
+
+
             if ($this->getTable('AppModule:Utilisateur')->valueAvailable('login', $_POST['signup']['login']) &&
-                $this->getTable('AppModule:Utilisateur')->valueAvailable('email', $_POST['signup']['login'])) {
+                $this->getTable('AppModule:Utilisateur')->valueAvailable('email', $_POST['signup']['email'])) {
                 // if ($_POST['signup_mdp'] === $_POST['signup_mdpConf']) {
                     //$_POST['signup_mdp'] =  password_hash($_POST['signup_mdp'], PASSWORD_BCRYPT );
 

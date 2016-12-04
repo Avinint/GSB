@@ -64,12 +64,11 @@ class Table {
         }
     }
 
-
-
     public function createQueryBuilder($alias = '', $table = '')
     {
         $query = new QueryBuilder($this);
         if($alias === null){
+
             $alias = strtolower($this->getTable()[0]); // Si alias vide on utilise la premiere lettre de la classe
         }
 
@@ -244,33 +243,30 @@ class Table {
         return $entity;
     }
 
-    public function update($entity, $image = null, $table = '')
+    public function update($fields, $image = null, $table = '')
     {
-        var_dump('update');
-        var_dump($_POST);
-        if($table === ''){
-            $table = $this->getPrefix().$this->getTable();
-        }else{
+        if($table){
             $table = $this->getPrefix().$table;
+        }else{
+            $table = $this->getPrefix().$this->getTable();
         }
 
-        $fields = array_filter($entity->getVars());
-        /* * * * * A mettre dans handleRequest ? */  // on n'update que ce que le champs mis à jours
-        if ($entity->getId()) {
+         // on n'update que ce que le champs mis à jours
+       /* if ($entity->getId()) {
             $preUpdateState = $fields = $entity->getId() ? $this->find($entity->getId())->getVars() : array();
             $fields = array_diff_assoc($fields, $preUpdateState);
 			$imageBackup = method_exists($entity, 'getImage') ? $entity->getImage(): '';
-        }
+        }*/
 
         if(empty($image) || $image['image']['name'] === ''){
             unset($image);
         }
-        
+        // TODO move image preupload to Save
         //$filePath = $table === 'article'?'':D_S.$table.'s';
         //$path = ROOT.D_S.'public'.D_S.'img'.$filePath;
-        if (isset($image)) {
+        /*if (isset($image)) {
             $fields['image'] = $entity->preUpload($image['image']);
-        }
+        }*/
 
         //$entity = $this->refresh($entity, $fields);
 
@@ -281,7 +277,6 @@ class Table {
 			$sql_parts[] = "$k = ?";
 			$attributes[] = "$v";
 		}
-		$attributes[] = $entity->id;
 
 		$sql = implode(', ', $sql_parts);
 
@@ -291,65 +286,14 @@ class Table {
         WHERE id = ?
         ', $attributes,true)) {
             if (isset($image)) {
-               if ($uploaded = $entity->upload($image['image'], $fields['image'])) {
+                // TODO move image preupload to Save
+               /*if ($uploaded = $entity->upload($image['image'], $fields['image'])) {
                    $entity->getId()? $entity->removeFile($imageBackup): NULL;
                } else {
                     $entity->getId()? $entity->setImage($imageBackup): NULL;
                    echo "Fichier non telecharge";
-               }
+               }*/
             }
-
-            return true;
-        }
-
-        return false;
-	}
-
-	public function create(&$entity, $image = null, $table = '')
-	{
-
-        var_dump('create');
-        if($table === ''){
-            $table = $this->getPrefix().$this->getTable();
-        }else{
-            $table = $this->getPrefix().$table;
-        }
-		$fields = array_filter($entity->getVars());
-        if(empty($image) || $image['image']['name'] === ''){
-            unset($image);
-        }
-        //$filePath = $table === 'article'?'':D_S.$table.'s';
-        //$path = ROOT.D_S.'public'.D_S.'img'.$filePath;
-        //var_dump($image);
-        if (isset($image)) {
-            $fields['image'] = $entity->preUpload($image['image']);
-        }
-		$sql_parts = [];
-		$attributes = [];
-		
-		foreach($fields as $k => $v){
-			$sql_parts[] = "$k = ?";
-			$attributes[] = "$v";
-		}
-
-		$sql = implode(', ', $sql_parts);
-
-        if ($this->query(
-            'INSERT INTO '.$table.'
-            SET '.$sql,
-            $attributes,true)) {
-            if (isset($image)) {
-                if ($uploaded = $entity->upload($image['image'], $fields['image'])) {
-
-                }else{
-                    echo "Fichier non telecharge";
-                }
-            }
-
-			if (!$entity->getId()) {
-				 $entity->setPersistedId($this->lastInsertId()); // on set l'id
-				 //$entity = $this->find($this->lastInsertId()); // ou  on récupere l'entite avec l'ID
-			}
 
             return true;
         }
@@ -357,36 +301,93 @@ class Table {
         return false;
     }
 
-	public function delete($id)
-	{
-        $entity = $this->find($id);
-        if(method_exists($entity,'getImage')){
-            $image = $entity->getImage();
-            $entity->removeFile($image);
+    public function create($fields, $image = null, $table = '')
+    {
+        if($table === ''){
+            $table = $this->getPrefix().$this->getTable();
+        }else{
+            $table = $this->getPrefix().$table;
         }
 
-		return $this->query('DELETE FROM '.$this->table.' WHERE id = ?',
-		array($id), true);
-	}
+        if(empty($image) || $image['image']['name'] === ''){
+            unset($image);
+        }
+        //$filePath = $table === 'article'?'':D_S.$table.'s';
+        //$path = ROOT.D_S.'public'.D_S.'img'.$filePath;
+        //var_dump($image);
 
-	public function query($statement, $attributes = null, $one = false, $class = null)
+        // TODO move image preupload to Save
+        /*if (isset($image)) {
+            $fields['image'] = $entity->preUpload($image['image']);
+        }*/
+
+        $sql_parts = [];
+        $attributes = [];
+
+        foreach($fields as $k => $v){
+            $sql_parts[] = "$k = ?";
+            $attributes[] = "$v";
+        }
+
+        $sql = implode(', ', $sql_parts);
+
+        if ($this->query(
+            'INSERT INTO '.$table.'
+            SET '.$sql,
+            $attributes,true)) {
+            if (isset($image)) {
+                // TODO move image upload to Save
+                /*  if ($uploaded = $entity->upload($image['image'], $fields['image'])) {
+
+                }else{
+                    echo "Fichier non telecharge";
+                }*/
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public function delete($id)
+    {
+        $entity = $this->find($id);
+        // TODO move image removal to Save
+       /* if(method_exists($entity,'getImage')){
+            $image = $entity->getImage();
+            $entity->removeFile($image);
+        }*/
+
+        return $this->query('DELETE FROM '.$this->table.' WHERE id = ?',
+        array($id), true);
+    }
+
+	public function query($statement, $attributes = null, $one = false, $scalar = false)
 	{
         $entity = $this->getEntity();
 		$app = App::getInstance();
 		if($attributes){
-			return 	$app->getDb()->prepare(
+			$data = $app->getDb()->prepare(
 						$statement, 
 						$attributes,
                         $entity,
 						$one
 					);
 		}else{
-			return 	$app->getDb()->query(
+			$data = $app->getDb()->query(
 						$statement,
                         $entity,
 						$one
 					);
 		}
+
+        $meta = $entity::dataMapper();
+        if($scalar || !$data) {
+            return $data;
+        } else {
+            return $one ? $meta->hydrate($data, $entity) : $meta->hydrateAll($data, $entity);
+        }
 	}
 
     public function lastInsertId()

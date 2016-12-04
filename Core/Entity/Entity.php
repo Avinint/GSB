@@ -22,7 +22,7 @@ class Entity
         return $this->$key;
     }
 
-    public function setPersistedId($id)
+    public function setId($id)
     {
         if (property_exists(get_called_class(), 'id') && !$this->id) {
             $this->id = $id;
@@ -119,7 +119,12 @@ class Entity
 
     public function getVars()
     {
-        return get_object_vars($this);
+        $vars = get_object_vars($this);
+        if (isset($vars['changeset'])) {
+           unset($vars['changeset']);
+        }
+
+        return $vars;
     }
 
     public function setChanges($changes)
