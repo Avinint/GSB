@@ -50,7 +50,7 @@ class MySQLDatabase {
     }
 
     public function prepare($statement, $attr, $class = null, $one = false, $ctor = null)
-    {;
+    {
         $data = null;
         $req = $this->getPDO()->prepare($statement);
         $res = $req->execute($attr);
