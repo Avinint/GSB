@@ -439,14 +439,19 @@ class Table {
 					);
 		}
 
-        $meta = $entity::dataMapper();
         if($scalar || $data === false) {
 ;            return $data;
         } else {
-            var_dump($data);
+            $meta = $entity::dataMapper();
+
             return $one ? $meta->hydrate($data, $entity) : $meta->hydrateAll($data, $entity);
         }
 	}
+
+    private function getAssociations()
+    {
+
+    }
 
     public function lastInsertId()
     {

@@ -17,7 +17,7 @@ class DbAuth
     }
 
     public function authenticate($user, $id = null)
-    {
+    { var_dump('fion');
         $_SESSION['auth'] = $id ? : $user->getId();
         $_SESSION['role'] = $user->getRole();
         return  $_SESSION['logged'] = true;

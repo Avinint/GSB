@@ -162,8 +162,6 @@ abstract class Form extends ContainerAware{
                 }
             }
         }
-
-
             /*if($key['options']['confirmation']){
                 var_dump($key['options']['confirmation']);
                 die();
@@ -608,7 +606,7 @@ abstract class Form extends ContainerAware{
         die();
     }
 
-    public function handleRequest($data)
+    public function handleRequest()
     {
         if (!empty($_POST) || !empty($_FILES)) {
             $fields = array_shift($_POST);
@@ -634,7 +632,6 @@ abstract class Form extends ContainerAware{
                    // var_dump($entity->getChanges());
 
                     $scalars = array_intersect_key($fields, $entity->getDataMapper()->getFields());
-                   // var_dump($scalars);
 
                     foreach ($scalars as $attr => $value) {
                         $method = 'set'.ucfirst($attr);
@@ -659,41 +656,53 @@ abstract class Form extends ContainerAware{
             throw new \Exception ("Form data not valid.");
         }
         $clone = clone $entity;
+
         //var_dump($clone);
         $associationTypes = $this->data->getDataMapper()->getAssociations();
         foreach ($associationTypes as $type) {
             if ($fields = array_intersect_key($fields, $type)) {
-                foreach ($fields as $prop => $value) {
-                    $field = $this->fields[$prop];
-                    $multiple = isset($field['options']['multiple']) && $field['options']['multiple'];
-                    $set = 'set'.ucfirst($prop);
-                    $get = 'get'.ucfirst($prop);
-                    $add = 'add'.ucfirst($prop);
-                    $association = $type[$prop];
-                    $class = $association['targetEntity'];
-                    // on change la valeur si on a reneigné le champ  ou si les valeurs nulles sont admises non par défaut
-                    if ($value || isset($association['nullable']) && $association['nullable'] === true) {
-                       $child = is_object($value) ? $value : $this->container['app']->getTable($class)->find($value);
-
-                        //    add code for changing sub forms
-
-                        if ($child instanceof $class) {
-                            if (($type === "ManyToMany" || $type === "OneToMany") && $multiple && is_array($entity->$get())) {
-                                $entity->$add($child);
-                            } else {
-                                $entity->$set($child);
-                            }
-                        } else {
-                            throw new \Exception("Entité invalide");
-                        }
-                    }
-                    // add HYDRATOR for update
-                }
+                $this->cascadeAssociation($entity, $fields, $type);
             }
         }
         // one to one or array many to one relationships
         $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
         // many to many or one to many relationships
         $entity::getTable()->setChanges($entity::getTable()->trackArrayChanges($entity, $clone));
+    }
+
+    public function cascadeAssociation($entity, $fields, $type)
+    {
+        foreach ($fields as $prop => $value) {
+            $field = $this->fields[$prop];
+            $multiple = isset($field['options']['multiple']) && $field['options']['multiple'];
+            $set = 'set'.ucfirst($prop);
+            $get = 'get'.ucfirst($prop);
+            $add = 'add'.ucfirst($prop);
+            $association = $type[$prop];
+            $class = $association['targetEntity'];
+            // on change la valeur si on a reneigné le champ  ou si les valeurs nulles sont admises non par défaut
+            if ($value || isset($association['nullable']) && $association['nullable'] === true) {
+                $child = is_object($value) ? $value : $this->container['app']->getTable($class)->find($value);
+
+                if ($child instanceof $class) {
+                    $associationTypes = $child->getDataMapper()->getAssociations();
+                    foreach ($associationTypes as $type) {
+                        if ($fields = array_intersect_key($fields, $type)) {
+                            $this->cascadeAssociation($entity, $fields, $type);
+                        }
+                    }
+
+                    if (($type === "ManyToMany" || $type === "OneToMany") && $multiple && is_array($entity->$get())) {
+                        $entity->$add($child);
+                    } else {
+                        $entity->$set($child);
+                    }
+                } else {
+                    throw new \Exception("Entité invalide");
+                }
+            }
+            // add HYDRATOR for update
+        }
+
     }
 }

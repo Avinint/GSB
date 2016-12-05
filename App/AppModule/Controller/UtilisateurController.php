@@ -73,10 +73,12 @@ class UtilisateurController extends AppController
                         'children' => array(
                         ));
 
-                    $form->handleRequest($data);
+                    $form->handleRequest();
 
                 if ($form->isValid()) {
+
                     $this->save($user);
+                    echo "heleo";
                     $auth->authenticate($user);
 
 					$this->redirect($this->generateURL('utilisateur_profil_edit'));

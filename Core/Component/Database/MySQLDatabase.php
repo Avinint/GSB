@@ -51,7 +51,6 @@ class MySQLDatabase {
 
     public function prepare($statement, $attr, $class = null, $one = false, $ctor = null)
     {
-        var_dump($statement);
         $data = null;
         $req = $this->getPDO()->prepare($statement);
         $res = $req->execute($attr);
@@ -81,6 +80,7 @@ class MySQLDatabase {
         else if($one === false){
            $data = $req->fetchAll();
         }
+
         return $data;
     }
 

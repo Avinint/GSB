@@ -85,8 +85,10 @@ class DataMapper
     {
         //var_dump(array_key_exists($column, $this->columns));
         if (array_key_exists($column, $this->columns)) {
+            var_dump($this->columns[$column]);
             return $this->columns[$column];
         }
+        return 0;
     }
 
     public function getColumnFromProperty($property)
@@ -104,10 +106,10 @@ class DataMapper
     }
 
 
-    public function getProperties(Array $columns)
-    {
-
-        //var_dump( array_map(array($this, 'getPropertyFromColumn'), $this->columns));
+    public function getProperties($columns)
+    {   var_dump('hecho');
+        var_dump($columns);
+       // var_dump(array_map(array($this, 'getPropertyFromColumn'), array_keys($columns)));
         return array_map(array($this, 'getPropertyFromColumn'), array_keys($columns));
     }
 
@@ -146,11 +148,14 @@ class DataMapper
         //$keys = array_map('function', array_keys($data));
         $entity = new $class();
 
-        $fields = $this->getProperties($data);
+        if($data)
+            $fields = $this->getProperties($data);
+
         $data = array_combine($fields, array_values($data));
 
         $properties = array_intersect_key($data, $this->getFields());
         foreach ($properties as $prop => $value) {
+
             $set = 'set'.ucfirst($prop);
             $entity->$set($value);
         }
@@ -158,21 +163,22 @@ class DataMapper
         foreach ($associationTypes as $name => $associations) {
             if ($name === 'ManyToOne') {
 
-                $associations = array_intersect_key($data , $associations);
 
-                var_dump($associations);
-                foreach ($associations as $prop => $value) {
+                $data = array_intersect_key($data , $associations);
 
-                    $class = $this->getFields();
-                    $set = 'set'.$class;
-                    $child = new $class();
-
+                foreach ($data as $prop => $value) {
+                    $childClass = $associations[$prop]['targetEntity'];
+                    if (!$value instanceof $childClass) {
+                        $app = \App::getInstance();
+                        $child =$app->getTable($childClass)->find($value);
+                        $set = 'set'.ucfirst($prop);
+                        $entity->$set($child);
+                    }
                 }
             }
         }
         $associations = array_intersect_key($data, $this->getFields());
 
-        var_dump($entity);
         return $entity;
     }
 

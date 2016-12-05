@@ -408,7 +408,12 @@ class QueryBuilder{
 
     public function getSingleScalarResult()
     {
+        return $this->repository->query($this->query, $this->getParameters(), true, true);
+    }
 
+    public function getScalarResults()
+    {
+        return $this->repository->query($this->query, $this->getParameters(), false, true);
     }
 
     public function readSql()

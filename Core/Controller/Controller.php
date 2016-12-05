@@ -245,19 +245,24 @@ class Controller extends ContainerAware
         } */
     }
 
-    public function save($object)
-    {
+    public function save($object) {
+
         $foreignKeys = $this->saveChildren($object/*, $files, $object*/);
         $class = ucfirst($object->getClass());
         $data = $object->getDataMapper()->getFields();
-        $changes = $this->getTable($class)->getChanges();
-        $data = array_intersect($data, $changes); // ajout des champs en fonction des changements suivis
+        //$this->getTable($class)->setChanges($this->getTable($class)->trackChanges($entity, $clone));
+       // $changes = $this->getTable($class)->getChanges();
+
+        var_dump($data);
+
+       // $data = array_intersect($data, $changes); // ajout des champs en fonction des changements suivis
         foreach ($data as $prop => &$value) {
 
             $value = $object->$prop; // zjout de valeurs aux champs
         }
         $data = array_merge($data, $foreignKeys); // ajout  des clés étrangeres aux champs
         if ($object->getId()) {
+
             $data['id'] = $object->getId();
             $result = $this->getTable($class)->update(
                 $data //, $files
@@ -266,13 +271,14 @@ class Controller extends ContainerAware
             if(array_key_exists('date', $object->getVars())){
                 $data->setDate($this->insertDate());
             }
-			
+            var_dump($data);
             $result = $this->getTable($class)->create(
                 $data // , $files
             );
         }
 
         if ($result) {
+
             $object->setId($this->getTable($class)->lastInsertId());
         }
 

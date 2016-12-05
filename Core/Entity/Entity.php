@@ -31,7 +31,6 @@ class Entity
     public static function getShortClass()
     {
         $class = new \ReflectionClass(get_called_class());
-
         return $class->getShortName();
     }
 
@@ -124,26 +123,6 @@ class Entity
     }
 
 
-
-   /* public static function loadMetadata(Metadata $metadata)
-    {
-        $builder = new MetadataBuilder($metadata);
-    }*/
-
-    /*public static function getMetadata()
-    {
-		if(empty(static::$metadata) {
-			static::function
-		}
-		
-        return static::$metadata;
-    }
-	
-	private static function setMetaData()
-	{
-		static::$metadata = include ROOT.'App'.D_S.'AppModule'.D_S.'config'.D_S.'dataMapper'.D_S.$class.'Mapper.php';
-	}*/
-
     public static function setDataMapper()
     {
        return new DataMapper(ROOT.D_S.'App'.D_S.static::getModule().D_S.'config'.D_S.'dataMapper'.D_S.static::getShortClass().'Mapper.php');
@@ -151,9 +130,8 @@ class Entity
 
 	public static function dataMapper($field = null)
     {
-        if (!isset(static::$mapper)) {
             static::$mapper = static::setDataMapper();
-        }
+
 
         return static::$mapper;
     }
