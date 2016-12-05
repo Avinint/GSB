@@ -95,32 +95,5 @@ class BackOfficeController extends AppController
         }
     }
 
-    public function editProfil()
-    {
-        $logout = $this->logout();
-        $user =  $this->getTable('AppModule:Utilisateur')->findNoPassword($_SESSION['auth']);
-
-        $form = new ProfilForm($this->generateURL('utilisateur_profil_edit'), $user);
-
-        if(!empty($_POST) && $_POST['profil_action'] == 'editProfil'){
-
-            if($_POST['profil_mdp'] !== ''){
-               // $_POST['profil_mdp'] = hash('sha512', $_POST['profil_mdp']);
-                //$_POST['profil_mdpConf'] = hash('sha512', $_POST['profil_mdpConf']);
-            }
-            $object = array('entity' => $user);
-
-            $this->handleRequest($form, $object, $this->generateURL('utilisateur_profil_edit'));
-        }
-
-        //$login = $this->login();
-        $page = 'Mettre à jour mon profil:';
-
-        $this->render('User:profil.php', array(
-                'form' => $form,
-                'logout' => $logout,
-                'page' => $page,
-                'User' => $user,
-            ));
-    }
+    
 }

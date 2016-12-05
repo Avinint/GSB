@@ -5,11 +5,11 @@ namespace App\AppModule\Form;
 use Core\Form\Form;
 use Core\Form\FormBuilder;
 
-class ProfilForm extends Form
+class CompteForm extends Form
 {
     public function getName()
     {
-        return 'profil';
+        return 'compte';
     }
 
     public function buildForm(FormBuilder $builder)
@@ -27,23 +27,11 @@ class ProfilForm extends Form
                     'required' => true,
                     'unique' => true,
                 ))
-            ->add('image', 'file', array(
-                    'label' => 'Avatar',
-                    'parentTag' => array(
-                        'div' => 'form-group'
-                    ),
+            ->add('email', 'email', array(
+                    'label' => 'Courriel:',
                     'labelType' => 'block',
-                ))
-            ->add('newsletter', 'checkbox', array(
-                    'label' => 'Voulez vous recevoir notre newsletter?',
-                    'choices' => array(
-                        'Oui' => 1,
-                        'Non' => 0,
-                    ),
-                    'parentTag' => array(
-                        'div' => 'form-group'
-                    ),
-                    'labelType' => 'block',
+                    'required' => true,
+                    'unique' => true,
                 ))
         ->add('mdp', 'password', array(
             'label' => 'Mot de Passe:',
@@ -58,7 +46,7 @@ class ProfilForm extends Form
 
             ))
             ->add('action', 'hidden', array(
-                    'value' => 'editProfil'
+                    'value' => 'editCompte'
                 ))
         ->getForm();
     }

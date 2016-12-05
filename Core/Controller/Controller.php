@@ -252,9 +252,6 @@ class Controller extends ContainerAware
         $data = $object->getDataMapper()->getFields();
         //$this->getTable($class)->setChanges($this->getTable($class)->trackChanges($entity, $clone));
        // $changes = $this->getTable($class)->getChanges();
-
-        var_dump($data);
-
        // $data = array_intersect($data, $changes); // ajout des champs en fonction des changements suivis
         foreach ($data as $prop => &$value) {
 
@@ -271,7 +268,6 @@ class Controller extends ContainerAware
             if(array_key_exists('date', $object->getVars())){
                 $data->setDate($this->insertDate());
             }
-            var_dump($data);
             $result = $this->getTable($class)->create(
                 $data // , $files
             );
@@ -308,7 +304,7 @@ class Controller extends ContainerAware
                     $data = array_flip(array_intersect($data, $this->getTable($class)->getChanges()));
                     // compare sub object data TODO test
 
-                    /* if(!$child->getId()) {
+                     if(!$child->getId()) { // On insert objet si id non existent
                         $result = $this->getTable($class)->create(
                             $data//, $childObject, $childFiles, $class
                         );
@@ -320,7 +316,7 @@ class Controller extends ContainerAware
                     if ($result || !$child->getChanges()) {
                         $id = $child->getId()? : $this->getTable($class)->lastInsertId();
                         $fkeys[$fk] = $id;
-                    }*/
+                    }
                 }
             }
         }

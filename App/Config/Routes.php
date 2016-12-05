@@ -13,10 +13,6 @@ return array(
         'path' => '/',
         'controller' => 'AppModule:HomeController:index',
     ),
-    'yoyopage' => array(
-        'path' => '/yoyo',
-        'controller' => 'AppModule:HomeController:show',
-    ),
     'admin_control_panel' => array(
         'path' => '/control/panel',
         'controller' => 'AppModule:Admin:AdminController:panel',
@@ -29,9 +25,9 @@ return array(
         'path' => '/inscription',
         'controller' => 'AppModule:UtilisateurController:signup',
     ),
-    'utilisateur_profil_edit' => array(
-        'path' => '/profil/edit',
-        'controller' => 'AppModule:BackOfficeController:editProfil',
+    'utilisateur_compte_edit' => array(
+        'path' => '/compte/edit',
+        'controller' => 'AppModule:UtilisateurController:editCompte',
     ),
     'utilisateur_index' => array(
         'path' => '/admin/utilisateur/index',

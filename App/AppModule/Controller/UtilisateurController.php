@@ -3,7 +3,7 @@
 namespace App\AppModule\Controller;
 
 use App\AppModule\Form\LoginForm;
-use App\AppModule\Form\ProfilForm;
+use App\AppModule\Form\CompteForm;
 use App\AppModule\Entity\Utilisateur;
 use App\AppModule\Form\ContactForm;
 use App\AppModule\Form\InscriptionForm;
@@ -32,7 +32,6 @@ class UtilisateurController extends AppController
 
             }else{
                 $error = true;
-                echo 'fuck'; die();
             }
         }
         $form = new LoginForm();
@@ -64,35 +63,51 @@ class UtilisateurController extends AppController
 
             if ($this->getTable('AppModule:Utilisateur')->valueAvailable('login', $_POST['signup']['login']) &&
                 $this->getTable('AppModule:Utilisateur')->valueAvailable('email', $_POST['signup']['email'])) {
-                // if ($_POST['signup_mdp'] === $_POST['signup_mdpConf']) {
-                    //$_POST['signup_mdp'] =  password_hash($_POST['signup_mdp'], PASSWORD_BCRYPT );
-
-                    //unset($_POST['signup_mdp_conf']);
-                    $data = array('entity' => $user,
-                        'login' => true,
-                        'children' => array(
-                        ));
-
+               
                     $form->handleRequest();
 
                 if ($form->isValid()) {
-
                     $this->save($user);
-                    echo "heleo";
                     $auth->authenticate($user);
-
-					$this->redirect($this->generateURL('utilisateur_profil_edit'));
+					$this->redirect($this->generateURL('utilisateur_compte_edit'));
                 }
-               //}
-            }
+            } else {
+				 echo "Les identifiants choisis existent déja";
+			}
         }
-
-
-       // $headlines = $this->getTable('AppModule:Utilisateur')->extract('id', 'titre');
-
-       // $login = $this->login();
+		
         $page = 'Inscription:';
 
         $this->render('AppModule:User:inscription.php', compact('form','page'), 'no_template');
+    }
+	
+	public function editCompte()
+    {
+        $logout = $this->logout();
+        $user 	= $this->getTable('AppModule:Utilisateur')->findNoPassword($_SESSION['auth']);
+        $form   = new CompteForm($user,$this->generateURL('utilisateur_compte_edit'));
+		
+		var_dump($_POST['compte']['action']);
+        if(!empty($_POST) && $_POST['compte']['action'] == 'editCompte'){
+			
+			
+            $form->handleRequest($user);
+			
+			if ($form->isValid()) {
+                    $this->save($user);
+					$this->redirect($this->generateURL('utilisateur_compte_edit'));
+                }
+        }
+
+        //$login = $this->login();
+        $page = 'gestionnaire de compte utilisateur:';
+		
+		var_dump($page);
+        $this->render('AppModule:User:compte.php', array(
+                'form'   => $form,
+                'logout' => $logout,
+                'page'   => $page,
+                'user' => $user,
+            ));
     }
 }

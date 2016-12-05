@@ -56,7 +56,7 @@ class Table {
         return $class;
     }
 
-    private function getEntity()
+    public function getEntity()
     {
         $entity = $this->entity ?
         $this->getEntityClass() :
@@ -134,7 +134,7 @@ class Table {
             $table = $this->getTable();
         }
         $query->select($alias)->from($table, $alias);
-
+		
         return $query;
     }
 

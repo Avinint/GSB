@@ -83,9 +83,7 @@ class DataMapper
 
     public function getPropertyFromColumn($column)
     {
-        //var_dump(array_key_exists($column, $this->columns));
         if (array_key_exists($column, $this->columns)) {
-            var_dump($this->columns[$column]);
             return $this->columns[$column];
         }
         return 0;
@@ -93,7 +91,6 @@ class DataMapper
 
     public function getColumnFromProperty($property)
     {
-        //var_dump(array_key_exists($column, $this->columns));
         if (array_key_exists($property, $this->fields)) {
             return $this->fields[$property];
         }
@@ -107,9 +104,7 @@ class DataMapper
 
 
     public function getProperties($columns)
-    {   var_dump('hecho');
-        var_dump($columns);
-       // var_dump(array_map(array($this, 'getPropertyFromColumn'), array_keys($columns)));
+    {
         return array_map(array($this, 'getPropertyFromColumn'), array_keys($columns));
     }
 
@@ -162,8 +157,6 @@ class DataMapper
         $associationTypes = $this->getAssociations();
         foreach ($associationTypes as $name => $associations) {
             if ($name === 'ManyToOne') {
-
-
                 $data = array_intersect_key($data , $associations);
 
                 foreach ($data as $prop => $value) {

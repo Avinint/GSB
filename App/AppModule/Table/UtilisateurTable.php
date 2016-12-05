@@ -9,25 +9,28 @@ class UtilisateurTable extends Table
     public function findByUsername($username)
     {
         $query = $this->createQueryBuilder('u');
-        $query
+		
+		$query
             ->where('u.login = :login')
             ->setParameter('login', $username)
             ->getQuery()
         ;
 
+		
         return $query->getSingleResult();
     }
 
     public function findNoPassword($id)
     {
         $query = $this
-            ->createQueryBuilder('u')
-            ->select(array('u.id','u.login', 'u.nom', 'u.prenom', 'u.email', 'u.image', 'u.role'))
-            ->where('id = :id')
+            ->createQueryBuilder('u');
+            //->select(array('u.id','u.login', 'u.nom', 'u.prenom', 'u.role'));
+			
+            $query->where('id = :id')
             ->setParameter('id', $id)
             ->getQuery()
         ;
-
+		
         return $query->getSingleResult();
     }
 
@@ -41,6 +44,8 @@ class UtilisateurTable extends Table
             ->getQuery()
             ;
 
-        return false === $query->getSingleResult();
+        return false === $query->getSingleScalarResult();
     }
+	
+	
 }

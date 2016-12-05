@@ -170,7 +170,6 @@ abstract class Form extends ContainerAware{
            /* if($field['type'] === 'text'){
                 if($field)
             }*/
-
         $this->errors = $errors;
 
         return empty($errors);
