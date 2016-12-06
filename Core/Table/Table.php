@@ -197,7 +197,7 @@ class Table {
             $query->orderBy(':sort', ':order')
             ->setParameter('sort', $orderBy[0])
             ->setParameter('sort', $orderBy[1])
-            ->getQuery();
+            ;
         }
 
         return $query
@@ -252,15 +252,22 @@ class Table {
         throw new \Exception($this->entity, $fieldName, $method.$by);
     }
 
-
-    public function extract($key, $value)
+    public function extract($args)
     {
-        $repo = $this->findAll();
-        $return = array();
-        foreach ($repo as $v){
-            $return[$v->$key] = $v->$value;
-        }
-        return $return;
+		$args = func_get_args();
+		var_dump($args);
+		
+		$select ='';
+		foreach ($args as &$arg) {
+			$arg = $this->table[0].'.'.$arg;
+		}
+		var_dump($args);
+		$query = $this->createQueryBuilder()
+		->select($args);
+        
+		
+        return $query->getQuery()
+			->getScalarResults();
     }
 
     public function pluck($args)
@@ -281,7 +288,7 @@ class Table {
         }
         return $query
             ->getQuery()
-            ->getResults();
+            ->getScalarResults();
     }
 
     public function refresh($entity, $fields)

@@ -172,7 +172,6 @@ class DataMapper
         return false;
     }
 
-
     public function guessColumnName($string)
     {
         return strtolower(preg_replace('/(?<=[a-z])([A-Z])/', '_$1', $string));
@@ -219,16 +218,22 @@ class DataMapper
 
         $ref = new \ReflectionClass($class);
         $constructor = $ref->getConstructor();
-        $arguments = $constructor->getParameters();
-        $args = array();
-        foreach($arguments as $key => $arg) {
-            $args[$arg->name] = $key;
-        }
+		
+		if ($constructor) {
+			$arguments = $constructor->getParameters();
+			$args = array();
+			foreach($arguments as $key => $arg) {
+				$args[$arg->name] = $key;
+			}
+			
+			// var_dump($args);
+			$params = array_intersect_key($properties, $args);
 
-       // var_dump($args);
-        $params = array_intersect_key($properties, $args);
+			$properties  = array_diff_key($properties, $args);
+		}
+        
 
-        $properties  = array_diff_key($properties, $args);
+       
         //var_dump($params);
 
         $entity = new $class(array_shift($params));
@@ -242,11 +247,16 @@ class DataMapper
             $entity->$method($value);
 
         }
+
         return $entity;
     }
 
     public function hydrateAll($dataCollection, $class)
     {
-        return array_map(function ($data) use ($class) {$this->hydrate($data, $class);}, $dataCollection);
+		foreach ($dataCollection as &$data) {
+			$this->hydrate($data, $class);
+		}
+		
+        return $dataCollection;
     }
 } 

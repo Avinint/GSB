@@ -51,16 +51,17 @@ class InscriptionForm extends Form
                                 )
             ))
             ->add('role', 'entity', array(
-                    'class' => 'AppModule:Role',
+                    'data_class' => 'AppModule:Role',
                     'label' => 'Role:',
+					'choice_name' => 'libelle',
                     'labelType' => 'block',
                     'required' => false,
                     'parentTag' => array(
                         'div' => 'form-group'
                     )
                 ))
-            ->add('pays', 'entity', array(
-                    'class' => 'AppModule:Pays',
+            /*->add('pays', 'entity', array(
+                    'data_class' => 'AppModule:Pays',
                     'label' => 'Pays:',
                     'labelType' => 'block',
                     'multiple' => false,
@@ -68,7 +69,7 @@ class InscriptionForm extends Form
                     'parentTag' => array(
                         'div' => 'form-group'
                     )
-                ))
+                ))*/
             ->add('action', 'hidden', array(
                     'value' => 'signup'
                 ))

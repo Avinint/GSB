@@ -8,6 +8,7 @@ class Role extends Entity {
 
     protected $id;
     protected $nom;
+	protected $libelle;
 
     /**
      * @return integer
@@ -31,6 +32,22 @@ class Role extends Entity {
     public function getNom()
     {
         return $this->nom;
+    }
+	
+	 /**
+     * @param mixed $libelle
+     */
+    public function setLibelle($libelle)
+    {
+        $this->libelle = $libelle;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLibelle()
+    {
+        return $this->libelle;
     }
 
     public function __toString()

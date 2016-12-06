@@ -46,6 +46,7 @@ class MySQLDatabase {
         else if($one === false){
             $data = $req->fetchAll();
         }
+		
         return $data;
     }
 

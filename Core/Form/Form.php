@@ -188,6 +188,7 @@ abstract class Form extends ContainerAware{
             if(isset($attr['disabled'])){unset($attr['disabled']);}
             $required = isset($attr['required'])? $attr['required']: '';
             if(isset($attr['required'])){unset($attr['required']);}
+			
             foreach($attr as $k => $v){
 
                 $attributes[$k] = empty($attr[$k])? '': ' '.$k.'="'.$v.'"';
@@ -197,7 +198,6 @@ abstract class Form extends ContainerAware{
         }else{
             $attributes ='';
         }
-
 
         $result = '<'.$tag.$attributes.'>'.$html.'</'.$tag.'>';
         $result = $this->addParentTag($result, $parent);
@@ -390,12 +390,14 @@ abstract class Form extends ContainerAware{
     public function select($name, $label, $options, $attributes = array())
     {
         $list = array();
-        $parent = array_key_exists('parent', $attributes)?$attributes['parent']: null;
+        $parent = array_key_exists('parent', $attributes)? $attributes['parent'] : null;
         unset($attributes['parent']);
 
        $class = isset($attributes['class'])? $attributes['class']: '';
 
         // Determine quel élément de la liste est selectionné par défaut
+		
+		
         foreach($options as $k => $v){
             $attr = array('value' => $k);
            ;
@@ -403,6 +405,7 @@ abstract class Form extends ContainerAware{
                 $attr['selected'] = 'selected';
             }
             $list[] = $this->tag($v, 'option',$attr);
+			
 
         }
         $html = implode(' ', $list);
@@ -535,7 +538,7 @@ abstract class Form extends ContainerAware{
                 unset($attributes['list']);
             }
             $attributes['type'] = $field['type'];
-            if($field['type'] === 'select'){
+			if($field['type'] === 'select'){
                 if(array_key_exists('list',$field['options'])) {
                     $list = $field['options']['list'];
                 }else{
@@ -545,6 +548,44 @@ abstract class Form extends ContainerAware{
                     $key,
                     $field['options']['label'],
                     $this->entityLists[$list],
+                    $attributes
+                );
+            } else if($field['type'] === 'entity'){
+				$entity = $field['options']['data_class'];
+				$table = $this->container['app']->getTable($entity);
+				if(isset($field['options']['choice_value'])) {
+					$choiceValue = $field['options']['choice_value'];
+				} else {
+					$choiceValue = 'id';
+				}
+				
+				if (isset($field['options']['choice_name'])) {
+					$choiceName = $field['options']['choice_name'];
+				} else if (method_exists($this->data->$key, 'getName')) {
+					$choiceName = 'name';
+				} else if (method_exists($this->data->$key, 'getNom')) {
+					$choiceName = 'nom';
+				} else {
+					
+					$choiceName = $choiceValue;
+				}
+				$list = array();
+				$extraction = $table->extract($choiceValue, $choiceName);
+				
+				foreach ($extraction as &$res) {
+					if(count($res) === 1) {
+						$list[$res['id']] = $res['id'];
+					} else {
+						$value = array_shift($res);
+						$name = array_shift($res);
+						$list[$value] = $name ;
+					}	
+				}
+				
+                $view .= $this->select(
+                    $key,
+                    $field['options']['label'],
+                    $list,
                     $attributes
                 );
             }else if($field['type'] === 'password'){
@@ -627,7 +668,6 @@ abstract class Form extends ContainerAware{
                        // var_dump($entity->getChanges());
 
                         $scalars = array_intersect_key($fields, $entity->getDataMapper()->getFields());
-                        var_dump($scalars);
                         foreach ($scalars as $attr => $value) {
                             $method = 'set'.ucfirst($attr);
                             $entity->$method($value);
@@ -640,9 +680,6 @@ abstract class Form extends ContainerAware{
                 } else {// fin validate
                     echo 'formulaire non valide';
                 }
-
-
-
             }
     }
 
