@@ -24,7 +24,7 @@ class UtilisateurTable extends Table
     {
         $query = $this
             ->createQueryBuilder('u')
-            ->select(array('u.id','u.login', 'u.nom', 'u.prenom', 'u.role'));
+            ->select(array('u.id','u.login', 'u.email', 'u.nom', 'u.prenom', 'u.role'));
 
             $query->where('id = :id')
             ->setParameter('id', $id)

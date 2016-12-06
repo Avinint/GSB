@@ -19,13 +19,12 @@ class CompteForm extends Form
                     'label' => 'Prénom:',
                     'labelType' => 'block',
                     'required' => true,
-                    'unique' => true,
+
                 ))
             ->add('nom', 'text', array(
                     'label' => 'Nom:',
                     'labelType' => 'block',
                     'required' => true,
-                    'unique' => true,
                 ))
             ->add('email', 'email', array(
                     'label' => 'Courriel:',

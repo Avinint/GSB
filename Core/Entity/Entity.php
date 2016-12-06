@@ -10,13 +10,11 @@ class Entity
     protected static $mapper;
 
 	public function __get($key)
-	{	
+	{
 		$method = 'get'.ucfirst($key);
 		if(method_exists($this, $method)){
 			$this->$key = $this->$method();
-        }else if(method_exists($this, $m = $method.'_id')){
-            $this->$key = $this->$m();
-		}
+        }
 
         return $this->$key;
     }

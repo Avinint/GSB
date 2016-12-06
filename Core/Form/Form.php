@@ -242,7 +242,6 @@ abstract class Form extends ContainerAware{
         $max = isset($attributes['max'])? $attributes['max']: '';
         $disabled =  isset($attributes['disabled'])&& $attributes['disabled']? ' disabled': '';
         $required = (isset($attributes['required'])&& $attributes['required'])? ' required': '';
-
         $labelType = array_key_exists('labelType', $attributes)?$attributes['labelType']: null;
         unset($attributes['labelType']);
 
@@ -480,9 +479,9 @@ abstract class Form extends ContainerAware{
     {
         $name = $this->parseName($name);
         if(is_object($this->data)){
+
             //$method = 'get'.ucfirst($name);
             $data = $this->data->$name;
-
             return isset($data)? $data : null;
         }else{
             $data = $this->data[$name];
