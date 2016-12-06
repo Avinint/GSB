@@ -19,7 +19,8 @@ class DbAuth
     public function authenticate($user, $id = null)
     {
         $_SESSION['auth'] = $id ? : $user->getId();
-        $_SESSION['role'] = $user->getRole()->getNom();
+        $_SESSION['role'] = false === $user->getRole() ? 'ROLE_USER' :$user->getRole()->getNom();
+
         return  $_SESSION['logged'] = true;
     }
 
@@ -35,7 +36,6 @@ class DbAuth
 	
 	public function isGranted($role = 'ROLE_USER')
 	{
-        var_dump($_SESSION['role']);
 		return ($this->logged() && $_SESSION['role'] === $role);
 	}
 	

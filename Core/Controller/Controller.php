@@ -247,14 +247,18 @@ class Controller extends ContainerAware
 
     public function save($entity) {
 
+
+
         $foreignKeys = $this->saveChildren($entity/*, $files, $entity*/);
         $class = ucfirst($entity->getClass());
         $data = $entity->getDataMapper()->getFields();
+
         //$this->getTable($class)->setChanges($this->getTable($class)->trackChanges($entity, $clone));
        // $changes = $this->getTable($class)->getChanges();
        // $data = array_intersect($data, $changes); // ajout des champs en fonction des changements suivis
         foreach ($data as $prop => &$value) {
-            $value = $entity->$prop; // zjout de valeurs aux champs
+            $get = 'get'.ucfirst($prop);
+            $value = $entity->$get(); // zjout de valeurs aux champs
         }
         $data = array_merge($data, $foreignKeys); // ajout  des clés étrangeres aux champs
 
@@ -262,6 +266,7 @@ class Controller extends ContainerAware
 
         if ($entity->getId()) {
             $data['id'] = $entity->getId();
+
             $result = $this->getTable($class)->update(
                 $data //, $files
             );
@@ -293,6 +298,7 @@ class Controller extends ContainerAware
         $associationTypes = $entity->getDataMapper()->getAssociations();
         foreach ($associationTypes as $typeName => $type) {
             if ($fields = array_flip(array_intersect($this->getTable($class)->getChanges(), array_keys($type)))) {
+                ;
                 foreach ($fields as $prop => $child) {
 
                     // envoyer uodate ou create avec le bon type de données
@@ -304,6 +310,7 @@ class Controller extends ContainerAware
                     $data = array_flip(array_intersect($data, $this->getTable($class)->getChanges()));
                     // compare sub object data TODO test
 
+
                      if(!$child->getId()) { // On insert objet si id non existent
                         $result = $this->getTable($class)->create(
                             $data//, $childObject, $childFiles, $class
@@ -313,6 +320,7 @@ class Controller extends ContainerAware
                             $data//, $childObject, $childFiles, $class
                         );
                     }
+
                     if ($result || !$child->getChanges()) {
                         $id = $child->getId()? : $this->getTable($class)->lastInsertId();
                         $fkeys[$fk] = $id;

@@ -339,6 +339,8 @@ class Table {
 			$attributes[] = "$v";
 		}
 
+        // trouver un moyen plus élégant de rajouter l'id pour le parametre
+        $attributes[] = $attributes[0];
 		$sql = implode(', ', $sql_parts);
 
         if ($this->query (

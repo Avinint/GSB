@@ -117,12 +117,14 @@ abstract class Form extends ContainerAware{
                 }
             }*/
             if ($this->isRequired($field) && empty($data[$key])) {
-
                 $errors[$key]['emptyField'] = 'Ce champ ne peut pas être vide.';
             }
-            if ($field['type'] === 'password') {
-                if (isset($data[$this->name][$key])) {
+
+            if ($field['type'] === 'password' && $this->isRequired($field)){
+
+                if (isset($key, $data)) {
                     if (strlen($data[$key]) <3 || strlen($data[$key]) > 60) {
+
                         if (!isset($errors['password'])) {
                             $errors[] = array('password'=> array());
                         }
@@ -162,14 +164,7 @@ abstract class Form extends ContainerAware{
                 }
             }
         }
-            /*if($key['options']['confirmation']){
-                var_dump($key['options']['confirmation']);
-                die();
-            }*/
 
-           /* if($field['type'] === 'text'){
-                if($field)
-            }*/
         $this->errors = $errors;
 
         return empty($errors);
@@ -281,7 +276,7 @@ abstract class Form extends ContainerAware{
                 $fieldParent
             );
 
-        } else if($type === 'submit'){
+        } else if ($type === 'submit') {
             $buttonId = isset($attributes['buttonId'])? $attributes['buttonId']: 'submit';
             $id = ' id="'.$this->name.'_'.$buttonId.'_id"';
             $input = '<input'.$class.' type="'.$type.'"'.$id.' value="'.$button
@@ -612,39 +607,44 @@ abstract class Form extends ContainerAware{
             $files = array_shift($_FILES);
             $result = null;
 
-            if ($this->validate($fields)) {
 
-                foreach ($this->all() as $name => $def) {
-                    if ($def['type'] === 'password') {
-                        if (isset($def['options']['confirmation']) || $fields[$name] === '') {
+                if ($this->validate($fields)) {
+
+                    foreach ($this->all() as $name => $def) {
+                        if ($def['type'] === 'password') {
+                            if (isset($def['options']['confirmation']) || $fields[$name] === '') {
+                                unset($fields[$name]);
+                            }
+                        }
+                        if($def['type'] === 'hidden' && $name === 'action') {
                             unset($fields[$name]);
                         }
                     }
-                    if($def['type'] === 'hidden' && $name === 'action') {
-                        unset($fields[$name]);
+
+                    if ($entity = $this->getData()) {
+
+                        $clone = clone $entity;
+                        $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
+                       // var_dump($entity->getChanges());
+
+                        $scalars = array_intersect_key($fields, $entity->getDataMapper()->getFields());
+                        var_dump($scalars);
+                        foreach ($scalars as $attr => $value) {
+                            $method = 'set'.ucfirst($attr);
+                            $entity->$method($value);
+                        }
+
+                        $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
+                        $this->cascadeRequest($fields, $files);
                     }
+
+                } else {// fin validate
+                    echo 'formulaire non valide';
                 }
 
-                if ($entity = $this->getData()) {
 
-                    $clone = clone $entity;
-                    $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
-                   // var_dump($entity->getChanges());
 
-                    $scalars = array_intersect_key($fields, $entity->getDataMapper()->getFields());
-
-                    foreach ($scalars as $attr => $value) {
-                        $method = 'set'.ucfirst($attr);
-                        $entity->$method($value);
-                    }
-                    $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
-                    $this->cascadeRequest($fields, $files);
-                }
-
-            } else {// fin validate
-                echo 'formulaire non valide';
             }
-        }
     }
 
     public function cascadeRequest(&$fields, &$files)
@@ -656,7 +656,7 @@ abstract class Form extends ContainerAware{
         }
         $clone = clone $entity;
 
-        //var_dump($clone);
+        //_dump($clone);
         $associationTypes = $this->data->getDataMapper()->getAssociations();
         foreach ($associationTypes as $type) {
             if ($fields = array_intersect_key($fields, $type)) {

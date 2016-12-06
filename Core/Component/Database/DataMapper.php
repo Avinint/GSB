@@ -225,16 +225,15 @@ class DataMapper
             $args[$arg->name] = $key;
         }
 
-        var_dump($args);
+       // var_dump($args);
         $params = array_intersect_key($properties, $args);
+
         $properties  = array_diff_key($properties, $args);
+        //var_dump($params);
 
-        var_dump($params);
-
-        $entity = new $class(extract($params));
+        $entity = new $class(array_shift($params));
 
         foreach ($properties as $prop => $value) {
-            //var_dump($this->hasMany($prop));
             if ($this->hasMany($prop)) {
                 $method = 'add'.ucfirst($prop);
             } else {

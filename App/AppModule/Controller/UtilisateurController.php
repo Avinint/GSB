@@ -23,11 +23,10 @@ class UtilisateurController extends AppController
         $error = false;
         if (!empty($_POST)) {
             $auth = $this->container['auth'];
-            $user = $this->getTable('AppModule:Utilisateur')->findByUsername($_POST['login']['login']);
-            echo $user->getMdp();
+
             if ($auth->login($this->getTable('AppModule:Utilisateur')->findByUsername($_POST['login']['login']),
                     $_POST['login']['mdp'])) {
-                $this->redirect($this->generateURL('utilisateur_profil_edit'));
+                $this->redirect($this->generateURL('utilisateur_compte_edit'));
             }else{
                 $error = true;
             }
@@ -62,6 +61,7 @@ class UtilisateurController extends AppController
                     $form->handleRequest();
 
                 if ($form->isValid()) {
+
                     $this->save($user);
                     $auth->authenticate($user);
                     $this->redirect($this->generateURL('utilisateur_compte_edit'));
@@ -85,8 +85,10 @@ class UtilisateurController extends AppController
 
         if (!empty($_POST) && $_POST['compte']['action'] == 'editCompte') {
             $form->handleRequest($user);
+
             if ($form->isValid()) {
                     $this->save($user);
+                var_dump("save");
                     $this->redirect($this->generateURL('utilisateur_compte_edit'));
             }
         }

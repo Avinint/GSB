@@ -17,13 +17,10 @@ class Utilisateur extends Entity implements UserInterface{
     protected $role;
     protected $pays;
 
-    public function __construct($mdp = null, $login = null)
+    public function __construct($mdp = null)
     {
-        if(!$mdp) {
+        if($mdp) {
             $this->mdp = $mdp;
-        }
-        if(!$login) {
-            $this->login = $login;
         }
 
        /* $values = func_get_args();
