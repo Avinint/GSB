@@ -4,10 +4,11 @@ namespace App\AppModule\Entity;
 
 use Core\Entity\Entity;
 
-class Role extends Entity {
+class Pays extends Entity {
 
     protected $id;
     protected $nom;
+    protected $continent;
 
     /**
      * @return integer
@@ -33,8 +34,20 @@ class Role extends Entity {
         return $this->nom;
     }
 
-    public function __toString()
+
+    /**
+     * @param Continent $continent
+     */
+    public function setContinent(Continent $continent)
     {
-        return $this->nom;
+        $this->continent = $continent;
+    }
+
+    /**
+     * @return Continent
+     */
+    public function getContinent()
+    {
+        return $this->continent;
     }
 }

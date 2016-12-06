@@ -4,15 +4,15 @@ namespace Core\Controller;
 
 use \App;
 use Core\View\View;
+use Core\Container\ContainerAware;
 
-class Controller
+class Controller extends ContainerAware
 {
     protected $viewpath;
-    protected $container;
-	
+
     public function __construct()
     {
-        $this->initContainer();
+        parent::__construct();
         $this->viewpath = ROOT.'/App/View/';
     }
 
@@ -42,8 +42,7 @@ class Controller
     protected function getTable($model)
     {
         $app = App::getInstance();
-
-        return strpos($model, ':')?$app->getTable($model) : $app->getTableFromEntity($model);
+        return strpos($model, ':')? $app->getTable($model) : $app->getTableFromEntity($model);
     }
 
     public function controlAccess()
@@ -95,11 +94,11 @@ class Controller
 
     public function redirect($url, $statusCode = 303)
     {
-        header('Location: ' . $url, true, $statusCode);
+        header('Location: ' . $url);
         throw new \Exception("redirection"); // TDODO test and remove?
     }
 
-    public function handleRequest($form, $object, $route)
+    public function handleRequestBack($form, $data, $route)
     {
         if(!empty($_POST) || !empty($_FILES)){
 
@@ -109,17 +108,15 @@ class Controller
 
             if($form->validate($fields)){
 
-                if(isset($object['fk'])){
-
-                    foreach($object['fk'] as $k => $v){
+                if(isset($data['fk'])){
+                    foreach($data['fk'] as $k => $v){
                         if(array_key_exists($k, $fields)){
-                            $fields[$v] = $fields[$k];
-                            unset($fields[$k]);
+                            $fields[$v] = $fields[$k]; // $fields['role_id'] = $fields ['role']
+                            unset($fields[$k]);  //unset role
                         }
                     }
                 }
                 foreach ($form->all() as $name => $def){
-
                     if ($def['type'] === 'password') {
                         if (isset($def['options']['confirmation']) || $fields[$name] === '') {
                             unset($fields[$name]);
@@ -129,27 +126,27 @@ class Controller
                         unset($fields[$name]);
                     }
                 }
-                $this->cascadeRelations($fields, $files, $object);
+                $this->cascadeRelations($fields, $files, $data);
                 echo 'Donnees valides';
 
-                $class = ucfirst($object['entity']->getClass());
-                if ($object['entity']->getId()) {
+                $class = ucfirst($data['entity']->getClass());
+                if ($data['entity']->getId()) {
                     $result = $this->getTable($class)->update(
-                        $object['entity'], $fields, $files
+                        $data['entity'], $fields, $files
                     );
                 } else {
-                    if(array_key_exists('date', $object['entity']->getVars())){
+                    if(array_key_exists('date', $data['entity']->getVars())){
                         $fields['date'] = $this->insertDate();
                     }
                     $result = $this->getTable($class)->create(
-                        $object['entity'],$fields, extract($files)
+                        $data['entity'],$fields, extract($files)
                     );
                 }
 
-                if ($result){
+                if ($result) {
                     /* Si c'est une inscription on logue le nouvel utilisateur */
-                    if (isset($object['login'])) {
-                        $id =  $this->getTable($class)->lastInsertId();
+                    if (isset($data['login'])) {
+                        $id = $this->getTable($class)->lastInsertId();
                         $_SESSION['auth'] = $id;
                     }
 
@@ -161,54 +158,214 @@ class Controller
         }
     }
 
-    public function cascadeRelations(&$fields, &$files, $object)
+    public function handleRequest($form, $data)
+    {
+        if(!empty($_POST) || !empty($_FILES)){
+
+            $fields = $form->parseFields($_POST);
+            $files = $form->parseFields($_FILES);
+            $result = null;
+
+            if ($form->validate($fields)) {
+                if(isset($data['fk'])){
+                    foreach($data['fk'] as $k => $v){
+                        if(array_key_exists($k, $fields)){
+                            $fields[$v] = $fields[$k]; // $fields['role_id'] = $fields ['role']
+                            unset($fields[$k]);  //unset role
+                        }
+                    }
+                }
+                foreach ($form->all() as $name => $def){
+                    if ($def['type'] === 'password') {
+                        if (isset($def['options']['confirmation']) || $fields[$name] === '') {
+                            unset($fields[$name]);
+                        }
+                    }
+                    if($def['type'] === 'hidden' && $name === 'action') {
+                        unset($fields[$name]);
+                    }
+                }
+
+                $this->cascadeRelations($fields, $files, $data);
+
+                $entity = ($data['entity']);
+                foreach ($fields as $attr => $value) {
+                    $method = 'set'.ucfirst($attr);
+                    $entity->$method($value);
+                }
+
+            } else {// fin validate
+                echo 'formulaire non valide';
+            }
+        }
+    }
+
+    public function cascadePersist(&$fields, &$files, $data)
     {
         $result = null;
         $childObject = array();
         $childFiles = array();
 
-        if(isset($object['children'])){
-            $children = $object['children'];
-            foreach($children as $class => $child){
-                $object = $child['entity'];
-                if($object){
-                    foreach ($object->getVars() as $key => $value){
-
-                        if(array_key_exists($key, $fields)){
-                            $childObject = array_intersect_key($fields, $object->getVars());
-                            $fields = array_diff_key($fields, $object->getVars());
+        /*if (isset($data['children'])) {
+            $children = $data['children'];
+            foreach ($children as $class => $child) {
+                $data = $child['entity'];
+                // var_dump($object->getVars());
+                if ($data) {
+                    foreach ($data->getVars() as $key => $value) {
+                        if (array_key_exists($key, $fields)) {
+                            $childObject = array_intersect_key($fields, $data->getVars());
+                            $fields = array_diff_key($fields, $data->getVars());
                         }
-                        if(array_key_exists($key, $files)){
-                            $childFiles = array_intersect_key($files, $object->getVars());
-                            $files = array_diff_key($files, $object->getVars());
+                        if (array_key_exists($key, $files)) {
+                            $childFiles = array_intersect_key($files, $data->getVars());
+                            $files = array_diff_key($files, $data->getVars());
                         }
                     }
 
-                    if($object->getId() === null){
-                        $result = $this->$class->create(
-                            $object, $childObject, $childFiles, $class
+                    if ($data->getId() === null) {
+                        $result = $this->getTable($class)->create(
+                            $data, $childObject, $childFiles, $class
                         );
-                        if($result){
-                            $id =  $this->$class->lastInsertId();
+                        if ($result) {
+                            $id =  $this->getTable($class)->lastInsertId();
+
                             $fields[$children[key($children)]['db_name']] = $id;
                         }
-                    }else{
-                        $result = $this->$class->update(
-                            $object, $childObject, $childFiles, $class
+                    } else {
+                        $result = $this->getTable($class)->update(
+                            $data, $childObject, $childFiles, $class
                         );
                     }
                 }
             }
-        }else{
-            $fields = array_intersect_key($fields, $object['entity']->getVars());
-            $files = array_intersect_key($files, $object['entity']->getVars());
+        } else {
+            $fields = array_intersect_key($fields, $data['entity']->getVars());
+            $files = array_intersect_key($files, $data['entity']->getVars());
+        } */
+    }
+
+    public function save($entity) {
+
+
+
+        $foreignKeys = $this->saveChildren($entity/*, $files, $entity*/);
+        $class = ucfirst($entity->getClass());
+        $data = $entity->getDataMapper()->getFields();
+
+        //$this->getTable($class)->setChanges($this->getTable($class)->trackChanges($entity, $clone));
+       // $changes = $this->getTable($class)->getChanges();
+       // $data = array_intersect($data, $changes); // ajout des champs en fonction des changements suivis
+        foreach ($data as $prop => &$value) {
+            $get = 'get'.ucfirst($prop);
+            $value = $entity->$get(); // zjout de valeurs aux champs
         }
+        $data = array_merge($data, $foreignKeys); // ajout  des clés étrangeres aux champs
+
+
+
+        if ($entity->getId()) {
+            $data['id'] = $entity->getId();
+
+            $result = $this->getTable($class)->update(
+                $data //, $files
+            );
+        } else {
+            if(array_key_exists('date', $entity->getVars())){
+                $data->setDate($this->insertDate());
+            }
+            $result = $this->getTable($class)->create(
+                $data // , $files
+            );
+        }
+        if ($result) {
+
+            $entity->setId($this->getTable($class)->lastInsertId());
+        }
+
+        return $result;
     }
 
-    private function initContainer()
+    public function saveChildren(&$entity/*, &$files, $data*/)
     {
-        $app = App::getInstance();
-        $this->container = $app->getContainer();
-    }
+        $fkeys = array();
+        $class = ucfirst($entity->getClass());
+        $result = null;
+        if (!$entity instanceof \Core\Entity\Entity) {
+            throw new \Exception ("Form data not valid.");
+        }
 
+        $associationTypes = $entity->getDataMapper()->getAssociations();
+        foreach ($associationTypes as $typeName => $type) {
+            if ($fields = array_flip(array_intersect($this->getTable($class)->getChanges(), array_keys($type)))) {
+                ;
+                foreach ($fields as $prop => $child) {
+
+                    // envoyer uodate ou create avec le bon type de données
+                    $get = 'get'.ucfirst($prop);
+                    $class = $type[$prop]['targetEntity'];
+                    $child = $entity->$get();
+                    $fk = $type[$prop]['foreignKey']?  :$prop.'_id';
+                    $data = $child->getVars();
+                    $data = array_flip(array_intersect($data, $this->getTable($class)->getChanges()));
+                    // compare sub object data TODO test
+
+
+                     if(!$child->getId()) { // On insert objet si id non existent
+                        $result = $this->getTable($class)->create(
+                            $data//, $childObject, $childFiles, $class
+                        );
+                    } else if ($child->getChanges()) {
+                        $result = $this->getTable($class)->update(
+                            $data//, $childObject, $childFiles, $class
+                        );
+                    }
+
+                    if ($result || !$child->getChanges()) {
+                        $id = $child->getId()? : $this->getTable($class)->lastInsertId();
+                        $fkeys[$fk] = $id;
+                    }
+                }
+            }
+        }
+        return $fkeys;
+
+        /*   if (isset($data['children'])) {
+            $children = $data['children'];
+            foreach ($children as $class => $child) {
+                $data = $child['entity'];
+                // var_dump($entity->getVars());
+                if ($data) {
+                    foreach ($data->getVars() as $key => $value) {
+                        if (array_key_exists($key, $fields)) {
+                            $childObject = array_intersect_key($fields, $data->getVars());
+                            $fields = array_diff_key($fields, $data->getVars());
+                        }
+                        if (array_key_exists($key, $files)) {
+                            $childFiles = array_intersect_key($files, $data->getVars());
+                            $files = array_diff_key($files, $data->getVars());
+                        }
+                    }
+
+                    if ($data->getId() === null) {
+                        $result = $this->getTable($class)->create(
+                            $data//, $childObject, $childFiles, $class
+                        );
+                        if ($result) {
+                            $id =  $this->getTable($class)->lastInsertId();
+
+                            $fields[$children[key($children)]['db_name']] = $id;
+                        }
+                    } else {
+                        $result = $this->getTable($class)->update(
+                            $data//, $childObject, $childFiles, $class
+                        );
+                    }
+                }
+            }
+        } else {
+            $fields = array_intersect_key($fields, $data['entity']->getVars());
+            $files = array_intersect_key($files, $data['entity']->getVars());
+        }*/
+    }
 }

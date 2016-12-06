@@ -37,12 +37,10 @@ class UtilisateurForm extends Form
             ->add('prenom', 'text', array(
                     'label' => 'Prénom:',
                     'labelType' => 'block',
-                    'unique' => true,
                 ))
             ->add('nom', 'text', array(
                     'label' => 'Nom:',
                     'labelType' => 'block',
-                    'unique' => true,
                 ))
             ->add('image', 'file', array(
                     'label' => 'Avatar',
@@ -51,17 +49,7 @@ class UtilisateurForm extends Form
                     ),
                     'labelType' => 'block',
                 ))
-            ->add('newsletter', 'checkbox', array(
-                    'label' => 'Voulez vous recevoir notre newsletter?',
-                    'choices' => array(
-                        'Oui' => 1,
-                        'Non' => 0,
-                    ),
-                    'parentTag' => array(
-                        'div' => 'form-group'
-                    ),
-                    'labelType' => 'block',
-                ))
+
         ->add('mdp', 'password', array(
             'label' => 'Mot de Passe:',
                 'doNotHydrate' => true,
@@ -79,7 +67,8 @@ class UtilisateurForm extends Form
                                         'div' => 'form-group'
                                     )
                 ))
-            ->add('role', 'number', array(
+            ->add('role', 'entity', array(
+                    'class' => 'AppModule:Role',
                     'label' => 'Role:',
                     'labelType' => 'block',
                     'required' => true,

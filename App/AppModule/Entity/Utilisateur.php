@@ -9,13 +9,38 @@ use Core\Entity\UserInterface;
 class Utilisateur extends Entity implements UserInterface{
 
     protected $id;
-    protected $pseudo;
+    protected $login;
     protected $nom;
     protected $prenom;
     protected $email;
     protected $mdp;
-    protected $role_id;
-    protected $pays_id;
+    protected $role;
+    protected $pays;
+
+    public function __construct($mdp = null)
+    {
+        if($mdp) {
+            $this->mdp = $mdp;
+        }
+
+       /* $values = func_get_args();
+        var_dump($values);
+        $this->initialize($values);*/
+    }
+
+    private function initialize($values)
+    {
+        $class = new \ReflectionClass($this);
+        $construct = $class->getConstructor();
+        $params = $construct->getParameters();
+        foreach($params as $key => $arg) {
+            $prop = $arg->name;
+            $value = $values[$key];
+            if(!is_null($value)) {
+                $this->$prop = $value;
+            }
+        }
+    }
 
     /**
      * @return string
@@ -26,19 +51,19 @@ class Utilisateur extends Entity implements UserInterface{
     }
 
     /**
-     * @param mixed $pseudo
+     * @param mixed $login
      */
-    public function setPseudo($pseudo)
+    public function setLogin($login)
     {
-        $this->pseudo = $pseudo;
+        $this->login = $login;
     }
 
     /**
      * @return mixed
      */
-    public function getPseudo()
+    public function getLogin()
     {
-        return $this->pseudo;
+        return $this->login;
     }
 
 
@@ -108,19 +133,19 @@ class Utilisateur extends Entity implements UserInterface{
     }
 
     /**
-     * @param mixed $roleId
+     * @param Role $role
      */
-    public function setRole_id($roleId)
+    public function setRole($role)
     {
-        $this->role_id = $roleId;
+        $this->role = $role;
     }
 
     /**
      * @return mixed
      */
-    public function getRole_id()
+    public function getRole()
     {
-        return $this->role_id;
+        return $this->role;
     }
 
     /**
@@ -142,17 +167,17 @@ class Utilisateur extends Entity implements UserInterface{
     /**
      * @param mixed $pays_id
      */
-    public function setPaysId($paysId)
+    public function setPays($pays)
     {
-        $this->pays_id = $paysId;
+        $this->pays = $pays;
     }
 
     /**
      * @return mixed
      */
-    public function getPaysId()
+    public function getPays()
     {
-        return $this->pays_id;
+        return $this->pays;
     }
 
     public function getFilePath()

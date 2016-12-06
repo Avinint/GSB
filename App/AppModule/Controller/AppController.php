@@ -18,9 +18,9 @@ class AppController extends Controller
     public function login()
     {
         if(!empty($_POST) && isset($_POST['login_action'])){
-            $auth = new DbAuth();
+            $auth = $this->container['auth'];
 
-            if($user = $this->getTable('Utilisateur')->findByUsername($_POST['login_pseudo'])){
+            if($user = $this->getTable('AppModule:Utilisateur')->findByUsername($_POST['login_login'])){
                 if($auth->login($user, $_POST['login_mdp'])){
 
                         $this->redirect($this->route->generateURL('admin_control_panel' ));

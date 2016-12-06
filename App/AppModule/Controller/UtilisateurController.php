@@ -3,7 +3,7 @@
 namespace App\AppModule\Controller;
 
 use App\AppModule\Form\LoginForm;
-use App\AppModule\Form\ProfilForm;
+use App\AppModule\Form\CompteForm;
 use App\AppModule\Entity\Utilisateur;
 use App\AppModule\Form\ContactForm;
 use App\AppModule\Form\InscriptionForm;
@@ -18,24 +18,23 @@ class UtilisateurController extends AppController
         $this->loadModel('Utilisateur');
     }*/
 
-    /*public function login()
+    public function login()
     {
         $error = false;
-        if(!empty($_POST)){
-            $auth = new DBAuth(\App::getInstance()->getDb());
-            var_dump($this->Utilisateur->findByUsername($_POST['pseudo']));
-            if($auth->login($this->Utilisateur->findByUsername($_POST['pseudo']), $_POST['mdp'])){
+        if (!empty($_POST)) {
+            $auth = $this->container['auth'];
 
-            $this->redirect($this->route->generateURL('admin_article_index' ));
-
+            if ($auth->login($this->getTable('AppModule:Utilisateur')->findByUsername($_POST['login']['login']),
+                    $_POST['login']['mdp'])) {
+                $this->redirect($this->generateURL('utilisateur_compte_edit'));
             }else{
                 $error = true;
             }
         }
         $form = new LoginForm();
 
-        $this->render('User:login.php', compact('form', 'error'));
-    }*/
+        $this->render('AppModule:User:login.php', compact('form', 'error'));
+    }
 
     public function contact()
     {
@@ -52,38 +51,56 @@ class UtilisateurController extends AppController
 
     public function signup()
     {
-        $error = false;
-        $form = new InscriptionForm();
-        if (!empty($_POST) && $_POST['signup_action'] == 'signup') {
+        $user = new Utilisateur();
+        $form = new InscriptionForm($user);
+        if (!empty($_POST) && $_POST['signup']['action'] == 'signup') {
 
             $auth = $this->container['auth'];
+            if ($this->getTable('AppModule:Utilisateur')->valueAvailable('login', $_POST['signup']['login']) &&
+                $this->getTable('AppModule:Utilisateur')->valueAvailable('email', $_POST['signup']['email'])) {
+                    $form->handleRequest();
 
-            if ($this->getTable('AppModule:Utilisateur')->valueAvailable('pseudo', $_POST['signup_pseudo']) &&
-                $this->getTable('AppModule:Utilisateur')->valueAvailable('email', $_POST['signup_pseudo'])
-            ) {
-                // if ($_POST['signup_mdp'] === $_POST['signup_mdpConf']) {
-                    //$_POST['signup_mdp'] =  password_hash($_POST['signup_mdp'], PASSWORD_BCRYPT );
-                    $user = new Utilisateur();
-                    //unset($_POST['signup_mdp_conf']);
+                if ($form->isValid()) {
 
-                    $data = array('entity' => $user,
-                        'login' => true,
-                        'children' => array(
-                        ));
-
-                    $this->handleRequest($form, $data, $this->generateURL('utilisateur_profil_edit'));
-               //}
+                    $this->save($user);
+                    $auth->authenticate($user);
+                    $this->redirect($this->generateURL('utilisateur_compte_edit'));
+                }
+            } else {
+                echo "Les identifiants choisis existent déja";
             }
-        } else {
-            $error = 'identifiants d\'inscription non corrects';
         }
 
-
-       // $headlines = $this->getTable('AppModule:Utilisateur')->extract('id', 'titre');
-
-       // $login = $this->login();
         $page = 'Inscription:';
 
         $this->render('AppModule:User:inscription.php', compact('form','page'), 'no_template');
+    }
+
+    public function editCompte()
+    {
+        $this->filterAccess('ROLE_USER');
+        $logout = $this->logout();
+        $user 	= $this->getTable('AppModule:Utilisateur')->findNoPassword($_SESSION['auth']);
+        $form   = new CompteForm($user,$this->generateURL('utilisateur_compte_edit'));
+
+        if (!empty($_POST) && $_POST['compte']['action'] == 'editCompte') {
+            $form->handleRequest($user);
+
+            if ($form->isValid()) {
+                    $this->save($user);
+                var_dump("save");
+                    $this->redirect($this->generateURL('utilisateur_compte_edit'));
+            }
+        }
+
+        //$login = $this->login();
+        $page = 'gestionnaire de compte utilisateur:';
+
+        $this->render('AppModule:User:compte.php', array(
+                'form'   => $form,
+                'logout' => $logout,
+                'page'   => $page,
+                'user' => $user,
+            ));
     }
 }

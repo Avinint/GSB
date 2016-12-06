@@ -2,18 +2,24 @@
 
 namespace Core\Form;
 
-abstract class Form{
+use Core\Container\ContainerAware;
+use Core\Entity\Entity;
+
+abstract class Form extends ContainerAware{
 	
 	protected $data;
+    protected $errors;
     protected $clicked;
     protected $fields = array();
     protected $entityLists = array();
     protected $options = array();
     protected $name;
     protected $parentForm = null;
+    protected $container;
 	
-	public function __construct($action = null, $data = null, array $lists = array())
+	public function __construct($data = null, $action = null, array $lists = array())
 	{
+        parent::__construct();
         if(!isset($this->options['action'])){
             $this->options['action'] ='';
         }
@@ -48,6 +54,15 @@ abstract class Form{
         $this->data = $data;
     }
 
+    public function getData()
+    {
+        if ($this->data instanceof Entity) {
+            return $this->data;
+        }
+
+        return null;
+    }
+
     public function getName()
     {
         return 'form';
@@ -75,53 +90,100 @@ abstract class Form{
     public abstract function buildForm(FormBuilder $builder);
 
 
+    public function isValid()
+    {
+        if (count($this->errors) > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function isRequired($field)
+    {
+         return isset($field['options']['required']) && $field['options']['required'] === true;
+    }
+
+
     public function validate($data)
     {
         $errors = array();
+        //var_dump($this->fields);
         foreach($this->fields as $key => $field)
         {
             /* if($field['type'] === 'text' || $field['type'] === 'textarea'){
                 if(ctype_cntrl($data[$key]) || ctype_space($data[$key])){
                     $errors[$key]['textNotValid'] = 'Ce texte n\'est pas valide.';
                 }
-
-                // if($data[$key])
             }*/
-            if(isset($key['options']['required']) && empty($data[$key])){
+            if ($this->isRequired($field) && empty($data[$key])) {
                 $errors[$key]['emptyField'] = 'Ce champ ne peut pas être vide.';
             }
 
-            if($field['type'] === 'password' ){
-                if(!isset($field['options']['doNotHydrate'])){
-                    if(strlen($data[$key]) <3 || strlen($data[$key]) > 255){
-                        $errors[$key]['textNotValid'] = 'Ce texte n\'est pas valide.';
-                    }
+            if ($field['type'] === 'password' && $this->isRequired($field)){
 
-                }
-                if(isset($field['options']['confirmation'])){
-                    if($data[$key] !== $data[$field['options']['confirmation']]){
-                        $errors['password']['confirmationError'] = 'Mot de passe non confirmé';
+                if (isset($key, $data)) {
+                    if (strlen($data[$key]) <3 || strlen($data[$key]) > 60) {
+
+                        if (!isset($errors['password'])) {
+                            $errors[] = array('password'=> array());
+                        }
+                        $errors['password'][] = array('textNotValid' =>'Ce texte n\'est pas valide.');
                     }
                 }
             }
 
-            /*if($key['options']['confirmation']){
-                var_dump($key['options']['confirmation']);
-                die();
-            }*/
+            if (isset($field['options']['confirmation'])) {
+                if ($data[$key] !== $data[$field['options']['confirmation']]) {
+                    $errors['password'][] = array('confirmationError' => 'Mot de passe non confirmé');
+                }
+            }
+
+            if ($field['type'] === 'entity') {
+                $entity = $this->getEntity($field['options']['class']);
+                if($entity::hasDataMapper()) {
+
+                    $fkType = $entity::dataMapper()->getPrimaryKey();
+                    if(is_array($fkType)) {
+                        $fkType = $fkType['type'];
+                    }
+                    if ($fkType === 'integer') {
+
+                        if(!intval($data[$key]) < 0) {
+                            throw new  \Exception("invalid foreign key");
+                        }
+                    }else if ($fkType === 'string') {
+                        if(!is_string($data[$key])) {
+                            throw new  \Exception("invalid foreign key");
+                        }
+                    }
+                } else {
+                    if((intval($data[$key])) < 1 && $this->isRequired($field)) {
+                        throw new  \Exception(sprintf("invalid entity data: %s", $key));
+                    }
+                }
+            }
         }
-           /* if($field['type'] === 'text'){
-                if($field)
-            }*/
-        var_dump($errors);
+
+        $this->errors = $errors;
+
         return empty($errors);
     }
 
-	public function tag($html, $tag = 'div', $attr = [], $parent = null)
-	{
-		// Pour chaque attribut on rajoute le html, exemple: class="", et on les combine
-		$attributes = []; $required = ''; $disabled ='';
-		if($attr){
+    private function getEntity($string)
+    {
+        $entity = explode (':', $string);
+        $module = array_shift($entity);
+        $className = array_shift($entity);
+
+        return "App\\".$module.'\\Entity\\'.$className;
+    }
+
+    public function tag($html, $tag = 'div', $attr = [], $parent = null)
+    {
+        // Pour chaque attribut on rajoute le html, exemple: class="", et on les combine
+        $attributes = []; $required = ''; $disabled ='';
+        if($attr){
             $disabled = isset($attr['disabled'])? $attr['disabled']: '';
             if(isset($attr['disabled'])){unset($attr['disabled']);}
             $required = isset($attr['required'])? $attr['required']: '';
@@ -140,8 +202,8 @@ abstract class Form{
         $result = '<'.$tag.$attributes.'>'.$html.'</'.$tag.'>';
         $result = $this->addParentTag($result, $parent);
 
-		return $result;
-	}
+        return $result;
+    }
 
     public function addParentTag($html, $parent)
     {
@@ -180,7 +242,6 @@ abstract class Form{
         $max = isset($attributes['max'])? $attributes['max']: '';
         $disabled =  isset($attributes['disabled'])&& $attributes['disabled']? ' disabled': '';
         $required = (isset($attributes['required'])&& $attributes['required'])? ' required': '';
-
         $labelType = array_key_exists('labelType', $attributes)?$attributes['labelType']: null;
         unset($attributes['labelType']);
 
@@ -197,25 +258,24 @@ abstract class Form{
         }
 
         $button = $name; // On conserve le nom pour le  texte du bouton submit
-        $name = $this->name.'_'.$name;
+        $name = $this->name.'['.$name.']';
 
-		if($type === 'textarea'){ // creation input type textarea
+        if($type === 'textarea'){ // creation input type textarea
 
-			$input = $this->tag(
-				$this->getValue($name),
-				$type,
-				array(
-					'name' => $name,
-					'id' => $id,
+            $input = $this->tag(
+                $this->getValue($name),
+                $type,
+                array(
+                    'name' => $name,
+                    'id' => $id,
                     'class' => $class,
                     'disabled' => $disabled,
                     'required' => $required,
-				),
+                ),
                 $fieldParent
-			);
+            );
 
-
-        }else if($type === 'submit'){
+        } else if ($type === 'submit') {
             $buttonId = isset($attributes['buttonId'])? $attributes['buttonId']: 'submit';
             $id = ' id="'.$this->name.'_'.$buttonId.'_id"';
             $input = '<input'.$class.' type="'.$type.'"'.$id.' value="'.$button
@@ -233,8 +293,7 @@ abstract class Form{
                 }
                 $input = $this->tag($input, $fieldParent, $parentAttr);
             }*/
-		}else{ // creation input simple
-
+        }else{   // creation input simple
              if($type === 'password'|| isset($attributes['doNotHydrate'])){
                  $value ='';
              }else{
@@ -243,70 +302,90 @@ abstract class Form{
              }
             $value = $value? ' value="'.$value.'"': '';
             $id = ' id="'.$id.'"';
-            $name = ' name="'.$name.'"';
             if($min){
                 $min = ' min='.$min;
             }
             if($max){
                 $max = ' max='.$max;
             }
-            if($type === 'choice'){
-                if(isset($attributes['multiple']) && $attributes['multiple'] === true){
+            if ($type === 'choice') {
+                if (isset($attributes['multiple']) && $attributes['multiple'] === true) {
+                    if (!isset($attributes['expanded']) || !$attributes['expanded'] === false) {
+                        $name = ' name="'.$name.'[]"';
+                    } else {
+                        $name = ' name="'.$name.'"';
+                        foreach($attributes['choices'] as $choice => $value){
+                            $value = ' value="'.$value.'"';
+                            $input = '<input'.$class.' type="radio"'.$name.$id.$min.$max.$value
+                                .$required.$disabled.'>';
+                            if($attributes['childLabelType'] === 'after'){
+                                $input = $input.$choice.BR;
+                            }else if($attributes['childLabelType'] === 'empty'){
+                                /* do nothing */
+                            }else{
+                                $input = $choice.$input.BR;
+                            }
+                        }
+                    }
+                } else {
+                    if (!isset($attributes['expanded']) || !$attributes['expanded'] === false) {
+                        $name = ' name="'.$name.'[]"';
+                    }else {
 
-                    /** @TODO radio button */
-                }else{
-                    foreach($attributes['choices'] as $choice => $value){
-                        $value = ' value="'.$value.'"';
-                        $input = '<input'.$class.' type="checkbox"'.$name.$id.$min.$max.$value
-                            .$required.$disabled.'>';
-                        if($attributes['childLabelType'] === 'after'){
-                            $input = $input.$choice.BR;
-                        }else if($attributes['childLabelType'] === 'empty'){
-                            /* do nothing */
-                        }else{
-                            $input = $choice.$input.BR;
+                        $name = ' name="'.$name.'"';
+                        foreach($attributes['choices'] as $choice => $value){
+                            $value = ' value="'.$value.'"';
+                            $input = '<input'.$class.' type="checkbox"'.$name.$id.$min.$max.$value
+                                .$required.$disabled.'>';
+                            if($attributes['childLabelType'] === 'after'){
+                                $input = $input.$choice.BR;
+                            }else if($attributes['childLabelType'] === 'empty'){
+                                /* do nothing */
+                            }else{
+                                $input = $choice.$input.BR;
+                            }
                         }
                     }
                 }
-            }else{
+            } else {
+                $name = ' name="'.$name.'"';
                 $input = '<input'.$class.' type="'.$type.'"'.$name.$id.$min.$max.$value
                     .$required.$disabled.'>';
             }
 
-
             $input  = $this->addParentTag($input, $fieldParent);
-		}
+        }
 
         /* rendu du label selon type */
-        if($labelType === 'empty'){
+        if ($labelType === 'empty' || $type == 'hidden') {
             $html = $input;
-        }else if($labelType === 'after'){
+        } else if ($labelType === 'after') {
             $html = $input.$label;
-        }else{
+        } else {
             $html = $label.$input;
         }
 
         /* parent est une balise html qui entoure le champ du formulaire */
-        if($parent){
-            if(is_array($parent)){
+        if ($parent) {
+            if (is_array($parent)) {
                 $parentName = key($parent);
                 $parentClass = $parent[$parentName];
-                if(is_numeric($parentName)){
+                if (is_numeric($parentName)) {
                     throw new \Exception('Balise html tag non valide');
                 }
 
-                return $this->tag( // si hidden pas de label affiché
+                return $this->tag(
                     $html, $parentName, ['class' => $parentClass]
                     );
-            }else{
-                return $this->tag( // si hidden pas de label affiché
+            } else {
+                return $this->tag(
                    $html, $parent
                 );
             }
         }else{
             return $html;
         }
-	}
+    }
 
     public function select($name, $label, $options, $attributes = array())
     {
@@ -327,14 +406,18 @@ abstract class Form{
 
         }
         $html = implode(' ', $list);
-
-        $label = $this->tag($label, 'label', ['for' => $name], $parent);
+        $id = $this->getName().'_'.$name;
+        if (isset($attributes['multiple']) &&  $attributes['multiple']) {
+            $name.='[]';
+        }
+        $name = $this->getName().'['.$name.']';
+        $label = $this->tag($label, 'label', ['for' => $id], $parent);
         $select = $label.$this->tag(
             $html,
             'select',[
                 'class' => $class,
                 'name'  => $name,
-                'id' => $name,
+                'id' => $id,
             ]
         );
         return $select;
@@ -376,7 +459,7 @@ abstract class Form{
         return $html;
     }
 
-    public function parseFields($names)
+   public function parseFields($names)
     {
         $keys =  array_map(array($this, 'parseName'),array_keys($names));
         $array = array_combine($keys, array_values($names));
@@ -385,25 +468,26 @@ abstract class Form{
 
     public function parseName($name)
     {
-        $name = explode('_', $name);
+        $name = rtrim($name,']');
+        $name = explode('[', $name);
         $name = array_pop($name);
 
         return $name;
     }
 
-	public function getValue($name)
-	{
+    public function getValue($name)
+    {
         $name = $this->parseName($name);
-		if(is_object($this->data)){
+        if(is_object($this->data)){
+
             //$method = 'get'.ucfirst($name);
             $data = $this->data->$name;
-
-			return isset($data)? $data : null;
-		}else{
+            return isset($data)? $data : null;
+        }else{
             $data = $this->data[$name];
-			return isset($data)? $data : null;
-		}
-	}
+            return isset($data)? $data : null;
+        }
+    }
 
     public function all()
     {
@@ -457,33 +541,32 @@ abstract class Form{
                 }else{
                     $list = $key;
                 }
-                $view.= $this->select(
+                $view .= $this->select(
                     $key,
                     $field['options']['label'],
                     $this->entityLists[$list],
                     $attributes
                 );
             }else if($field['type'] === 'password'){
-                $view.=$this->password(
+                $view .= $this->password(
                     $key,
                     $field['options']['label'],
                     $attributes
                 );
             }else if($field['type'] === 'textarea'){
-
-                $view.=$this->input(
+                $view .= $this->input(
                     $key,
                     $field['options']['label'],
                     $attributes
                 );
             }else if($field['type'] === 'child'){
-                $view.= $this->child(
+                $view .= $this->child(
                     $field['options']['form'],
                     $attributes
                 );
 
             }else{
-                $view.=$this->input(
+                $view .= $this->input(
                     $key,
                     $field['options']['label'],
                     $attributes
@@ -514,5 +597,111 @@ abstract class Form{
     {
         header('Location: ' . $url, true, $statusCode);
         die();
+    }
+
+    public function handleRequest()
+    {
+        if (!empty($_POST) || !empty($_FILES)) {
+            $fields = array_shift($_POST);
+            $files = array_shift($_FILES);
+            $result = null;
+
+
+                if ($this->validate($fields)) {
+
+                    foreach ($this->all() as $name => $def) {
+                        if ($def['type'] === 'password') {
+                            if (isset($def['options']['confirmation']) || $fields[$name] === '') {
+                                unset($fields[$name]);
+                            }
+                        }
+                        if($def['type'] === 'hidden' && $name === 'action') {
+                            unset($fields[$name]);
+                        }
+                    }
+
+                    if ($entity = $this->getData()) {
+
+                        $clone = clone $entity;
+                        $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
+                       // var_dump($entity->getChanges());
+
+                        $scalars = array_intersect_key($fields, $entity->getDataMapper()->getFields());
+                        var_dump($scalars);
+                        foreach ($scalars as $attr => $value) {
+                            $method = 'set'.ucfirst($attr);
+                            $entity->$method($value);
+                        }
+
+                        $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
+                        $this->cascadeRequest($fields, $files);
+                    }
+
+                } else {// fin validate
+                    echo 'formulaire non valide';
+                }
+
+
+
+            }
+    }
+
+    public function cascadeRequest(&$fields, &$files)
+    {
+        $result = null;
+        $entity = $this->data;
+        if (!$this->data instanceof Entity) {
+            throw new \Exception ("Form data not valid.");
+        }
+        $clone = clone $entity;
+
+        //_dump($clone);
+        $associationTypes = $this->data->getDataMapper()->getAssociations();
+        foreach ($associationTypes as $type) {
+            if ($fields = array_intersect_key($fields, $type)) {
+                $this->cascadeAssociation($entity, $fields, $type);
+            }
+        }
+
+        // one to one or array many to one relationships
+        $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
+        // many to many or one to many relationships
+        $entity::getTable()->setChanges($entity::getTable()->trackArrayChanges($entity, $clone));
+    }
+
+    public function cascadeAssociation($entity, $fields, $type)
+    {
+        foreach ($fields as $prop => $value) {
+
+            $field = $this->fields[$prop];
+            $multiple = isset($field['options']['multiple']) && $field['options']['multiple'];
+            $set = 'set'.ucfirst($prop);
+            $get = 'get'.ucfirst($prop);
+            $add = 'add'.ucfirst($prop);
+            $association = $type[$prop];
+            $class = $association['targetEntity'];
+            // on change la valeur si on a reneigné le champ  ou si les valeurs nulles sont admises non par défaut
+            if ($value || isset($association['nullable']) && $association['nullable'] === true) {
+                $child = is_object($value) ? $value : $this->container['app']->getTable($class)->find($value);
+
+                if ($child instanceof $class) {
+                    $associationTypes = $child->getDataMapper()->getAssociations();
+                    foreach ($associationTypes as $type) {
+                        if ($fields = array_intersect_key($fields, $type)) {
+                            $this->cascadeAssociation($entity, $fields, $type);
+                        }
+                    }
+
+                    if (($type === "ManyToMany" || $type === "OneToMany") && $multiple && is_array($entity->$get())) {
+                        $entity->$add($child);
+                    } else {
+                        $entity->$set($child);
+                    }
+                } else {
+                    throw new \Exception("Entité invalide");
+                }
+            }
+            // add HYDRATOR for update
+        }
     }
 }

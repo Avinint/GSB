@@ -9,19 +9,15 @@
 namespace Core\Entity;
 
 
-class MetadataBuilder {
-
-
+class MetadataBuilder
+{
     public function  __construct(Metadata $metaData)
     {
 
     }
 
-
     public function createField()
     {
-
         return $this;
     }
-
 } 

@@ -2,8 +2,7 @@
 
 namespace Core\Table;
 
-use Core\Database\Database;
-use Core\Database\QueryBuilder;
+use Core\Component\Database\QueryBuilder;
 use \App;
 use Core\Config;
 use Core\Entity\Entity;
@@ -14,6 +13,21 @@ class Table {
 	protected $db;
     protected $entity;
     protected $count = 1;
+    protected $changeset = array();
+
+    public function __construct($entity = null)
+    {
+        $app = App::getInstance();
+        $this->db = $app->getContainer('db');
+        if ($entity) {
+            $this->entity = $entity;
+            $entity = explode(':', $entity);
+            $entity = end($entity);
+            $this->table = $app->getContainer('tool')->decamelize($entity);
+        } else {
+            $this->getDbTableName();
+        }
+    }
 
     public function getTable()
     {
@@ -28,24 +42,21 @@ class Table {
             $app = App::getInstance();
             $class = explode("\\", get_called_class());
             $class = end($class);
-            $this->table = $app->decamelize(str_replace('Table', '', $class));
+            $this->table =  $app->getContainer('tool')->decamelize(str_replace('Table', '', $class));
         }
     }
 
     public function getEntityClass()
     {
-        $module = ''; $class = '';
-        if ($this->entity) {
-            $class = explode(':', $this->entity);
-            $module = array_shift($class);
-            $class = array_shift($class);
-           $class = 'App\\'.$module.'\\Entity\\'.$class;
-        }
-		
+        $class = explode(':', $this->entity);
+        $module = array_shift($class);
+        $class = array_shift($class);
+        $class = 'App\\'.$module.'\\Entity\\'.$class;
+
         return $class;
     }
 
-    private function getEntity()
+    public function getEntity()
     {
         $entity = $this->entity ?
         $this->getEntityClass() :
@@ -54,25 +65,67 @@ class Table {
         return $entity;
     }
 
-    public function __construct($entity = null)
+    public function setChanges($changes)
     {
-        $app = App::getInstance();
-        $this->db = $app->getContainer('db');
-
-        if ($entity) {
-            $this->entity = $entity;
-            $entity = explode(':', $entity);
-            $entity = end($entity);
-            $this->table = $app->decamelize($entity);
+        if ($this->changeset === array()) {
+            $this->changeset = $changes;
         } else {
-            $this->getDbTableName();
+            $this->changeset = array_flip(array_flip(array_merge($this->changeset, $changes)));
         }
+    }
+
+    public function getChanges()
+    {
+        return $this->changeset;
+    }
+
+    public function trackChanges($entity, $clone)
+    {
+        $class = $this->getEntity();
+        if(!$entity instanceof $class && !$clone instanceof $class) {
+            throw new \Exception('method cannot compare instances of different classes');
+        }
+        $guestVars = array_filter(get_object_vars($clone), function($v) {return !is_array($v);});
+        $hostVars = array_filter(get_object_vars($entity), function($v) {return !is_array($v);});
+
+        return array_keys(array_diff_assoc($hostVars, $guestVars));
+    }
+
+    //Not Tested
+    public function trackArrayChanges($entity, $clone)
+    {
+        $class = $this->getEntity();
+        if(!$entity instanceof $class && !$clone instanceof $class) {
+            throw new \Exception('method cannot compare instances of different classes');
+        }
+        $guestVars = array_filter(get_object_vars($clone), function($v) {return is_array($v);});
+        $hostVars = array_filter(get_object_vars($entity), function($v) {return is_array($v);});
+
+        $differences = array();
+        foreach ($hostVars as $key => $var ) {
+            if($this->arrayEqual($var, $guestVars[$key]) == true && $key !== 'changeset') {
+                $differences[] = $key;
+            }
+        }
+
+        return $differences;
+    }
+
+    //Not tested
+    private function arrayEqual($a, $b)
+    {
+        return (
+            is_array($a) && is_array($b) &&
+            count($a) == count($b) &&
+            array_diff($a, $b) === array_diff($b, $a)
+        );
     }
 
     public function createQueryBuilder($alias = '', $table = '')
     {
         $query = new QueryBuilder($this);
         if($alias === null){
+
             $alias = strtolower($this->getTable()[0]); // Si alias vide on utilise la premiere lettre de la classe
         }
 
@@ -81,7 +134,7 @@ class Table {
             $table = $this->getTable();
         }
         $query->select($alias)->from($table, $alias);
-
+		
         return $query;
     }
 
@@ -99,9 +152,11 @@ class Table {
     public function find($id)
     {
         $query = $this
-        ->createQueryBuilder('a')
+        ->createQueryBuilder($this->table[0])
+        ->where('id = :id')
+        ->setParameter('id', $id)
         ->limit(0, 1)
-        ->getQuery()
+            ->getQuery()
         ;
 
         return $query->getSingleResult();
@@ -208,6 +263,27 @@ class Table {
         return $return;
     }
 
+    public function pluck($args)
+    {
+        $args = func_get_args($args);
+        $id = is_int($args[0]) ? array_shift($args) : 0 ;
+        $args = array_map(function($arg) {
+                return 't'.$arg;
+            }, $args);
+
+        $query = $this->createQueryBuilder('t')->select($args);
+        if ($id) {
+            return $query
+                ->where('id = :id')
+                ->setParameter('id', $id)
+                ->getQuery()
+                ->getSingleResult();
+        }
+        return $query
+            ->getQuery()
+            ->getResults();
+    }
+
     public function refresh($entity, $fields)
     {
         if(!$entity instanceof Entity){
@@ -224,29 +300,34 @@ class Table {
         return $entity;
     }
 
-	public function update($entity, $fields, $image = null, $table = '')
-	{
-        if($table === ''){
-            $table = $this->getPrefix().$this->getTable();
-        }else{
+    public function update($fields, $image = null, $table = '')
+    {
+        if($table){
             $table = $this->getPrefix().$table;
+        }else{
+            $table = $this->getPrefix().$this->getTable();
         }
+
+         // on n'update que ce que le champs mis à jours
+       /* if ($entity->getId()) {
+            $preUpdateState = $fields = $entity->getId() ? $this->find($entity->getId())->getVars() : array();
+            $fields = array_diff_assoc($fields, $preUpdateState);
+			$imageBackup = method_exists($entity, 'getImage') ? $entity->getImage(): '';
+        }*/
 
         if(empty($image) || $image['image']['name'] === ''){
             unset($image);
         }
-        $imageBackup = method_exists($entity, 'getImage') ?$entity->getImage(): '';
 
-        if(!$entity instanceof Entity){
-            throw new \Exception("Database problem");
-        }
+        $entity = $this->getEntity();
+        $fields = $entity::dataMapper()->beforePersist($fields);
 
+        // TODO move image preupload to Save
         //$filePath = $table === 'article'?'':D_S.$table.'s';
         //$path = ROOT.D_S.'public'.D_S.'img'.$filePath;
-        if(isset($image)){
-
+        /*if (isset($image)) {
             $fields['image'] = $entity->preUpload($image['image']);
-        }
+        }*/
 
         //$entity = $this->refresh($entity, $fields);
 
@@ -257,68 +338,24 @@ class Table {
 			$sql_parts[] = "$k = ?";
 			$attributes[] = "$v";
 		}
-		$attributes[] = $entity->id;
 
+        // trouver un moyen plus élégant de rajouter l'id pour le parametre
+        $attributes[] = $attributes[0];
 		$sql = implode(', ', $sql_parts);
 
-
-        if($this->query(
-		'UPDATE '.$table.'
-		 SET '.$sql.'
-		 WHERE id = ?
-		', $attributes,true)){
-            if(isset($image)){
-
-               if( $uploaded = $entity->upload($image['image'], $fields['image'])){
-                   $entity->removeFile($imageBackup);
-               }else{
-                   $entity->setImage($imageBackup);
+        if ($this->query (
+        'UPDATE '.$table.'
+        SET '.$sql.'
+        WHERE id = ?
+        ', $attributes,true, true)) {
+            if (isset($image)) {
+                // TODO move image preupload to Save
+               /*if ($uploaded = $entity->upload($image['image'], $fields['image'])) {
+                   $entity->getId()? $entity->removeFile($imageBackup): NULL;
+               } else {
+                    $entity->getId()? $entity->setImage($imageBackup): NULL;
                    echo "Fichier non telecharge";
-               }
-            }
-            return true;
-        }
-        return false;
-	}
-
-	public function create($entity, $fields, $image = null, $table = '')
-	{
-        if($table === ''){
-            $table = $this->getPrefix().$this->table;
-        }else{
-            $table = $this->getPrefix().$table;
-        }
-
-
-        if(empty($image) || $image['image']['name'] === ''){
-            unset($image);
-        }
-        //$filePath = $table === 'article'?'':D_S.$table.'s';
-        //$path = ROOT.D_S.'public'.D_S.'img'.$filePath;
-        //var_dump($image);
-
-        if(isset($image)){
-            $fields['image'] = $entity->preUpload($image['image']);
-        }
-		$sql_parts = [];
-		$attributes = [];
-
-		foreach($fields as $k => $v){
-			$sql_parts[] = "$k = ?";
-			$attributes[] = "$v";
-		}
-		$sql = implode(', ', $sql_parts);
-        if($this->query(
-            'INSERT INTO '.$table.'
-            SET '.$sql,
-            $attributes,
-            true)){
-            if(isset($image)){
-                if( $uploaded = $entity->upload($image['image'], $fields['image'])){
-
-                }else{
-                    echo "Fichier non telecharge";
-                }
+               }*/
             }
 
             return true;
@@ -327,37 +364,112 @@ class Table {
         return false;
     }
 
-	public function delete($id)
-	{
-        $entity = $this->find($id);
-        if(method_exists($entity,'getImage')){
-            $image = $entity->getImage();
-            $entity->removeFile($image);
+    public function prepareForDb($fields)
+    {
+        $fields = array_combine(array_keys($entity::dataMapper()->getColumns($fields)), array_values($fields));
+    }
+
+
+    public function create($fields, $image = null, $table = '')
+    {
+        if($table === ''){
+            $table = $this->getPrefix().$this->getTable();
+        }else{
+            $table = $this->getPrefix().$table;
         }
 
-		return $this->query('DELETE FROM '.$this->table.' WHERE id = ?',
-		array($id), true);
-	}
+        if(empty($image) || $image['image']['name'] === ''){
+            unset($image);
+        }
 
-	public function query($statement, $attributes = null, $one = false, $class = null)
+        $entity = $this->getEntity();
+        $fields = $entity::dataMapper()->beforePersist($fields);
+
+        //$filePath = $table === 'article'?'':D_S.$table.'s';
+        //$path = ROOT.D_S.'public'.D_S.'img'.$filePath;
+        //var_dump($image);
+
+        // TODO move image preupload to Save
+        /*if (isset($image)) {
+            $fields['image'] = $entity->preUpload($image['image']);
+        }*/
+
+        $sql_parts = [];
+        $attributes = [];
+
+        foreach($fields as $k => $v){
+            $sql_parts[] = "$k = ?";
+            $attributes[] = "$v";
+        }
+
+        $sql = implode(', ', $sql_parts);
+
+        //var_dump($entity::dataMapper()->getColumnFromProperty($fields));
+
+        if ($this->query(
+            'INSERT INTO '.$table.'
+            SET '.$sql,
+            $attributes,true, true)) {
+            if (isset($image)) {
+                // TODO move image upload to Save
+                /*  if ($uploaded = $entity->upload($image['image'], $fields['image'])) {
+
+                }else{
+                    echo "Fichier non telecharge";
+                }*/
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public function delete($id)
+    {
+        $entity = $this->find($id);
+        // TODO move image removal to Save
+       /* if(method_exists($entity,'getImage')){
+            $image = $entity->getImage();
+            $entity->removeFile($image);
+        }*/
+
+        return $this->query('DELETE FROM '.$this->table.' WHERE id = ?',
+        array($id), true);
+    }
+
+	public function query($statement, $attributes = null, $one = false, $scalar = false)
 	{
         $entity = $this->getEntity();
 		$app = App::getInstance();
 		if($attributes){
-			return 	$app->getDb()->prepare(
+			$data = $app->getDb()->prepare(
 						$statement, 
 						$attributes,
                         $entity,
 						$one
 					);
 		}else{
-			return 	$app->getDb()->query(
+			$data = $app->getDb()->query(
 						$statement,
                         $entity,
 						$one
 					);
 		}
+
+        if($scalar || $data === false) {
+;            return $data;
+        } else {
+            $meta = $entity::dataMapper();
+
+            return $one ? $meta->hydrate($data, $entity) : $meta->hydrateAll($data, $entity);
+        }
 	}
+
+    private function getAssociations()
+    {
+
+    }
 
     public function lastInsertId()
     {
@@ -366,7 +478,7 @@ class Table {
 
     public function getPrefix()
     {
-        $config = Config::getInstance(ROOT.'/Config/dbConfig.php', ROOT.'/Config/config.php', ROOT.'/Config/security.php');
+        $config = Config::getInstance(ROOT.'/config/dbConfig.php', ROOT.'/config/config.php', ROOT.'/config/security.php');
         return $config->get('db_prefix');
     }
 }

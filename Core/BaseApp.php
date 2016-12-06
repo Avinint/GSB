@@ -34,8 +34,10 @@ abstract class BaseApp
     {
         $this->container = new Container();
 		$this->container['env'] = $environment;
+        $this->container['kernel'] = $this;
         Core\Container\ContainerBuilder::init($this->container);
 		$this->exceptionHandler = $this->getContainer('exception_handler');
+
     }
 
     public function getRouter()
@@ -58,23 +60,35 @@ abstract class BaseApp
 
     public function getTable($fullName = '')
     {
-        $name = explode(':', $fullName);
-        $module = array_shift($name);
-        $name = array_pop($name);
+        if (strpos($fullName,':' ) !== false) {
+            $name = explode(':', $fullName);
+            $module = array_shift($name);
+            $name = array_pop($name);
 
-        $className = 'App\\'.$module.'\\Table\\'.ucfirst($name).'Table';
-        if (!class_exists($className)) {
-            $className = 'Core\\Table\\Table';
+            $className = 'App\\'.$module.'\\Table\\'.ucfirst($name).'Table';
+            if (!class_exists($className)) {
+                $className = 'Core\\Table\\Table';
+            }
+
+            return new $className($fullName);
+
+        } else {
+            return $this->getTableFromEntity($fullName);
         }
-
-        return new $className($name);
     }
 
     public function getTableFromEntity($name)
     {
         $className = str_replace('Entity', 'Table', $name).'Table';
+        if (!class_exists($className)) {
+            $className = 'Core\\Table\\Table';
+        }
         $name = explode('\\', $name);
-        $name = strtolower(end($name));
+        array_shift($name);
+        $module = array_shift($name);
+        $name = array_pop($name);
+        $name = $module.':'.$name;
+
         return new $className($name);
     }
 
@@ -86,10 +100,5 @@ abstract class BaseApp
     public function getDb()
     {
         return $this->getContainer('db');
-    }
-
-    public function decamelize($string)
-    {
-        return strtolower(preg_replace('/(?|([a-z\d])([A-Z])|([^\^])([A-Z][a-z]))/', '$1_$2', $string));
     }
 }

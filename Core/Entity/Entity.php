@@ -2,45 +2,63 @@
 
 namespace Core\Entity;
 
+use Core\Component\Database\DataMapper;
+use Core\Component\Database\Metadata;
+
 class Entity
 {
+    protected static $mapper;
+
 	public function __get($key)
-	{	
+	{
 		$method = 'get'.ucfirst($key);
 		if(method_exists($this, $method)){
 			$this->$key = $this->$method();
-        }else if(method_exists($this, $m = $method.'_id')){
-            $this->$key = $this->$m();
-		}else{
-            foreach($this->getUploadRefs() as $type){
-
-                $method = 'get'.ucfirst($type);
-                if(method_exists($this, $method)){
-                    $this->$key = $this->$method();
-                    break;
-                }
-            }
         }
-        return $this->$key;
-	}
 
+        return $this->$key;
+    }
+
+    public function setId($id)
+    {
+        if (property_exists(get_called_class(), 'id') && !$this->id) {
+            $this->id = $id;
+        }
+    }
+
+    public static function getShortClass()
+    {
+        $class = new \ReflectionClass(get_called_class());
+        return $class->getShortName();
+    }
 
     public function getTableName()
     {
-        $class = explode("\\", get_called_class());
-        $class = strtolower(end($class));
+        if ($this->getDataMapper() && $this->getDataMapper()->hasTable()) {
+            return $this->getDataMapper()->getTable();
+        }
 
-        return $class;
+        $class = explode("\\", get_called_class());
+        
+        return strtolower(static::getShortClass());
     }
-	
-	private static function getModule()
-	{
-		$class = explode("\\", get_called_class());
-		array_shift($class);
-		$module = array_shift($class);
-		
+
+	public static function getTable()
+    {
+        $class = new \ReflectionClass(get_called_class());
+        $repo = 'App'.D_S.static::getModule().D_S.'Table'.D_S.static::getShortClass().'Table';
+
+        return new $repo() ;
+    }
+
+    private static function getModule()
+    {
+        $class = explode("\\", get_called_class());
+        array_shift($class);
+        $module = array_shift($class);
+
         return $module;
-	}
+    }
 
     public function getClass()
     {
@@ -58,32 +76,33 @@ class Entity
         return  ROOT.D_S.'public'.D_S.'img'.D_S.$this->getClassName().'s';
     }
 
-    public function preUpload($fichier)
+    public function preUpload($file)
     {
-        $pos_extension = strpos($fichier['name'], '.');
-        $extension = substr($fichier['name'], $pos_extension);
+        $pos_extension = strpos($file['name'], '.');
+        $extension = substr($file['name'], $pos_extension);
         $newName = uniqid().$extension;
 
         return $newName;
     }
 
-	public function upload($fichier, $name, $dir = null)
+	public function upload($file, $name, $dir = null)
 	{
         $dir = $dir? $dir: $this->getFilePath();
         if(!is_dir($dir)){
             if(!mkdir($dir, '0777', true )){
                 throw new \Exception('repertoire non cree');
             }
-            //chmod($repertoire, '0777');
 		}
 	    $name = $dir.D_S.$name;
-		$moved = move_uploaded_file($fichier['tmp_name'], $name);
-		if($moved){
-			return $name;
-		}else{
-			return false;
-		}
-	}
+        if( $file['file']['error'] === UPLOAD_ERR_OK && is_uploaded_file($file['tmp_name'])) {
+            $moved = move_uploaded_file($file['tmp_name'], $name);
+            if ($moved) {
+                return $name;
+            } // TODO else throw exception
+        }
+
+        return false;
+    }
 
     public function removeFile($filename, $dir = null)
     {
@@ -96,25 +115,33 @@ class Entity
 
     public function getVars()
     {
-        return get_object_vars($this);
+        $vars = get_object_vars($this);
+
+        return $vars;
     }
 
-    public static function loadMetadata(Metadata $metadata)
+
+    public static function setDataMapper()
     {
-        $builder = new MetadataBuilder($metadata);
+       return new DataMapper(ROOT.D_S.'App'.D_S.static::getModule().D_S.'config'.D_S.'dataMapper'.D_S.static::getShortClass().'Mapper.php');
     }
 
-    public static function getMetadata()
+	public static function dataMapper($field = null)
     {
-        //return self::$metadata;
+            static::$mapper = static::setDataMapper();
+
+
+        return static::$mapper;
     }
 
-    public static function getTable()
+    public static function hasDataMapper()
     {
-        $class = new \ReflectionClass(get_called_class());
-        $repo = 'App'.D_S.self::getModule().D_S.'Table'.D_S.$class->getShortName().'Table';
+        return file_exists(ROOT.D_S.'App'.D_S.static::getModule().D_S.'config'.D_S.'dataMapper'.D_S.static::getShortClass().'Mapper.php');
+    }
 
-        return new $repo() ;
+    public function getDataMapper()
+    {
+        return static::dataMapper();
     }
 
     /* Wrapper methods for NOOB mode aka Ruby mode */
@@ -182,5 +209,10 @@ class Entity
         }
 
         throw new \Exception(static::getTable()->getEntity(), $fieldName, $method.$by);
+    }
+
+    public function __toString()
+    {
+        return strtolower(static::getShortClass());
     }
 }

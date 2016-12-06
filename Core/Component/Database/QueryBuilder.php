@@ -1,6 +1,6 @@
 <?php
 
-namespace Core\Database;
+namespace Core\Component\Database;
 
 use Core\Table\Table;
 
@@ -62,26 +62,24 @@ class QueryBuilder{
 	public function select($selection = '*')
 	{
         $selection = is_array($selection) ? $selection : func_get_args();
+		$selection = array_map(array($this, 'parseSelect'), $selection);
+        
         $this->sqlParts['select'] = $selection;
 
 		//$this->fields = func_get_args();
 		return $this;
 	}
 
-    public function distinct($flag = true)
-    {
-        $this->sqlParts['distinct'] = (bool) $flag;
-
-        return $this;
-    }
-
-    // addSelect ajoute des champs à la selection
-    public function addSelect($selection)
+	// addSelect ajoute des champs à la selection
+    public function addSelect($selection = null)
     {
         $selection = is_array($selection) ? $selection : func_get_args();
-        /* si c'est un alias on le recupere dans la liste */
-        if(!is_array($selection)) {
-            $this->sqlParts['select'][] =  $selection; //
+        
+        if ($selection) {
+			foreach ($selection as &$prop) {
+				$this->parseSelect($prop);
+			}
+            $this->sqlParts['select'][] =  $selection; 
 
             return $this;
 
@@ -91,7 +89,37 @@ class QueryBuilder{
 
         return $this;
     }
+	
+    public function parseSelect($prop)
+    {
+		$prop = strpos($prop, '.') === false ? $prop.'.*' : $prop;
+        $separator = strpos($prop, '.');
+        if($separator !== false)  {
+            $select = explode('.', $prop);
+			
+            $columnName = array_pop($select);
+			if ($columnName !== '*') {
+				$entity = $this->repository->getEntity();
+				$meta = $entity::dataMapper();
+				$columnName = $meta->getColumnFromProperty($columnName);
+			}
+			
+            $alias = array_shift($select);
+            $this->addAlias($alias, $columnName);
+			$prop = $alias.'.'.$columnName;
+        }
+		
+		return $prop;
+    }
 
+    public function distinct($flag = true)
+    {
+        $this->sqlParts['distinct'] = (bool) $flag;
+
+        return $this;
+    }
+
+    
 	public function where($where, $type = '')
 	{
         if ($type) {
@@ -119,6 +147,7 @@ class QueryBuilder{
         $alias = $alias ? : strtolower($table[0]);
         $from['table'] = $table;
         $from['alias'] = $alias;
+        $this->addAliasKey($alias);
         $this->sqlParts['from'] = array();
         $this->sqlParts['from'][] = $from;
 
@@ -131,9 +160,17 @@ class QueryBuilder{
 
         $from['table'] = $table;
         $from['alias'] = $alias;
+        $this->addAliasKey($alias);
         $this->sqlParts['from'][] = $from;
 
         return $this;
+    }
+
+    public function addAliasKey($alias)
+    {
+        if(!array_key_exists($alias, $this->aliases)) {
+            $this->aliases[$alias] = array();
+        }
     }
 
     public function setParameter($identifier, $value)
@@ -142,7 +179,6 @@ class QueryBuilder{
 
         return $this;
     }
-
 
     public function orderBy($field, $order = null)
     {
@@ -262,12 +298,12 @@ class QueryBuilder{
 
     private function writeSelect()
     {
-        return implode(', ', array_map( array($this, 'getSelect'), $this->getSqlPart('select')));
+        return implode(', ', $this->getSqlPart('select'));
     }
 
     private function getSelect($select)
     {
-        return strpos($select, '.') === false? $select.'.*': $select;
+        return strpos($select, '.') === false && array_key_exists($select,$this->aliases) ? $select.'.*': $select;
     }
 
     private function writePart($partName, $options = array())
@@ -360,7 +396,6 @@ class QueryBuilder{
 
     public function getQuery()
     {
-
         $this->query = 'SELECT '
             . ($this->getSqlPart('distinct') === true ? ' DISTINCT' : '')
             . $this->writeSelect()
@@ -378,12 +413,26 @@ class QueryBuilder{
     public function getSingleResult()
     {
         return $this->repository->query($this->query, $this->getParameters(), true);
+
+    }
+
+    public function getSingleScalarResult()
+    {
+        return $this->repository->query($this->query, $this->getParameters(), true, true);
+    }
+
+    public function getScalarResults()
+    {
+        return $this->repository->query($this->query, $this->getParameters(), false, true);
     }
 
     public function readSql()
     {
-        echo $this->query;
-
+        echo 'SELECT '
+            . ($this->getSqlPart('distinct') === true ? ' DISTINCT' : '')
+            . $this->writeSelect()
+            . $this->writeFrom().$this->writeEnd();
+        ;
         return $this;
     }
 

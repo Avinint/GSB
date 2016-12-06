@@ -9,12 +9,14 @@ class UtilisateurTable extends Table
     public function findByUsername($username)
     {
         $query = $this->createQueryBuilder('u');
-        $query
-            ->where('u.pseudo = :pseudo')
-            ->setParameter('pseudo', $username)
+		
+		$query
+            ->where('u.login = :login')
+            ->setParameter('login', $username)
             ->getQuery()
         ;
 
+		
         return $query->getSingleResult();
     }
 
@@ -22,8 +24,9 @@ class UtilisateurTable extends Table
     {
         $query = $this
             ->createQueryBuilder('u')
-            ->select(array('u.id','u.pseudo', 'u.nom', 'u.prenom', 'u.email', 'u.image', 'u.role_id', 'u.newsletter'))
-            ->where('id = :id')
+            ->select(array('u.id','u.login', 'u.email', 'u.nom', 'u.prenom', 'u.role'));
+
+            $query->where('id = :id')
             ->setParameter('id', $id)
             ->getQuery()
         ;
@@ -41,6 +44,8 @@ class UtilisateurTable extends Table
             ->getQuery()
             ;
 
-        return false === $query->getSingleResult();
+        return false === $query->getSingleScalarResult();
     }
+	
+	
 }

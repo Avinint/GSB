@@ -4,7 +4,8 @@ namespace App\AppModule\Entity;
 
 use Core\Entity\Entity;
 
-class Role extends Entity {
+class Continent extends Entity
+{
 
     protected $id;
     protected $nom;
@@ -29,11 +30,6 @@ class Role extends Entity {
      * @return string
      */
     public function getNom()
-    {
-        return $this->nom;
-    }
-
-    public function __toString()
     {
         return $this->nom;
     }
