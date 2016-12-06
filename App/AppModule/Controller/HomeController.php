@@ -23,7 +23,7 @@ class HomeController extends AppController
         $user = Utilisateur::find(2);
         echo $user->prenom.' '.$uti->nom;*/
         //var_dump(Utilisateur::findByPrenom('Bruno', array('Prenom', "ASC"), 0 , 1));
-        //$this->filterAccess('ROLE_DEFAULT');
+        //
         $this->render('AppModule:Home:index.php');
     }
 

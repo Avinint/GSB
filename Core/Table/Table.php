@@ -318,6 +318,10 @@ class Table {
         if(empty($image) || $image['image']['name'] === ''){
             unset($image);
         }
+
+        $entity = $this->getEntity();
+        $fields = $entity::dataMapper()->beforePersist($fields);
+
         // TODO move image preupload to Save
         //$filePath = $table === 'article'?'':D_S.$table.'s';
         //$path = ROOT.D_S.'public'.D_S.'img'.$filePath;
@@ -341,7 +345,7 @@ class Table {
         'UPDATE '.$table.'
         SET '.$sql.'
         WHERE id = ?
-        ', $attributes,true)) {
+        ', $attributes,true, true)) {
             if (isset($image)) {
                 // TODO move image preupload to Save
                /*if ($uploaded = $entity->upload($image['image'], $fields['image'])) {
@@ -358,6 +362,12 @@ class Table {
         return false;
     }
 
+    public function prepareForDb($fields)
+    {
+        $fields = array_combine(array_keys($entity::dataMapper()->getColumns($fields)), array_values($fields));
+    }
+
+
     public function create($fields, $image = null, $table = '')
     {
         if($table === ''){
@@ -369,6 +379,10 @@ class Table {
         if(empty($image) || $image['image']['name'] === ''){
             unset($image);
         }
+
+        $entity = $this->getEntity();
+        $fields = $entity::dataMapper()->beforePersist($fields);
+
         //$filePath = $table === 'article'?'':D_S.$table.'s';
         //$path = ROOT.D_S.'public'.D_S.'img'.$filePath;
         //var_dump($image);
@@ -388,10 +402,12 @@ class Table {
 
         $sql = implode(', ', $sql_parts);
 
+        //var_dump($entity::dataMapper()->getColumnFromProperty($fields));
+
         if ($this->query(
             'INSERT INTO '.$table.'
             SET '.$sql,
-            $attributes,true)) {
+            $attributes,true, true)) {
             if (isset($image)) {
                 // TODO move image upload to Save
                 /*  if ($uploaded = $entity->upload($image['image'], $fields['image'])) {

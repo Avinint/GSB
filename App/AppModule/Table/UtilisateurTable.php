@@ -23,14 +23,14 @@ class UtilisateurTable extends Table
     public function findNoPassword($id)
     {
         $query = $this
-            ->createQueryBuilder('u');
-            //->select(array('u.id','u.login', 'u.nom', 'u.prenom', 'u.role'));
-			
+            ->createQueryBuilder('u')
+            ->select(array('u.id','u.login', 'u.nom', 'u.prenom', 'u.role'));
+
             $query->where('id = :id')
             ->setParameter('id', $id)
             ->getQuery()
         ;
-		
+
         return $query->getSingleResult();
     }
 

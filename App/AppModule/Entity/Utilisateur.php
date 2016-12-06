@@ -17,6 +17,34 @@ class Utilisateur extends Entity implements UserInterface{
     protected $role;
     protected $pays;
 
+    public function __construct($mdp = null, $login = null)
+    {
+        if(!$mdp) {
+            $this->mdp = $mdp;
+        }
+        if(!$login) {
+            $this->login = $login;
+        }
+
+       /* $values = func_get_args();
+        var_dump($values);
+        $this->initialize($values);*/
+    }
+
+    private function initialize($values)
+    {
+        $class = new \ReflectionClass($this);
+        $construct = $class->getConstructor();
+        $params = $construct->getParameters();
+        foreach($params as $key => $arg) {
+            $prop = $arg->name;
+            $value = $values[$key];
+            if(!is_null($value)) {
+                $this->$prop = $value;
+            }
+        }
+    }
+
     /**
      * @return string
      */

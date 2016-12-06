@@ -23,13 +23,19 @@ return array(
                     'referencedColumnName' => 'id', // optionnel
                 ),
             ),
-             'pays' => array(
+            'pays' => array(
                 'targetEntity' => 'App\AppModule\Entity\Pays',
                 'foreignKey' => array( // optionnel
-                'name' => 'pays_id', // opttionnel
-                'referencedColumnName' => 'id', // optionnel
+                    'name' => 'pays_id', // opttionnel
+                    'referencedColumnName' => 'id', // optionnel
+                )
+            )
+        ),
+        'ManyToMany' => array(
+            'links' => array(
+                'targetEntity' => 'App\AppModule\Entity\Link',
+
+            ),
+        ),
     )
-)
-        )
-    ),
 );

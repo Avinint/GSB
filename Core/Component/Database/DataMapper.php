@@ -12,6 +12,7 @@ class DataMapper
     private $associationMappings = array();
     private $table;
     private $pkType;
+    const ASSOCIATION_TYPES = 'ManyToOne_OneToOne_ManyToMany_OneToMany';
 
     public function __construct($path)
     {
@@ -24,10 +25,8 @@ class DataMapper
             $this->pkType = $metadata['primaryKey'];
         }
 
-
-
         if (isset($metadata['properties'])) {
-            $associationTypes = array('ManyToOne', 'OneToOne', 'ManyToMany', 'OneToMany');
+            $associationTypes = explode('_', self::ASSOCIATION_TYPES);
             foreach($metadata['properties'] as $propertyName => $property) {
                 if (!in_array($propertyName, $associationTypes)) {
                     $this->fieldMappings[$propertyName] =  $property;
@@ -46,13 +45,20 @@ class DataMapper
 
                     if(isset($metadata['properties'][$type])) {
                         foreach ($metadata['properties'][$type] as $name => $association) {
-                            $this->associationMappings[$type][$name] = array(
-                                'targetEntity' => $association['targetEntity'],
-                                'foreignKey' => $association['foreignKey']['name']
-                            );
 
-                            $this->columns[$association['foreignKey']['name']] = $name;
-                            $this->foreignKeys[$association['foreignKey']['name']] = $association['foreignKey']['referencedColumnName'];
+                            $this->associationMappings[$type][$name] = array(
+                                'targetEntity' => $association['targetEntity']
+                            );
+                            if (($type === 'ManyToOne' || $type = 'OneToOne') && $this->hasForeignKey($association)) {
+                                $this->associationMappings[$type][$name]['foreignKey'] = $association['foreignKey']['name'];
+                            } else if ($type === 'ManyToOne') {
+                                $this->associationMappings[$type][$name]['foreignKey'] = $this->guessForeignKey($name);
+                            }
+                            if($this->hasForeignKey($association)) {
+                                $this->columns[$association['foreignKey']['name']] = $name;
+                                $this->fields[$name] = $association['foreignKey']['name'];
+                                $this->foreignKeys[$association['foreignKey']['name']] = $association['foreignKey']['referencedColumnName'];
+                            }
                         }
                         unset($metadata['properties'][$type]);
                     }
@@ -60,6 +66,11 @@ class DataMapper
             }
 
         }
+    }
+
+    public function hasForeignKey($association)
+    {
+        return isset($association['foreignKey']) && isset($association['foreignKey']['name']);
     }
 
     public function getAssociations($type = null)
@@ -84,17 +95,21 @@ class DataMapper
     public function getPropertyFromColumn($column)
     {
         if (array_key_exists($column, $this->columns)) {
+
             return $this->columns[$column];
         }
-        return 0;
+
+        return false;
     }
 
     public function getColumnFromProperty($property)
     {
         if (array_key_exists($property, $this->fields)) {
+
             return $this->fields[$property];
         }
-        return 0;
+
+        return false;
     }
 
     public function getPrimaryKey()
@@ -102,6 +117,10 @@ class DataMapper
         return $this->pkType;
     }
 
+    public function getColumnNames($props)
+    {
+        return array_map(array($this, 'getColumnFromProperty'), array_keys($props));
+    }
 
     public function getProperties($columns)
     {
@@ -133,27 +152,54 @@ class DataMapper
         return $this->associationMappings;
     }
 
+    public function hasMany($property)
+    {
+        $isManyToMany = array_key_exists('ManyToMany', $this->associationMappings)? in_array($property, $this->associationMappings['ManyToMany']) : false;
+        $isOneToMany = array_key_exists('OneToMany', $this->associationMappings)? in_array($property, $this->associationMappings['OneToMany']) : false;
+
+        return $isManyToMany || $isOneToMany;
+    }
+
+    public function isAssociation($property)
+    {
+        $associationTypes = explode('_', self::ASSOCIATION_TYPES);
+        foreach ($associationTypes as $type) {
+            if (array_key_exists($property, $type )) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
     public function guessColumnName($string)
     {
         return strtolower(preg_replace('/(?<=[a-z])([A-Z])/', '_$1', $string));
     }
 
+    public function guessForeignKey($name)
+    {
+        return $name.'_id';
+    }
+
+    public function guessReferencedColumnName()
+    {
+        return 'id';
+    }
+
+    public function beforePersist($fields)
+    {
+        return array_combine(array_keys($this->getColumns($fields)), array_values($fields));
+    }
+
     public function hydrate($data, $class)
     {
-        //$keys = array_map('function', array_keys($data));
-        $entity = new $class();
-
-        if($data)
-            $fields = $this->getProperties($data);
+        $fields = $this->getProperties($data);
 
         $data = array_combine($fields, array_values($data));
-
         $properties = array_intersect_key($data, $this->getFields());
-        foreach ($properties as $prop => $value) {
 
-            $set = 'set'.ucfirst($prop);
-            $entity->$set($value);
-        }
         $associationTypes = $this->getAssociations();
         foreach ($associationTypes as $name => $associations) {
             if ($name === 'ManyToOne') {
@@ -163,15 +209,40 @@ class DataMapper
                     $childClass = $associations[$prop]['targetEntity'];
                     if (!$value instanceof $childClass) {
                         $app = \App::getInstance();
-                        $child =$app->getTable($childClass)->find($value);
-                        $set = 'set'.ucfirst($prop);
-                        $entity->$set($child);
+                        // replacing foreign keys by entity
+                        $properties[$prop] = $app->getTable($childClass)->find($value);
                     }
                 }
             }
         }
-        $associations = array_intersect_key($data, $this->getFields());
+        // now we can set all properties on new model
 
+        $ref = new \ReflectionClass($class);
+        $constructor = $ref->getConstructor();
+        $arguments = $constructor->getParameters();
+        $args = array();
+        foreach($arguments as $key => $arg) {
+            $args[$arg->name] = $key;
+        }
+
+        var_dump($args);
+        $params = array_intersect_key($properties, $args);
+        $properties  = array_diff_key($properties, $args);
+
+        var_dump($params);
+
+        $entity = new $class(extract($params));
+
+        foreach ($properties as $prop => $value) {
+            //var_dump($this->hasMany($prop));
+            if ($this->hasMany($prop)) {
+                $method = 'add'.ucfirst($prop);
+            } else {
+                $method = 'set'.ucfirst($prop);
+            }
+            $entity->$method($value);
+
+        }
         return $entity;
     }
 

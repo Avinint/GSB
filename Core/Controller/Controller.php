@@ -245,37 +245,37 @@ class Controller extends ContainerAware
         } */
     }
 
-    public function save($object) {
+    public function save($entity) {
 
-        $foreignKeys = $this->saveChildren($object/*, $files, $object*/);
-        $class = ucfirst($object->getClass());
-        $data = $object->getDataMapper()->getFields();
+        $foreignKeys = $this->saveChildren($entity/*, $files, $entity*/);
+        $class = ucfirst($entity->getClass());
+        $data = $entity->getDataMapper()->getFields();
         //$this->getTable($class)->setChanges($this->getTable($class)->trackChanges($entity, $clone));
        // $changes = $this->getTable($class)->getChanges();
        // $data = array_intersect($data, $changes); // ajout des champs en fonction des changements suivis
         foreach ($data as $prop => &$value) {
-
-            $value = $object->$prop; // zjout de valeurs aux champs
+            $value = $entity->$prop; // zjout de valeurs aux champs
         }
         $data = array_merge($data, $foreignKeys); // ajout  des clés étrangeres aux champs
-        if ($object->getId()) {
 
-            $data['id'] = $object->getId();
+
+
+        if ($entity->getId()) {
+            $data['id'] = $entity->getId();
             $result = $this->getTable($class)->update(
                 $data //, $files
             );
         } else {
-            if(array_key_exists('date', $object->getVars())){
+            if(array_key_exists('date', $entity->getVars())){
                 $data->setDate($this->insertDate());
             }
             $result = $this->getTable($class)->create(
                 $data // , $files
             );
         }
-
         if ($result) {
 
-            $object->setId($this->getTable($class)->lastInsertId());
+            $entity->setId($this->getTable($class)->lastInsertId());
         }
 
         return $result;
@@ -326,7 +326,7 @@ class Controller extends ContainerAware
             $children = $data['children'];
             foreach ($children as $class => $child) {
                 $data = $child['entity'];
-                // var_dump($object->getVars());
+                // var_dump($entity->getVars());
                 if ($data) {
                     foreach ($data->getVars() as $key => $value) {
                         if (array_key_exists($key, $fields)) {

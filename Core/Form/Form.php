@@ -624,10 +624,11 @@ abstract class Form extends ContainerAware{
                         unset($fields[$name]);
                     }
                 }
+
                 if ($entity = $this->getData()) {
+
                     $clone = clone $entity;
                     $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
-
                    // var_dump($entity->getChanges());
 
                     $scalars = array_intersect_key($fields, $entity->getDataMapper()->getFields());
@@ -636,7 +637,6 @@ abstract class Form extends ContainerAware{
                         $method = 'set'.ucfirst($attr);
                         $entity->$method($value);
                     }
-
                     $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
                     $this->cascadeRequest($fields, $files);
                 }
@@ -663,6 +663,7 @@ abstract class Form extends ContainerAware{
                 $this->cascadeAssociation($entity, $fields, $type);
             }
         }
+
         // one to one or array many to one relationships
         $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
         // many to many or one to many relationships
@@ -672,6 +673,7 @@ abstract class Form extends ContainerAware{
     public function cascadeAssociation($entity, $fields, $type)
     {
         foreach ($fields as $prop => $value) {
+
             $field = $this->fields[$prop];
             $multiple = isset($field['options']['multiple']) && $field['options']['multiple'];
             $set = 'set'.ucfirst($prop);
@@ -702,6 +704,5 @@ abstract class Form extends ContainerAware{
             }
             // add HYDRATOR for update
         }
-
     }
 }
