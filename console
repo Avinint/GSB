@@ -1,0 +1,30 @@
+<?php
+define('ROOT', __DIR__);
+require_once ROOT.'/App/Config/globals.php';
+require_once ROOT.'/App/App.php';
+
+App::load();
+$app = App::getInstance('dev');
+echo "\n--- Invite de commande GSB ---";
+
+array_shift($argv);
+
+$command = null;
+$index = 0;
+foreach($argv as $arg) {
+	if($arg[0] !== '-') {
+		$command = $arg;
+		$index = 0;
+	}
+}
+if( $command && in_array($command, $argv)) {
+	unset($argv[$index]);
+	var_dump($argv);
+} else {
+	echo "     \n\n   commande non reconnue\n";
+}
+$path = ROOT.'/Core/Command/';
+
+switch ($command)
+
+//$app->getRouter()->getRoute();

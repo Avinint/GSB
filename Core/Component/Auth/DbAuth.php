@@ -23,7 +23,7 @@ class DbAuth
         $_SESSION['auth'] = $id ? : $user->getId();
         $_SESSION['role'] = false == $user->getRole() ? 'ROLE_USER' :$user->getRole()->getNom();
 
-        return  $_SESSION['logged'] = true;
+        return $_SESSION['logged'] = true;
     }
 
     public function isLogged()
@@ -33,7 +33,7 @@ class DbAuth
 
 	public function logged()
 	{
-		return $_SESSION['logged'];
+		return isset($_SESSION['logged']) && $_SESSION['logged'];
 	}
 
     public function isGranted($role = 'ROLE_USER')

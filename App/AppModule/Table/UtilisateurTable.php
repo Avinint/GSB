@@ -15,7 +15,6 @@ class UtilisateurTable extends Table
             ->setParameter('login', $username)
             ->getQuery()
         ;
-
 		
         return $query->getSingleResult();
     }

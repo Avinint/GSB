@@ -43,7 +43,10 @@ class Controller extends ContainerAware
     {
         $ac = $this->container['access_control'];
         foreach ($ac as $rule) {
+			
+			
             if (preg_match('%'.$rule['path'].'%', $this->container['current_route']->getPath())) {
+				var_dump($rule);
                 foreach ($rule['roles'] as $role) {
                     if ($role === 'FREE_ACCESS' or true === $this->container['auth']->isGranted($role)) {
                         return;
