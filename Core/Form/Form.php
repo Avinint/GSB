@@ -415,7 +415,7 @@ abstract class Form extends ContainerAware{
         // on génère le choix
         foreach($options as &$option) {
             $value = array_shift($option);
-            $label = array_shift($option);
+            $choice = array_shift($option);
             $attr = array('value' => $value);
 
             if($value == $this->getValue($name)){
@@ -423,7 +423,7 @@ abstract class Form extends ContainerAware{
                 $attr['selected'] = true;
             }
 
-            $list[] = $this->tag($label, 'option',$attr);
+            $list[] = $this->tag($choice, 'option',$attr);
         }
         $html = implode(' ', $list);
 
@@ -452,7 +452,7 @@ abstract class Form extends ContainerAware{
                 $labelParent = array ('div' => $labelType);
             }
         }
-
+		
         $label = $this->tag($label, 'label', ['for' => $id], $labelParent);
         $select = $label.$this->tag(
             $html,
