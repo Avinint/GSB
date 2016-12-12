@@ -104,7 +104,6 @@ abstract class Form extends ContainerAware{
          return isset($field['options']['required']) && $field['options']['required'] === true;
     }
 
-
     public function validate($data)
     {
         $errors = array();
@@ -140,7 +139,7 @@ abstract class Form extends ContainerAware{
             }
 
             if ($field['type'] === 'entity') {
-                $entity = $this->getEntity($field['options']['class']);
+                $entity = $this->getEntity($field['options']['data_class']);
                 if($entity::hasDataMapper()) {
 
                     $fkType = $entity::dataMapper()->getPrimaryKey();
@@ -164,7 +163,6 @@ abstract class Form extends ContainerAware{
                 }
             }
         }
-
         $this->errors = $errors;
 
         return empty($errors);
@@ -179,27 +177,30 @@ abstract class Form extends ContainerAware{
         return "App\\".$module.'\\Entity\\'.$className;
     }
 
-    public function tag($html, $tag = 'div', $attr = [], $parent = null)
+    private function tag($html, $tag = 'div', $attr = [], $parent = null)
     {
         // Pour chaque attribut on rajoute le html, exemple: class="", et on les combine
         $attributes = []; $required = ''; $disabled ='';
-        if($attr){
+        if ($attr) {
             $disabled = isset($attr['disabled'])? $attr['disabled']: '';
             if(isset($attr['disabled'])){unset($attr['disabled']);}
-            $required = isset($attr['required'])? $attr['required']: '';
-            if(isset($attr['required'])){unset($attr['required']);}
-			
+            //$required = isset($attr['required'])? $attr['required']: '';
+           // if(isset($attr['required'])){unset($attr['required']);}
+
             foreach($attr as $k => $v){
 
                 $attributes[$k] = empty($attr[$k])? '': ' '.$k.'="'.$v.'"';
             }
+
             $attributes = implode(' ', $attributes);
             $attributes = $attributes.$required.$disabled;
-        }else{
+
+        } else {
             $attributes ='';
         }
-
         $result = '<'.$tag.$attributes.'>'.$html.'</'.$tag.'>';
+
+
         $result = $this->addParentTag($result, $parent);
 
         return $result;
@@ -208,19 +209,20 @@ abstract class Form extends ContainerAware{
     public function addParentTag($html, $parent)
     {
         if($parent !== null){
-            if(is_array($parent)){
+            if (is_array($parent)) {
                 $attr = array();
                 $attr['class'] = $parent[key($parent)];
                 $parent = key($parent);
-            }else{
+            } else {
                 $attr = null;
             }
             $html = $this->tag($html, $parent, $attr);
+
         }
         return $html;
     }
 
-    public function child(Form $form, $options)
+    private function child(Form $form, $options)
     {
         $parent = array_key_exists('parent', $options)? $options['parent']: null;
         $form->setParentForm($this->getName());
@@ -293,10 +295,10 @@ abstract class Form extends ContainerAware{
                 }
                 $input = $this->tag($input, $fieldParent, $parentAttr);
             }*/
-        }else{   // creation input simple
-             if($type === 'password'|| isset($attributes['doNotHydrate'])){
+        } else {   // creation input simple
+             if ($type === 'password'|| isset($attributes['doNotHydrate'])) {
                  $value ='';
-             }else{
+             } else {
                  $value = array_key_exists('value',$attributes)? $attributes['value']:
                      $this->getValue($name);
              }
@@ -331,7 +333,6 @@ abstract class Form extends ContainerAware{
                     if (!isset($attributes['expanded']) || !$attributes['expanded'] === false) {
                         $name = ' name="'.$name.'[]"';
                     }else {
-
                         $name = ' name="'.$name.'"';
                         foreach($attributes['choices'] as $choice => $value){
                             $value = ' value="'.$value.'"';
@@ -387,41 +388,77 @@ abstract class Form extends ContainerAware{
         }
     }
 
-    public function select($name, $label, $options, $attributes = array())
+    private function select($name, $label, $options, $attributes = array())
     {
         $list = array();
-        $parent = array_key_exists('parent', $attributes)? $attributes['parent'] : null;
-        unset($attributes['parent']);
-
-       $class = isset($attributes['class'])? $attributes['class']: '';
-
-        // Determine quel élément de la liste est selectionné par défaut
-		
-		
-        foreach($options as $k => $v){
-            $attr = array('value' => $k);
-           ;
-            if($k == $this->getValue($name)){
-                $attr['selected'] = 'selected';
-            }
-            $list[] = $this->tag($v, 'option',$attr);
-			
-
-        }
-        $html = implode(' ', $list);
         $id = $this->getName().'_'.$name;
+        $name = $this->getName().'['.$name.']';
+        $class = isset($attributes['attr']) && isset($attributes['attr']['class'])? $attributes['attr']['class']: '';
+        // Determine quel élément de la liste est selectionné par défaut
+        $basicAttributes = array(
+            'class' => $class,
+            'name'  => $name,
+            'id' => $id,
+        );
+        $attributes = array_merge($basicAttributes, $attributes);
+
+        // Si options  non multiple et non required on ajoute un placeholder blanc
         if (isset($attributes['multiple']) &&  $attributes['multiple']) {
             $name.='[]';
+            unset($attributes['multiple']);
+        } else if(!isset($attr['required']) || !$attr['required']) {
+            $emptyValue = isset($attributes['placeholder']) ? $attributes['placeholder'] : '';
+            $noData = array(array('0', $emptyValue));
+            $options = array_merge($noData, $options);
+            unset ($attributes['placeholder']);
         }
-        $name = $this->getName().'['.$name.']';
-        $label = $this->tag($label, 'label', ['for' => $id], $parent);
+        // on génère le choix
+        foreach($options as &$option) {
+            $value = array_shift($option);
+            $label = array_shift($option);
+            $attr = array('value' => $value);
+
+            if($value == $this->getValue($name)){
+
+                $attr['selected'] = true;
+            }
+
+            $list[] = $this->tag($label, 'option',$attr);
+        }
+        $html = implode(' ', $list);
+
+        if (isset($attributes['multiple']) &&  $attributes['multiple']) {
+            $name.='[]';
+            unset($attributes['multiple']);
+        }
+
+        $forbidden = array('data_class', 'type', 'choice_name', 'choice_value');
+            foreach ($forbidden as $remove) {
+            if(array_key_exists($remove, $attributes)) {
+                unset($attributes[$remove]);
+            }
+        }
+
+        $parent = array_key_exists('parentTag', $attributes) ? $attributes['parentTag']: null;
+        if($parent) {unset($attributes['parentTag']);}
+
+        $labelParent = null;
+        if (array_key_exists('labelType', $attributes)) {
+            $labelType = $attributes['labelType'];
+            unset($attributes['labelType']);
+            if ($labelType === 'block') {
+                $labelParent = 'div';
+            } else {
+                $labelParent = array ('div' => $labelType);
+            }
+        }
+
+        $label = $this->tag($label, 'label', ['for' => $id], $labelParent);
         $select = $label.$this->tag(
             $html,
-            'select',[
-                'class' => $class,
-                'name'  => $name,
-                'id' => $id,
-            ]
+            'select',
+            $attributes,
+            $parent
         );
         return $select;
     }
@@ -469,7 +506,7 @@ abstract class Form extends ContainerAware{
         return $array;
     }
 
-    public function parseName($name)
+    private function parseName($name)
     {
         $name = rtrim($name,']');
         $name = explode('[', $name);
@@ -478,15 +515,32 @@ abstract class Form extends ContainerAware{
         return $name;
     }
 
+    private function isEntity($name)
+    {
+        return isset($this->fields[$name]) && $this->fields[$name]['type'] === 'entity';
+    }
+
+    private function getIdentifier($name)
+    {
+        if (isset($this->fields[$name]['options']) && isset($this->fields[$name]['options']['choice_value'])) {
+            return 'get'.ucfirst($this->fields[$name]['options']['choice_value']);
+        }
+        return 'getId';
+    }
+
     public function getValue($name)
     {
         $name = $this->parseName($name);
-        if(is_object($this->data)){
+        if (is_object($this->data)) {
+            $method = 'get'.ucfirst($name);
 
-            //$method = 'get'.ucfirst($name);
-            $data = $this->data->$name;
+            $data = $this->data->$method();
+            if ($data && $this->isEntity($name)) {
+                $id = $this->getIdentifier($name);
+                $data = $data->$id();
+            }
             return isset($data)? $data : null;
-        }else{
+        } else {
             $data = $this->data[$name];
             return isset($data)? $data : null;
         }
@@ -538,8 +592,8 @@ abstract class Form extends ContainerAware{
                 unset($attributes['list']);
             }
             $attributes['type'] = $field['type'];
-			if($field['type'] === 'select'){
-                if(array_key_exists('list',$field['options'])) {
+            if($field['type'] === 'select'){
+                if (array_key_exists('list',$field['options'])) {
                     $list = $field['options']['list'];
                 }else{
                     $list = $key;
@@ -550,7 +604,7 @@ abstract class Form extends ContainerAware{
                     $this->entityLists[$list],
                     $attributes
                 );
-            } else if($field['type'] === 'entity'){
+            } else if ($field['type'] === 'entity') {
 				$entity = $field['options']['data_class'];
 				$table = $this->container['app']->getTable($entity);
 				if(isset($field['options']['choice_value'])) {
@@ -558,7 +612,6 @@ abstract class Form extends ContainerAware{
 				} else {
 					$choiceValue = 'id';
 				}
-				
 				if (isset($field['options']['choice_name'])) {
 					$choiceName = $field['options']['choice_name'];
 				} else if (method_exists($this->data->$key, 'getName')) {
@@ -566,47 +619,48 @@ abstract class Form extends ContainerAware{
 				} else if (method_exists($this->data->$key, 'getNom')) {
 					$choiceName = 'nom';
 				} else {
-					
 					$choiceName = $choiceValue;
 				}
 				$list = array();
-				$extraction = $table->extract($choiceValue, $choiceName);
-				
-				foreach ($extraction as &$res) {
-					if(count($res) === 1) {
-						$list[$res['id']] = $res['id'];
-					} else {
-						$value = array_shift($res);
-						$name = array_shift($res);
-						$list[$value] = $name ;
-					}	
-				}
-				
+                $orderBy = array('orderBy' => $choiceName);
+				$extraction = $table->pluck($choiceValue, $choiceName, $orderBy);
+                foreach ($extraction as &$res) {
+                    if(count($res) === 1) {
+                        $id = (string)$res['id'];
+                        $list[$res['id']] = $res['id'];
+                    } else {
+                        $value = array_shift($res);
+                        $value = (string)$value;
+
+                        $name = array_shift($res);
+                        $list[] = array(strval($value) , $name) ;
+                    }
+                }
+
                 $view .= $this->select(
                     $key,
                     $field['options']['label'],
                     $list,
                     $attributes
                 );
-            }else if($field['type'] === 'password'){
+            } else if ($field['type'] === 'password') {
                 $view .= $this->password(
                     $key,
                     $field['options']['label'],
                     $attributes
                 );
-            }else if($field['type'] === 'textarea'){
+            } else if ($field['type'] === 'textarea') {
                 $view .= $this->input(
                     $key,
                     $field['options']['label'],
                     $attributes
                 );
-            }else if($field['type'] === 'child'){
+            } else if ($field['type'] === 'child') {
                 $view .= $this->child(
                     $field['options']['form'],
                     $attributes
                 );
-
-            }else{
+            } else {
                 $view .= $this->input(
                     $key,
                     $field['options']['label'],
@@ -642,45 +696,49 @@ abstract class Form extends ContainerAware{
 
     public function handleRequest()
     {
+
         if (!empty($_POST) || !empty($_FILES)) {
             $fields = array_shift($_POST);
+            foreach ($fields as &$field) {
+                $field = isset($field) ? $field : null;
+            }
+
             $files = array_shift($_FILES);
             $result = null;
 
+            if ($this->validate($fields)) {
 
-                if ($this->validate($fields)) {
-
-                    foreach ($this->all() as $name => $def) {
-                        if ($def['type'] === 'password') {
-                            if (isset($def['options']['confirmation']) || $fields[$name] === '') {
-                                unset($fields[$name]);
-                            }
-                        }
-                        if($def['type'] === 'hidden' && $name === 'action') {
+                foreach ($this->all() as $name => $def) {
+                    if ($def['type'] === 'password') {
+                        if (isset($def['options']['confirmation']) || $fields[$name] === '') {
                             unset($fields[$name]);
                         }
                     }
+                    if($def['type'] === 'hidden' && $name === 'action') {
+                        unset($fields[$name]);
+                    }
+                }
 
-                    if ($entity = $this->getData()) {
+                if ($entity = $this->getData()) {
 
-                        $clone = clone $entity;
-                        $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
-                       // var_dump($entity->getChanges());
+                    $clone = clone $entity;
+                    $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
+                   // var_dump($entity->getChanges());
 
-                        $scalars = array_intersect_key($fields, $entity->getDataMapper()->getFields());
-                        foreach ($scalars as $attr => $value) {
-                            $method = 'set'.ucfirst($attr);
-                            $entity->$method($value);
-                        }
-
-                        $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
-                        $this->cascadeRequest($fields, $files);
+                    $scalars = array_intersect_key($fields, $entity->getDataMapper()->getFields());
+                    foreach ($scalars as $attr => $value) {
+                        $method = 'set'.ucfirst($attr);
+                        $entity->$method($value);
                     }
 
-                } else {// fin validate
-                    echo 'formulaire non valide';
+                    $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
+                    $this->cascadeRequest($fields, $files);
                 }
+
+            } else {// fin validate
+                echo 'formulaire non valide';
             }
+        }
     }
 
     public function cascadeRequest(&$fields, &$files)
@@ -701,15 +759,14 @@ abstract class Form extends ContainerAware{
         }
 
         // one to one or array many to one relationships
-        $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
+       // $entity::getTable()->setChanges($entity::getTable()->trackChanges($entity, $clone));
         // many to many or one to many relationships
-        $entity::getTable()->setChanges($entity::getTable()->trackArrayChanges($entity, $clone));
+        //$entity::getTable()->setChanges($entity::getTable()->trackArrayChanges($entity, $clone));
     }
 
     public function cascadeAssociation($entity, $fields, $type)
     {
         foreach ($fields as $prop => $value) {
-
             $field = $this->fields[$prop];
             $multiple = isset($field['options']['multiple']) && $field['options']['multiple'];
             $set = 'set'.ucfirst($prop);
@@ -720,8 +777,7 @@ abstract class Form extends ContainerAware{
             // on change la valeur si on a reneigné le champ  ou si les valeurs nulles sont admises non par défaut
             if ($value || isset($association['nullable']) && $association['nullable'] === true) {
                 $child = is_object($value) ? $value : $this->container['app']->getTable($class)->find($value);
-
-                if ($child instanceof $class) {
+                if ($child instanceof $class || is_null($child)) {
                     $associationTypes = $child->getDataMapper()->getAssociations();
                     foreach ($associationTypes as $type) {
                         if ($fields = array_intersect_key($fields, $type)) {
@@ -734,6 +790,8 @@ abstract class Form extends ContainerAware{
                     } else {
                         $entity->$set($child);
                     }
+                } else if (is_null($class)) {
+                    $entity->$set(null);
                 } else {
                     throw new \Exception("Entité invalide");
                 }

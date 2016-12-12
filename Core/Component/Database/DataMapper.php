@@ -3,6 +3,8 @@
 namespace Core\Component\Database;
 
 
+use Core\Entity\EntityFactory;
+
 class DataMapper
 {
     private $fields = array();
@@ -12,11 +14,16 @@ class DataMapper
     private $associationMappings = array();
     private $table;
     private $pkType;
+    private $uOW;
+
     const ASSOCIATION_TYPES = 'ManyToOne_OneToOne_ManyToMany_OneToMany';
 
-    public function __construct($path)
+    public function __construct($path, $uOW = null)
     {
         $metadata = include $path;
+        if($uOW) {
+            $this->uOW = $uOW;
+        }
 
         if (isset($metadata['table'])) {
             $this->table = $metadata['table'];
@@ -66,6 +73,16 @@ class DataMapper
             }
 
         }
+    }
+
+    public function setUnitOfWork($uOW)
+    {
+        $this->uOW = $uOW;
+    }
+
+    public function getUnitOfWork()
+    {
+        return $this->uOW;
     }
 
     public function hasForeignKey($association)
@@ -187,17 +204,29 @@ class DataMapper
         return 'id';
     }
 
+    /**
+     * @param $fields
+     * @return array|bool
+     *
+     */
     public function beforePersist($fields)
     {
-        return array_combine(array_keys($this->getColumns($fields)), array_values($fields));
+        if ($fields) {
+            return array_combine($this->getColumnNames($fields), array_values($fields));
+        }
+
+        return false;
     }
 
     public function hydrate($data, $class)
     {
+        // we replace column names by property names
         $fields = $this->getProperties($data);
 
         $data = array_combine($fields, array_values($data));
         $properties = array_intersect_key($data, $this->getFields());
+
+        $this->getUnitOfWork()->register($properties, $class);
 
         $associationTypes = $this->getAssociations();
         foreach ($associationTypes as $name => $associations) {
@@ -216,24 +245,6 @@ class DataMapper
         }
         // now we can set all properties on new model
 
-        $ref = new \ReflectionClass($class);
-        $constructor = $ref->getConstructor();
-		
-		if ($constructor) {
-			$arguments = $constructor->getParameters();
-			$args = array();
-			foreach($arguments as $key => $arg) {
-				$args[$arg->name] = $key;
-			}
-			
-			// var_dump($args);
-			$params = array_intersect_key($properties, $args);
-
-			$properties  = array_diff_key($properties, $args);
-		}
-        
-
-       
         //var_dump($params);
 
         $entity = new $class(array_shift($params));

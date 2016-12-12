@@ -2,7 +2,6 @@
 
 namespace Core\Container;
 
-
 class ContainerAware
 {
     protected $container;
@@ -11,7 +10,6 @@ class ContainerAware
     {
         $this->initContainer();
     }
-
 
     public function initContainer()
     {
