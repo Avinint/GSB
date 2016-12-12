@@ -6,8 +6,8 @@ use \App;
 use Core\Entity\Entity;
 use Core\Entity\UserInterface;
 
-class Utilisateur extends Entity implements UserInterface{
-
+class Utilisateur extends Entity implements UserInterface
+{
     protected $id;
     protected $login;
     protected $nom;
@@ -16,31 +16,6 @@ class Utilisateur extends Entity implements UserInterface{
     protected $mdp;
     protected $role;
     protected $pays;
-
-    public function __construct($mdp = null)
-    {
-        if($mdp) {
-            $this->mdp = $mdp;
-        }
-
-       /* $values = func_get_args();
-        var_dump($values);
-        $this->initialize($values);*/
-    }
-
-    private function initialize($values)
-    {
-        $class = new \ReflectionClass($this);
-        $construct = $class->getConstructor();
-        $params = $construct->getParameters();
-        foreach($params as $key => $arg) {
-            $prop = $arg->name;
-            $value = $values[$key];
-            if(!is_null($value)) {
-                $this->$prop = $value;
-            }
-        }
-    }
 
     /**
      * @return string
@@ -66,7 +41,6 @@ class Utilisateur extends Entity implements UserInterface{
         return $this->login;
     }
 
-
     /**
      * @param mixed $email
      */
@@ -88,7 +62,11 @@ class Utilisateur extends Entity implements UserInterface{
      */
     public function setMdp($mdp)
     {
-        $mdp = password_hash ($mdp, PASSWORD_BCRYPT);
+        $this->mdp = password_hash ($mdp, PASSWORD_BCRYPT);
+    }
+
+    public function setEncryptedPassword($mdp)
+    {
         $this->mdp = $mdp;
     }
 

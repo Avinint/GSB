@@ -55,7 +55,7 @@ class InscriptionForm extends Form
                     'label' => 'Role:',
 					'choice_name' => 'libelle',
                     'labelType' => 'block',
-                    'required' => false,
+                    'required' => true,
                     'parentTag' => array(
                         'div' => 'form-group'
                     )

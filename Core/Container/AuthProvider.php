@@ -11,7 +11,7 @@ class AuthProvider implements ServiceProviderInterface
     public function register(Container $container)
     {
         $container['auth'] = function ($c) {
-            return new DbAuth();
+            return new DbAuth($c['config']);
         };
     }
 } 
