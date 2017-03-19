@@ -117,6 +117,14 @@ class Entity
     {
         $vars = get_object_vars($this);
 
+        // on remplace les associations par leurs id (foreign key)
+        foreach($vars as $name => &$value) {
+            if($value instanceof self) {
+                if(method_exists($value, 'getId'))
+                $value = $value->getId();
+            }
+        }
+
         return $vars;
     }
 

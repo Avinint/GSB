@@ -18,13 +18,10 @@ class CompteForm extends Form
             ->add('prenom', 'text', array(
                     'label' => 'Prénom:',
                     'labelType' => 'block',
-                    'required' => true,
-
                 ))
             ->add('nom', 'text', array(
                     'label' => 'Nom:',
                     'labelType' => 'block',
-                    'required' => true,
                 ))
             ->add('email', 'email', array(
                     'label' => 'Courriel:',
@@ -32,21 +29,30 @@ class CompteForm extends Form
                     'required' => true,
                     'unique' => true,
                 ))
-        ->add('mdp', 'password', array(
-            'label' => 'Mot de Passe:',
+            ->add('mdp', 'password', array(
+                'label' => 'Mot de Passe:',
                 'labelType' => 'block',
                 'doNotHydrate' => true,
             ))
-        ->add('mdpConf', 'password', array(
+            ->add('mdpConf', 'password', array(
                 'label' => 'Mot de Passe:',
                 'labelType' => 'block',
                 'confirmation' => "mdp",
                 'doNotHydrate' => true,
-
             ))
-            ->add('action', 'hidden', array(
-                    'value' => 'editCompte'
-                ))
+            ->add('role', 'entity', array(
+                'data_class' => 'AppModule:Role',
+                'label' => 'Role:',
+                'placeholder' => 'Choisir...',
+                'choice_name' => 'libelle',
+                'labelType' => 'block',
+                'parentTag' => array(
+                    'div' => 'form-group'
+                )
+            ))
+        ->add('action', 'hidden', array(
+                'value' => 'editCompte'
+            ))
         ->getForm();
     }
 

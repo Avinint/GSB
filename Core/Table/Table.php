@@ -5,10 +5,11 @@ namespace Core\Table;
 use Core\Component\Database\QueryBuilder;
 use \App;
 use Core\Config;
+use Core\Container\ContainerAware;
 use Core\Entity\Entity;
 
-class Table {
-	
+class Table extends ContainerAware
+{
 	protected $table;
 	protected $db;
     protected $entity;
@@ -17,32 +18,38 @@ class Table {
 
     public function __construct($entity = null)
     {
-        $app = App::getInstance();
-        $this->db = $app->getContainer('db');
+        parent::__construct();
+        $this->db = $this->container['db'];
         if ($entity) {
             $this->entity = $entity;
-            $entity = explode(':', $entity);
-            $entity = end($entity);
-            $this->table = $app->getContainer('tool')->decamelize($entity);
+            $entity = $this->getEntityClass();
+            $this->table = $entity::dataMapper()->hasTable() ? $entity::dataMapper()->getTable(): $this->getDbTableNameFromEntity();
         } else {
-            $this->getDbTableName();
+            $this->guessDbTableName();
         }
     }
 
     public function getTable()
     {
-        $this->getDbTableName();
-
         return $this->table;
     }
 
-    public function getDbTableName()
+    public function getDbTableNameFromEntity()
+    {
+        $class = explode(":", $this->entity);
+        $class = end($class);
+
+        return $this->container['tool']->decamelize($class);
+    }
+
+
+    public function guessDbTableName()
     {
         if (empty($this->table)) {
-            $app = App::getInstance();
+
             $class = explode("\\", get_called_class());
             $class = end($class);
-            $this->table =  $app->getContainer('tool')->decamelize(str_replace('Table', '', $class));
+            $this->table =  $this->container['tool']->decamelize(str_replace('Table', '', $class));
         }
     }
 
@@ -252,42 +259,35 @@ class Table {
         throw new \Exception($this->entity, $fieldName, $method.$by);
     }
 
-    public function extract($args)
-    {
-		$args = func_get_args();
-		var_dump($args);
-		
-		$select ='';
-		foreach ($args as &$arg) {
-			$arg = $this->table[0].'.'.$arg;
-		}
-		var_dump($args);
-		$query = $this->createQueryBuilder()
-		->select($args);
-        
-		
-        return $query->getQuery()
-			->getScalarResults();
-    }
-
     public function pluck($args)
     {
-        $args = func_get_args($args);
-        $id = is_int($args[0]) ? array_shift($args) : 0 ;
-        $args = array_map(function($arg) {
-                return 't'.$arg;
-            }, $args);
+        $args = func_get_args();
+        $orderBy = null;
+        $key = null;
+        foreach ($args as $index => &$arg) {
+            if (is_array($arg) && isset($arg['orderBy'])) {
+                $orderBy = $arg;
 
-        $query = $this->createQueryBuilder('t')->select($args);
-        if ($id) {
-            return $query
-                ->where('id = :id')
-                ->setParameter('id', $id)
-                ->getQuery()
-                ->getSingleResult();
+                $key = $index;
+            }else {
+                $arg = $this->table[0].'.'.$arg;
+            }
         }
-        return $query
-            ->getQuery()
+        unset($args[$key]);
+        $query = $this->createQueryBuilder()
+        ->select($args);
+
+        if ($orderBy) {
+            if (is_array($orderBy) && isset($orderBy['sort'])) {
+                $query->orderBy($orderBy['orderBy'], $orderBy['sort']);
+            } else if (is_array($orderBy)) {
+                $query->orderBy($orderBy['orderBy']);
+            } else {
+                $query->orderBy($orderBy);
+            }
+        }
+
+        return $query->getQuery()
             ->getScalarResults();
     }
 
@@ -309,9 +309,9 @@ class Table {
 
     public function update($fields, $image = null, $table = '')
     {
-        if($table){
+        if ($table) {
             $table = $this->getPrefix().$table;
-        }else{
+        } else {
             $table = $this->getPrefix().$this->getTable();
         }
 
@@ -346,7 +346,7 @@ class Table {
 		}
 
         // trouver un moyen plus élégant de rajouter l'id pour le parametre
-        $attributes[] = $attributes[0];
+        $attributes[] = $fields['id'];
 		$sql = implode(', ', $sql_parts);
 
         if ($this->query (
@@ -370,14 +370,11 @@ class Table {
         return false;
     }
 
-    public function prepareForDb($fields)
-    {
-        $fields = array_combine(array_keys($entity::dataMapper()->getColumns($fields)), array_values($fields));
-    }
-
-
     public function create($fields, $image = null, $table = '')
     {
+       $uOW = $this->getUnitOfWork();
+
+
         if($table === ''){
             $table = $this->getPrefix().$this->getTable();
         }else{
@@ -389,6 +386,7 @@ class Table {
         }
 
         $entity = $this->getEntity();
+
         $fields = $entity::dataMapper()->beforePersist($fields);
 
         //$filePath = $table === 'article'?'':D_S.$table.'s';
@@ -444,39 +442,48 @@ class Table {
         array($id), true);
     }
 
-	public function query($statement, $attributes = null, $one = false, $scalar = false)
-	{
 
-        $entity = $this->getEntity();
-		$app = App::getInstance();
-		if($attributes){
-			$data = $app->getDb()->prepare(
-						$statement, 
-						$attributes,
-                        $entity,
-						$one
-					);
-		}else{
-			$data = $app->getDb()->query(
-						$statement,
-                        $entity,
-						$one
-					);
-		}
+    public function getUnitOfWork()
+    {
+        return $this->container['unit_of_work'];
+    }
 
-        if($scalar || $data === false) {
-;            return $data;
+    public function query($statement, $attributes = null, $one = false, $scalar = false)
+    {
+        $class = $this->getEntity();
+        $app = $this->container['app'];
+        if ($attributes) {
+            $data = $app->getDb()->prepare(
+                        $statement,
+                        $attributes,
+                        $class,
+                        $one
+                    );
         } else {
-            $meta = $entity::dataMapper();
+            $data = $app->getDb()->query(
+                        $statement,
+                        $class,
+                        $one
+                    );
+        }
 
-            return $one ? $meta->hydrate($data, $entity) : $meta->hydrateAll($data, $entity);
+        if ($scalar || $data === false) {
+            return $data;
+        } else {
+            $meta = $class::dataMapper();
+            $meta->setUnitOfWork($this->getUnitOfWork());
+
+            if ($one) {
+                $entity = $meta->hydrate($data, $class);
+
+                return $entity;
+            } else {
+                $entities = $meta->hydrateAll($data, $class);
+
+                return $entities;
+            }
         }
 	}
-
-    private function getAssociations()
-    {
-
-    }
 
     public function lastInsertId()
     {

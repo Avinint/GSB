@@ -2,6 +2,7 @@
 
 namespace Core\Container;
 
+use Core\Entity\EntityFactory;
 use Pimple\Container;
 
 class ContainerBuilder
@@ -18,5 +19,7 @@ class ContainerBuilder
         $container->register(new CurrentRouteProvider());
 		$container->register(new ToolProvider());
         $container->register(new DataMapperProvider());
+        $container->register(new UnitOfWorkProvider());
+        $container->register(new EntityFactoryProvider());
     }
 } 

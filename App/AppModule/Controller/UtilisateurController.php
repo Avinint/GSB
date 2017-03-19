@@ -43,7 +43,7 @@ class UtilisateurController extends AppController
             $user =  $this->getTable('AppModule:Utilisateur')->findNoPassword($_SESSION['auth']);
         }
         $login = $this->login();
-        $headlines = $this->getTable('AppModule:Article')->extract('id', 'titre');
+        $headlines = $this->getTable('AppModule:Article')->pluck('id', 'titre');
         $page = 'Contactez nous:';
         $form = new ContactForm();
         $this->render('user:contact.php', array('form'=> $form,'page'=> $page, 'login'=> $login, 'logout'=> $logout, 'User'=>$user, 'headlines'=> $headlines));
@@ -58,6 +58,7 @@ class UtilisateurController extends AppController
             $auth = $this->container['auth'];
             if ($this->getTable('AppModule:Utilisateur')->valueAvailable('login', $_POST['signup']['login']) &&
                 $this->getTable('AppModule:Utilisateur')->valueAvailable('email', $_POST['signup']['email'])) {
+
                     $form->handleRequest();
 
                 if ($form->isValid()) {
@@ -86,11 +87,8 @@ class UtilisateurController extends AppController
         if (!empty($_POST) && $_POST['compte']['action'] == 'editCompte') {
             $form->handleRequest($user);
             if ($form->isValid()) {
-
-                var_dump($user);
-                $this->save($user);
-
-                $this->redirect($this->generateURL('utilisateur_compte_edit'));
+                    $this->save($user);
+                    $this->redirect($this->generateURL('utilisateur_compte_edit'));
             }
         }
 

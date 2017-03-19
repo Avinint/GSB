@@ -361,7 +361,7 @@ class QueryBuilder{
         $sql = $this->writePart('where', array('left' => ' WHERE '))
         . $this->writePart('groupBy', array('left' => ' GROUP BY ', 'separator' => ', '))
         . $this->writePart('having', array('left' => ' HAVING '))
-        . $this->writePart('orderBy', array('left' => ' ORDER BY ', 'separator' => ', '))
+        . $this->writePart('orderBy', array('left' => ' ORDER BY ', 'separator' => ' '))
         . $this->getLimit();
         ;
 

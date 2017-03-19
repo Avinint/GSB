@@ -17,31 +17,6 @@ class Utilisateur extends Entity implements UserInterface
     protected $role;
     protected $pays;
 
-    public function __construct($mdp = null)
-    {
-        if($mdp) {
-            $this->mdp = $mdp;
-        }
-
-       /* $values = func_get_args();
-        var_dump($values);
-        $this->initialize($values);*/
-    }
-
-    private function initialize($values)
-    {
-        $class = new \ReflectionClass($this);
-        $construct = $class->getConstructor();
-        $params = $construct->getParameters();
-        foreach($params as $key => $arg) {
-            $prop = $arg->name;
-            $value = $values[$key];
-            if(!is_null($value)) {
-                $this->$prop = $value;
-            }
-        }
-    }
-
     /**
      * @return string
      */
@@ -65,7 +40,6 @@ class Utilisateur extends Entity implements UserInterface
     {
         return $this->login;
     }
-
 
     /**
      * @param mixed $email

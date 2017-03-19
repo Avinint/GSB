@@ -34,7 +34,6 @@ return array(
         /*'ManyToMany' => array(
             'links' => array(
                 'targetEntity' => 'App\AppModule\Entity\Link',
-
             ),
         ),*/
     )

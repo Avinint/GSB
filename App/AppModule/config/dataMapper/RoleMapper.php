@@ -9,5 +9,6 @@ return array(
             'type' => 'primaryKey',
         ),
         'nom'  => array(),
+        'libelle' =>  array(),
     ),
 );

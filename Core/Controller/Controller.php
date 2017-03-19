@@ -150,7 +150,6 @@ class Controller extends ContainerAware
         die();
     }
 
-
     public function handleRequest($form, $data)
     {
         if(!empty($_POST) || !empty($_FILES)){
@@ -193,7 +192,7 @@ class Controller extends ContainerAware
         }
     }
 
-    public function cascadePersist(&$fields, &$files, $data)
+    public function save($entity)
     {
         $result = null;
         $childObject = array();
@@ -236,25 +235,19 @@ class Controller extends ContainerAware
             $fields = array_intersect_key($fields, $data['entity']->getVars());
             $files = array_intersect_key($files, $data['entity']->getVars());
         } */
-    }
 
-    public function save($entity)
-    {
+
+
         $foreignKeys = $this->saveChildren($entity/*, $files, $entity*/);
-        $class = ucfirst($entity->getClass());
-        $data = $entity->getDataMapper()->getFields();
 
         //$this->getTable($class)->setChanges($this->getTable($class)->trackChanges($entity, $clone));
        // $changes = $this->getTable($class)->getChanges();
-       // $data = array_intersect($data, $changes); // ajout des champs en fonction des changements suivis
-        foreach ($data as $prop => &$value) {
-            $get = 'get'.ucfirst($prop);
-            $value = $entity->$get(); // zjout de valeurs aux champs
-        }
-        $data = array_merge($data, $foreignKeys); // ajout  des clés étrangeres aux champs
+       //$data = array_intersect($data, $changes); // ajout des champs en fonction des changements suivis
 
-
+       // $data = array_merge($data, $foreignKeys); // ajout  des clés étrangeres aux champs
         if ($entity->getId()) {
+
+            $data = $this->container['unit_of_work']->getChanges($entity);
             $data['id'] = $entity->getId();
             $result = $this->getTable($class)->update(
                 $data //, $files
@@ -263,6 +256,7 @@ class Controller extends ContainerAware
             if(array_key_exists('date', $entity->getVars())){
                 $data->setDate($this->insertDate());
             }
+
             $result = $this->getTable($class)->create(
                 $data // , $files
             );
@@ -291,29 +285,33 @@ class Controller extends ContainerAware
 
                 foreach ($fields as $prop => $child) {
 
+
                     // envoyer uodate ou create avec le bon type de données
                     $get = 'get'.ucfirst($prop);
                     $class = $type[$prop]['targetEntity'];
                     $child = $entity->$get();
-                    $fk = $type[$prop]['foreignKey']?  :$prop.'_id';
-                    $data = $child->getVars();
-                    $data = array_flip(array_intersect($data, $this->getTable($class)->getChanges()));
-                    // compare sub object data TODO test
 
+                    if ($child) {
+                        $data = $child->getVars();
+                        $data = array_flip(array_intersect($data, $this->getTable($class)->getChanges()));
+                        // compare sub object data TODO test
 
-                     if(!$child->getId()) { // On insert objet si id non existent
-                        $result = $this->getTable($class)->create(
-                            $data//, $childObject, $childFiles, $class
-                        );
-                    } else if ($child->getChanges()) {
+                        if(!$child->getId()) { // On insert objet si id non existent
+                            $result = $this->getTable($class)->create(
+                                $data//, $childObject, $childFiles, $class
+                            );
+                        }/* else { // ajouter unit of work
                         $result = $this->getTable($class)->update(
                             $data//, $childObject, $childFiles, $class
                         );
-                    }
+                    }*/
 
-                    if ($result || !$child->getChanges()) {
-                        $id = $child->getId()? : $this->getTable($class)->lastInsertId();
-                        $fkeys[$fk] = $id;
+                        /*if ($result || !$child->getChanges()) {
+                            $id = $child->getId()? : $this->getTable($class)->lastInsertId();
+
+                        }*/
+                        $id = $child->getId();
+                        $fkeys[$prop] = $id;
                     }
                 }
             }
