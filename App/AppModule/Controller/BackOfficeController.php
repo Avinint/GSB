@@ -18,7 +18,7 @@ class BackOfficeController extends AppController
         $user =  $this->getTable('AppBundle:Utilisateur')->findNoPassword($_SESSION['auth']);
 
         $utis = $this->getTable('AppModule:Utilisateur')->findAll();
-        $this->render('Admin:User:index.php', array(
+        $this->render('Admin:user:index.php', array(
                 'logout' => $logout,
                 'utis' => $utis,
                 'User' => $user,
@@ -37,8 +37,7 @@ class BackOfficeController extends AppController
 
         if(!empty($_POST) && $_POST['uti_action'] == 'uti'){
             if($_POST['uti_mdp'] !== ''){
-                //$_POST['uti_mdp'] = hash('sha512', $_POST['uti_mdp']);
-                //$_POST['uti_mdpConf'] = hash('sha512', $_POST['uti_mdpConf']);
+                $_POST['uti_mdp'] = Utilisateur::encrypt($_POST['uti_mdp']);
             }
 
             $data = array(
@@ -49,7 +48,7 @@ class BackOfficeController extends AppController
             $this->handleRequest($data, $object, $this->generateURL('admin_utilisateur_index'));
         }
 
-        $this->render('Admin:User:edit.php', array(
+        $this->render('Admin:user:edit.php', array(
                 'form' => $form,
                 'logout' => $logout,
                 'User' => $user,
@@ -67,7 +66,7 @@ class BackOfficeController extends AppController
 
         if(!empty($_POST) && $_POST['uti_action'] == 'uti'){
             if($_POST['uti_mdp'] !== ''){
-               // $_POST['uti_mdp'] = hash('sha512', $_POST['uti_mdp']);
+               $_POST['uti_mdp'] = Utilisateur::encrypt($_POST['uti_mdp']);
               //  $_POST['uti_mdpConf'] = hash('sha512', $_POST['uti_mdpConf']);
             }
 
@@ -79,7 +78,7 @@ class BackOfficeController extends AppController
             $this->handleRequest($form, $data, $this->generateURL('admin_utilisateur_index'));
         }
 
-        $this->render('Admin:Article:add.php', array(
+        $this->render('Admin:user:add.php', array(
                 'form' => $form,
                 'logout' => $logout,
                 'User' => $user,

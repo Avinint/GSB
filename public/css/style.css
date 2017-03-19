@@ -1,18 +1,39 @@
 ﻿body{
+    font-size: 14px;
 	margin-bottom: 60px;
 }
-.navbar-gsb{
-	/*background-color: #226B5A;*/
-	background-color: #009688;
-	background-image: none;
+
+a.site-title{
+    display: block;
+    text-align: center;
+    color: white;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+
 }
+
+.site-title h1{
+    margin: 0;
+    font-family: Lato, sans-serif;
+
+    letter-spacing: 5px;
+    font-size: 80px;
+    font-weight: 300;
+    line-height: 1;
+    text-transform: uppercase;
+}
+header{
+    background-color: #000000;
+}
+
 .navbar-brand{
 	padding: 0 15px;
 }
 
 .navbar-gsb ul.nav li a{
 	color: ghostwhite;
-	
+
 	//color: dodgerblue;
 }
 .navbar-gsb ul.nav li a:hover{
@@ -41,7 +62,7 @@
 }
 footer{
 	height:50px;
-	background-color:#2B7A91;
+	background-color: grey;
 	color: ghostwhite;
 	position: absolute;
     bottom: 0;

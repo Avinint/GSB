@@ -316,7 +316,7 @@ class Table {
         }
 
          // on n'update que ce que le champs mis à jours
-       /* if ($entity->getId()) {
+        /* if ($entity->getId()) {
             $preUpdateState = $fields = $entity->getId() ? $this->find($entity->getId())->getVars() : array();
             $fields = array_diff_assoc($fields, $preUpdateState);
 			$imageBackup = method_exists($entity, 'getImage') ? $entity->getImage(): '';
@@ -325,7 +325,6 @@ class Table {
         if(empty($image) || $image['image']['name'] === ''){
             unset($image);
         }
-
         $entity = $this->getEntity();
         $fields = $entity::dataMapper()->beforePersist($fields);
 
@@ -416,7 +415,7 @@ class Table {
         if ($this->query(
             'INSERT INTO '.$table.'
             SET '.$sql,
-            $attributes,true, true)) {
+            $attributes, true, true)) {
             if (isset($image)) {
                 // TODO move image upload to Save
                 /*  if ($uploaded = $entity->upload($image['image'], $fields['image'])) {
@@ -447,6 +446,7 @@ class Table {
 
 	public function query($statement, $attributes = null, $one = false, $scalar = false)
 	{
+
         $entity = $this->getEntity();
 		$app = App::getInstance();
 		if($attributes){

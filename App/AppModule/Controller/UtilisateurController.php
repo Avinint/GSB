@@ -33,7 +33,7 @@ class UtilisateurController extends AppController
         }
         $form = new LoginForm();
 
-        $this->render('AppModule:User:login.php', compact('form', 'error'));
+        $this->render('AppModule:user:login.php', compact('form', 'error'));
     }
 
     public function contact()
@@ -46,7 +46,7 @@ class UtilisateurController extends AppController
         $headlines = $this->getTable('AppModule:Article')->extract('id', 'titre');
         $page = 'Contactez nous:';
         $form = new ContactForm();
-        $this->render('User:contact.php', array('form'=> $form,'page'=> $page, 'login'=> $login, 'logout'=> $logout, 'User'=>$user, 'headlines'=> $headlines));
+        $this->render('user:contact.php', array('form'=> $form,'page'=> $page, 'login'=> $login, 'logout'=> $logout, 'User'=>$user, 'headlines'=> $headlines));
     }
 
     public function signup()
@@ -73,30 +73,31 @@ class UtilisateurController extends AppController
 
         $page = 'Inscription:';
 
-        $this->render('AppModule:User:inscription.php', compact('form','page'), 'no_template');
+        $this->render('AppModule:user:inscription.php', compact('form','page'), 'no_template');
     }
 
     public function editCompte()
     {
         $this->filterAccess('ROLE_USER');
         $logout = $this->logout();
-        $user 	= $this->getTable('AppModule:Utilisateur')->findNoPassword($_SESSION['auth']);
+        $user 	= $this->getUser();
         $form   = new CompteForm($user,$this->generateURL('utilisateur_compte_edit'));
 
         if (!empty($_POST) && $_POST['compte']['action'] == 'editCompte') {
             $form->handleRequest($user);
-
             if ($form->isValid()) {
-                    $this->save($user);
-                var_dump("save");
-                    $this->redirect($this->generateURL('utilisateur_compte_edit'));
+
+                var_dump($user);
+                $this->save($user);
+
+                $this->redirect($this->generateURL('utilisateur_compte_edit'));
             }
         }
 
         //$login = $this->login();
         $page = 'gestionnaire de compte utilisateur:';
 
-        $this->render('AppModule:User:compte.php', array(
+        $this->render('AppModule:user:compte.php', array(
                 'form'   => $form,
                 'logout' => $logout,
                 'page'   => $page,

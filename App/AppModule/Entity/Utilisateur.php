@@ -6,8 +6,8 @@ use \App;
 use Core\Entity\Entity;
 use Core\Entity\UserInterface;
 
-class Utilisateur extends Entity implements UserInterface{
-
+class Utilisateur extends Entity implements UserInterface
+{
     protected $id;
     protected $login;
     protected $nom;
@@ -84,12 +84,19 @@ class Utilisateur extends Entity implements UserInterface{
     }
 
     /**
-     * @param mixed $mdp
+     * @param string $mdp
      */
     public function setMdp($mdp)
     {
-        $mdp = password_hash ($mdp, PASSWORD_BCRYPT);
         $this->mdp = $mdp;
+    }
+
+    /**
+     * @param string $mdp
+     */
+    public static function encrypt($mdp)
+    {
+        return password_hash($mdp, PASSWORD_BCRYPT);
     }
 
     /**

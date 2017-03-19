@@ -55,7 +55,6 @@ class MySQLDatabase {
         $data = null;
         $req = $this->getPDO()->prepare($statement);
         $res = $req->execute($attr);
-
         if (
             strpos($statement, 'UPDATE') === 0 ||
             strpos($statement, 'INSERT') === 0 ||
@@ -70,6 +69,7 @@ class MySQLDatabase {
             if (!is_null($ctor)) {
                 $req->setFetchMode(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE, $class, $ctor);
             } else {
+                var_dump($statement);
                 //$req->setFetchMode(PDO::FETCH_CLASS, $class);
                 $req->setFetchMode(PDO::FETCH_ASSOC);
             }

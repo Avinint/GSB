@@ -2,6 +2,13 @@
 <html lang="en">
 <?php $this->header(); ?>
 <body>
+<header>
+    <a class="site-title" href="">
+        <h1>Bruno AVININT</h1>
+    </a>
+</header>
+
+
     <!-- Fixed navbar -->
     <?php if ($this->template == 'default') {
         $this->display('Template:navbar');

@@ -11,7 +11,7 @@ class HomeController extends AppController
 		$user = new Utilisateur();
 
 		//$this->container['tool']->debug($user->getMetadata());
-		$user->getTableName();
+
 		
 		//echo password_hash('riveton', PASSWORD_BCRYPT);if(!function_exists('hash_equals'))
 
@@ -24,12 +24,12 @@ class HomeController extends AppController
         echo $user->prenom.' '.$uti->nom;*/
         //var_dump(Utilisateur::findByPrenom('Bruno', array('Prenom', "ASC"), 0 , 1));
         //
-        $this->render('AppModule:Home:index.php');
+        $this->render('AppModule:home:index.php');
     }
 
     public function show()
     {
-        $this->render('AppModule:Home:show.php');
+        $this->render('AppModule:home:show.php');
     }
 
     public function __construct()

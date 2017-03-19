@@ -4,7 +4,7 @@ allow from all
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-	RewriteBase "/gsb"
+	RewriteBase "/Portfolio"
 
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^dev(.*)$ public/index_dev\.php%1   [QSA,L]

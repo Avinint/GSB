@@ -22,16 +22,65 @@ class Controller extends ContainerAware
         return new $form();
     }
 
-    protected function render($view, $variables = [], $template = 'default')
+    protected function render($view, $variables = array(), $template = 'default')
     {
+        $variables = array_merge($variables, $this->userData());
         $view = new View($view);
         $view->render($variables, $template);
+    }
+
+    /* rendu dans une variable */
+    protected function renderView($view, $parameters)
+    {
+        ob_start();
+        extract($parameters);
+        require $view;
+
+        return ob_get_clean();
+    }
+
+    protected function userData()
+    {
+        if (isset($_SESSION['user']))
+        {
+            $user = unserialize($_SESSION['user']);
+            $role = $user->getRole()->getLibelle();
+            return (array(
+                'nom'    => $user->getNom(),
+                'prenom' => $user->getPrenom(),
+                'login'  => $user->getLogin(),
+                'activeRole'   => ucfirst($role)));
+        }
+
+        return (array('login' => 'undefined'));
+    }
+
+    public function getUser()
+    {
+        if (isset($_SESSION['user'])) {
+            return unserialize($_SESSION['user']);
+        }
+
+        return false;
+    }
+
+    protected function partial($view, $vars)
+    {
+        $view = str_replace('/', D_S, $view);
+        extract($vars);
+        require 'views'.D_S.$view;
     }
 	
 	protected function generateURL($routeName, $parameters = array())
 	{
 		return $this->container['router']->generateURL($routeName, $parameters);
 	}
+
+    // transforme un snakecase en phrase avec espaces
+    protected function humanize($string)
+    {
+        return ucfirst(str_replace('_', ' ', $string));
+    }
 
     // TODO remove
     protected function loadModel($model)
@@ -82,81 +131,25 @@ class Controller extends ContainerAware
 
     protected function forbidden($msg = 'Accès interdit')
     {
+        //$this->redirect('?action=error&id=4');
         header('HTTP/1.0 403 Forbidden');
         die($msg);
     }
 
     protected function notFound()
     {
+        //$this->redirect('?action=error&id=2');
         header('HTTP/1.0 404 Not Found');
         die('Page introuvable');
     }
 
-    public function redirect($url, $statusCode = 303)
+    public function redirect($url)
     {
+        //$url = $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['SERVER_NAME'].$_SERVER['SCRIPT_NAME'].$url;
         header('Location: ' . $url);
-        throw new \Exception("redirection"); // TDODO test and remove?
+        die();
     }
 
-    public function handleRequestBack($form, $data, $route)
-    {
-        if(!empty($_POST) || !empty($_FILES)){
-
-            $fields = $form->parseFields($_POST);
-            $files = $form->parseFields($_FILES);
-            $result = null;
-
-            if($form->validate($fields)){
-
-                if(isset($data['fk'])){
-                    foreach($data['fk'] as $k => $v){
-                        if(array_key_exists($k, $fields)){
-                            $fields[$v] = $fields[$k]; // $fields['role_id'] = $fields ['role']
-                            unset($fields[$k]);  //unset role
-                        }
-                    }
-                }
-                foreach ($form->all() as $name => $def){
-                    if ($def['type'] === 'password') {
-                        if (isset($def['options']['confirmation']) || $fields[$name] === '') {
-                            unset($fields[$name]);
-                        }
-                    }
-                    if($def['type'] === 'hidden' && $name === 'action') {
-                        unset($fields[$name]);
-                    }
-                }
-                $this->cascadeRelations($fields, $files, $data);
-                echo 'Donnees valides';
-
-                $class = ucfirst($data['entity']->getClass());
-                if ($data['entity']->getId()) {
-                    $result = $this->getTable($class)->update(
-                        $data['entity'], $fields, $files
-                    );
-                } else {
-                    if(array_key_exists('date', $data['entity']->getVars())){
-                        $fields['date'] = $this->insertDate();
-                    }
-                    $result = $this->getTable($class)->create(
-                        $data['entity'],$fields, extract($files)
-                    );
-                }
-
-                if ($result) {
-                    /* Si c'est une inscription on logue le nouvel utilisateur */
-                    if (isset($data['login'])) {
-                        $id = $this->getTable($class)->lastInsertId();
-                        $_SESSION['auth'] = $id;
-                    }
-
-                    $this->redirect($route);
-                }
-            } else {// fin validate
-                echo 'formulaire non valide';
-            }
-        }
-    }
 
     public function handleRequest($form, $data)
     {
@@ -245,10 +238,8 @@ class Controller extends ContainerAware
         } */
     }
 
-    public function save($entity) {
-
-
-
+    public function save($entity)
+    {
         $foreignKeys = $this->saveChildren($entity/*, $files, $entity*/);
         $class = ucfirst($entity->getClass());
         $data = $entity->getDataMapper()->getFields();
@@ -263,10 +254,8 @@ class Controller extends ContainerAware
         $data = array_merge($data, $foreignKeys); // ajout  des clés étrangeres aux champs
 
 
-
         if ($entity->getId()) {
             $data['id'] = $entity->getId();
-
             $result = $this->getTable($class)->update(
                 $data //, $files
             );
@@ -294,11 +283,12 @@ class Controller extends ContainerAware
         if (!$entity instanceof \Core\Entity\Entity) {
             throw new \Exception ("Form data not valid.");
         }
-
         $associationTypes = $entity->getDataMapper()->getAssociations();
+       ## var_dump($associationTypes); ICI GET CHANGE PETE TOUT
         foreach ($associationTypes as $typeName => $type) {
+          #var_dump(array_flip(array_intersect($this->getTable($class)->getChanges(), array_keys($type))));
             if ($fields = array_flip(array_intersect($this->getTable($class)->getChanges(), array_keys($type)))) {
-                ;
+
                 foreach ($fields as $prop => $child) {
 
                     // envoyer uodate ou create avec le bon type de données
@@ -367,5 +357,60 @@ class Controller extends ContainerAware
             $fields = array_intersect_key($fields, $data['entity']->getVars());
             $files = array_intersect_key($files, $data['entity']->getVars());
         }*/
+    }
+
+
+
+
+    // validation de formulaire retourne un message d'erreur pour chaque champ danss liste qui est vide
+    protected function validateBlank($list)
+    {
+        $errors = array();
+        $fields = $_POST;
+        $emptyMsg = 'champ obligatoire';
+        foreach ($fields as $field => $value) {
+            if(empty($value) &&  in_array($field, $list)) {
+                $errors[$field] = array();
+                $errors[$field][] = $emptyMsg;
+            }
+        }
+
+        return $errors;
+    }
+
+    protected function validateUniques($list, $user = null)
+    {
+        $fields = $_POST;
+        $errors = array();
+        foreach ($list as $field) {
+            $method = 'findOneBy'.ucfirst($field);
+            $userExists = Utilisateur::$method($fields[$field]);
+            if(($userExists && !$user) || ($userExists && $userExists != $user)) {
+                $errors[$field]   = array();
+                $errors[$field][] = $this->humanize($field). " déja utilisé : veuillez en choisir un autre";
+            };
+        }
+
+        /*var_dump($loginExists && !$user || $loginExists != $user);
+        $emailExists = Utilisateur::findOneByEmail($fields['email']);
+        var_dump($emailExists && !$user || $emailExists != $user);*/
+
+        return $errors;
+    }
+
+    // validation de formulaire retourne un message d'erreur pour chaque champ danss liste qui est vide
+    protected function validatePasswordConfirmation()
+    {
+        $errors = array();
+        $fields = $_POST;
+        if (isset($fields['mdp']) && isset($fields['mdp_confirmation'])) {
+
+            if ($fields['mdp'] !== $fields['mdp_confirmation']) {
+                $errors = array('mdp' => array());
+                $errors['mdp'][] = 'Le mot de passe doit être identique dans le champ de confirmation';
+            }
+        }
+
+        return $errors;
     }
 }
