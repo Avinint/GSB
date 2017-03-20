@@ -88,7 +88,7 @@ class UtilisateurController extends AppController
             $form->handleRequest($user);
             if ($form->isValid()) {
                     $this->save($user);
-                    $this->redirect($this->generateURL('utilisateur_compte_edit'));
+                    $this->redirect($this->generateURL('homepage'));
             }
         }
 

@@ -69,7 +69,6 @@ class MySQLDatabase {
             if (!is_null($ctor)) {
                 $req->setFetchMode(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE, $class, $ctor);
             } else {
-                var_dump($statement);
                 //$req->setFetchMode(PDO::FETCH_CLASS, $class);
                 $req->setFetchMode(PDO::FETCH_ASSOC);
             }

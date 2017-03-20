@@ -13,8 +13,9 @@ class Controller extends ContainerAware
     public function __construct()
     {
         parent::__construct();
+		#$uoW = $this->container['unit_of_work']->register($this->getUser(), "AppBundle:Utilisateur");
         $this->viewpath = ROOT.'/App/View/';
-    }
+	}
 
     protected function createForm($form)
     {
@@ -58,7 +59,14 @@ class Controller extends ContainerAware
     public function getUser()
     {
         if (isset($_SESSION['user'])) {
-            return unserialize($_SESSION['user']);
+			$user = unserialize($_SESSION['user']);
+			$meta = $user::datamapper();
+			#$data = array_combine($fields, array_values($data));
+        
+			$data = array_combine($meta->getFields(), $user->getVars());
+			$this->container['unit_of_work']->register($data, $user->getClass());
+			
+            return $user;
         }
 
         return false;
@@ -146,6 +154,7 @@ class Controller extends ContainerAware
     public function redirect($url)
     {
         //$url = $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['SERVER_NAME'].$_SERVER['SCRIPT_NAME'].$url;
+		
         header('Location: ' . $url);
         die();
     }
@@ -192,51 +201,10 @@ class Controller extends ContainerAware
         }
     }
 
-    public function save($entity)
+	public function save($entity)
     {
-        $result = null;
-        $childObject = array();
-        $childFiles = array();
-
-        /*if (isset($data['children'])) {
-            $children = $data['children'];
-            foreach ($children as $class => $child) {
-                $data = $child['entity'];
-                // var_dump($object->getVars());
-                if ($data) {
-                    foreach ($data->getVars() as $key => $value) {
-                        if (array_key_exists($key, $fields)) {
-                            $childObject = array_intersect_key($fields, $data->getVars());
-                            $fields = array_diff_key($fields, $data->getVars());
-                        }
-                        if (array_key_exists($key, $files)) {
-                            $childFiles = array_intersect_key($files, $data->getVars());
-                            $files = array_diff_key($files, $data->getVars());
-                        }
-                    }
-
-                    if ($data->getId() === null) {
-                        $result = $this->getTable($class)->create(
-                            $data, $childObject, $childFiles, $class
-                        );
-                        if ($result) {
-                            $id =  $this->getTable($class)->lastInsertId();
-
-                            $fields[$children[key($children)]['db_name']] = $id;
-                        }
-                    } else {
-                        $result = $this->getTable($class)->update(
-                            $data, $childObject, $childFiles, $class
-                        );
-                    }
-                }
-            }
-        } else {
-            $fields = array_intersect_key($fields, $data['entity']->getVars());
-            $files = array_intersect_key($files, $data['entity']->getVars());
-        } */
-
-
+        $data = $entity->getVars();
+        $class = $entity->getClass();
 
         $foreignKeys = $this->saveChildren($entity/*, $files, $entity*/);
 
@@ -244,11 +212,13 @@ class Controller extends ContainerAware
        // $changes = $this->getTable($class)->getChanges();
        //$data = array_intersect($data, $changes); // ajout des champs en fonction des changements suivis
 
+
        // $data = array_merge($data, $foreignKeys); // ajout  des clés étrangeres aux champs
         if ($entity->getId()) {
 
             $data = $this->container['unit_of_work']->getChanges($entity);
             $data['id'] = $entity->getId();
+
             $result = $this->getTable($class)->update(
                 $data //, $files
             );

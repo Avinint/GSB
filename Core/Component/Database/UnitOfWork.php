@@ -88,13 +88,15 @@ objects = [
         $id    = $entity->getId();
 
         $this->addChanges($entity);
-
-        $clean = $this->cleanObjects[$class][$id];
-        $dirty = $this->dirtyObjects[$class][$id];
-
-        $updated = array_diff_assoc($dirty, $clean);
-
-        $this->changes[$class][$id] = $updated;
+		if ($this->cleanObjects[$class]) {
+			 $clean = $this->cleanObjects[$class][$id];
+		}
+       
+		if ($this->dirtyObjects) {
+			$dirty = $this->dirtyObjects[$class][$id];	
+			$updated = array_diff_assoc($dirty, $clean);
+			$this->changes[$class][$id] = $updated;	
+		}
     }
 
     public function getChanges(Entity $entity)
@@ -103,8 +105,12 @@ objects = [
         $id = $entity->getId();
 
         $this->setChanges($entity);
-
-        return array_filter($this->changes[$class][$id]);
+		
+		if($this->changes) {
+			return array_filter($this->changes[$class][$id]);
+		}
+        
+		return null;
     }
 
     // check that data is present in a collection

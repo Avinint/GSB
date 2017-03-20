@@ -222,7 +222,6 @@ class DataMapper
     {
         // we replace column names by property names
         $fields = $this->getProperties($data);
-
         $data = array_combine($fields, array_values($data));
         $properties = array_intersect_key($data, $this->getFields());
 
